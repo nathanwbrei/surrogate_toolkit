@@ -85,4 +85,25 @@ TEST_CASE("Iterating over items in a tuple") {
     std::apply([&](auto ... x){ (registerParam(x), ...); }, t);
 }
 
+TEST_CASE("Capturing inputs into a Parameters vector, single input") {
+    CapturingFunction<double, double> cf(square);
+    auto result = cf(7.0);
+    REQUIRE(result == 49.0);
+    REQUIRE(cf.m_parameters.size() == 2);
+    REQUIRE(std::any_cast<double>(cf.m_parameters[0].data) == 7.0);
+    REQUIRE(std::any_cast<double>(cf.m_parameters[1].data) == 49.0);
+}
+
+
+TEST_CASE("Capturing inputs into a Parameters vector, multiple inputs") {
+    CapturingFunction<double, double, int, std::string> cf(f);
+    auto result = cf(7.0, 3, "Nonsense");
+    REQUIRE(result == 10.0);
+    REQUIRE(cf.m_parameters.size() == 4);
+    REQUIRE(std::any_cast<double>(cf.m_parameters[0].data) == 7.0);
+    REQUIRE(std::any_cast<int>(cf.m_parameters[1].data) == 3);
+    REQUIRE(std::any_cast<std::string>(cf.m_parameters[2].data) == "Nonsense");
+    REQUIRE(std::any_cast<double>(cf.m_parameters[3].data) == 10.0);
+}
+
 

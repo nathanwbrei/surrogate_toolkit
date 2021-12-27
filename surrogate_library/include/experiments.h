@@ -10,6 +10,8 @@
 /// The problem with template metaprogramming is that the pattern language gets lost in the very nonobvious
 /// implementation details. So we build up the patterns in isolation first.
 
+#include <any>
+
 namespace experiments {
 
 template <typename ReturnT, typename ...ArgsT>
@@ -66,6 +68,56 @@ public:
     RetT operator()() {
         return std::apply(m_original, m_inputs);
     }
+};
+
+
+
+
+template <typename RetT, typename ...ArgsT>
+struct CapturingFunction {
+
+    struct Parameter {
+        enum class Datatype {INT, DOUBLE, BOOL, STRING};
+        Datatype datatype;
+        std::any data;
+    };
+
+    std::vector<Parameter> m_parameters;
+    std::function<RetT(ArgsT...)> m_original;
+
+    void registerParam(int x) {
+        Parameter p;
+        p.data = x;
+        p.datatype = Parameter::Datatype::INT;
+        m_parameters.push_back(p);
+    }
+
+    void registerParam(double x) {
+        Parameter p;
+        p.data = x;
+        p.datatype = Parameter::Datatype::DOUBLE;
+        m_parameters.push_back(p);
+    }
+
+    void registerParam(std::string s) {
+	Parameter p;
+	p.data = s;
+	p.datatype = Parameter::Datatype::STRING;
+	m_parameters.push_back(p);
+    }
+
+    CapturingFunction(std::function<RetT(ArgsT...)> f) : m_original(f) {}
+
+    RetT operator()(ArgsT&&... args) {
+        // For each argument, register a parameter
+        std::tuple<ArgsT...> t(args...);
+        std::apply([&](auto ... x){ (registerParam(x), ...); }, t);
+        RetT result = m_original(args...);
+        registerParam(result);
+        return result;
+    }
+
+
 };
 
 
