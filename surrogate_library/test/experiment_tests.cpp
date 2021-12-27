@@ -106,4 +106,9 @@ TEST_CASE("Capturing inputs into a Parameters vector, multiple inputs") {
     REQUIRE(std::any_cast<double>(cf.m_parameters[3].data) == 10.0);
 }
 
+TEST_CASE("Using a free function to avoid redundant template params ala std::make_tuple") {
+    auto cf = make_capturing_function(f);
+    auto result = cf(7.0, 3, "Nonsense");
+    REQUIRE(result == 10.0);
+}
 

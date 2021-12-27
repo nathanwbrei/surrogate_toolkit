@@ -11,6 +11,7 @@
 /// implementation details. So we build up the patterns in isolation first.
 
 #include <any>
+#include <tuple>
 
 namespace experiments {
 
@@ -116,9 +117,18 @@ struct CapturingFunction {
         registerParam(result);
         return result;
     }
-
-
 };
+
+template <typename ReturnT, typename... Args>
+using Signature = ReturnT(Args...);
+
+template<typename ReturnT, typename... Args>
+CapturingFunction<ReturnT, Args...> make_capturing_function(Signature<ReturnT, Args...> f) {
+    return CapturingFunction<ReturnT, Args...>(std::function<ReturnT(Args...)>(f));
+}
+
+
+
 
 
 }
