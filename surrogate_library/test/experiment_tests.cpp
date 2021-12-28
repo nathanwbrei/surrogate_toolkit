@@ -125,14 +125,10 @@ TEST_CASE("Simplest possible reference-capturer") {
     c = 55;
     std::cout << "b after = " << c << std::endl;
 
-
-
-   std::tuple<double> t {4.0};
-   std::vector<rcf::Parameter*> parameters;
-
-   double& d = std::get<0>(t);
-   d = 33;
-   REQUIRE(std::get<0>(t) == 33);
+    std::tuple<double> t {4.0};
+    double& d = std::get<0>(t);
+    d = 33;
+    REQUIRE(std::get<0>(t) == 33);
 
     rcf::ReferenceCapturingFunction<double, double> refcapfn(square);
     // Eventually use the capture mechanism from CapturingFunction instead of this nonsense
@@ -142,5 +138,57 @@ TEST_CASE("Simplest possible reference-capturer") {
 
 }
 
+TEST_CASE("Reference-capturer with different datatypes") {
 
+    auto refcapfn = rcf::make_ref_capturing_function(f);
+    // Eventually use the capture mechanism from CapturingFunction instead of this nonsense
+    dynamic_cast<experiments::rcf::ParameterT<double>*>(refcapfn.m_parameters[0])->samples.push_back(6.0);
+    dynamic_cast<experiments::rcf::ParameterT<int>*>(refcapfn.m_parameters[1])->samples.push_back(3);
+    dynamic_cast<experiments::rcf::ParameterT<std::string>*>(refcapfn.m_parameters[2])->samples.push_back("Hello");
+    REQUIRE(refcapfn() == 9.0);
+}
+
+TEST_CASE("Reference-capturer with uglier datatypes") {
+
+    std::tuple<double> t {2.0};
+    REQUIRE(std::apply(ref, t) == 4.0);
+
+    // auto sut1 = rcf::make_ref_capturing_function(ref);
+    // dynamic_cast<experiments::rcf::ParameterT<double>*>(sut1.m_parameters[0])->samples.push_back(6.0);
+    // REQUIRE(sut1() == 36.0);
+
+    // auto sut2 = rcf::make_ref_capturing_function(cref);
+    // dynamic_cast<experiments::rcf::ParameterT<double>*>(sut1.m_parameters[0])->samples.push_back(6.0);
+    // REQUIRE(sut2() == 36.0);
+
+    // auto sut3 = rcf::make_ref_capturing_function(rref);
+    // dynamic_cast<experiments::rcf::ParameterT<double>*>(sut3.m_parameters[0])->samples.push_back(6.0);
+    // REQUIRE(sut3() == 36.0);
+
+    auto sut3 = rcf::make_ref_capturing_function(csquare);
+    dynamic_cast<experiments::rcf::ParameterT<double>*>(sut3.m_parameters[0])->samples.push_back(6.0);
+    REQUIRE(sut3() == 36.0);
+
+
+}
+
+
+TEST_CASE("Something else") {
+    // Basic idea: Instead of writing to a tuple which is hidden, write to the _original_ locations
+    // Several different problems.
+    // 1. Using a tuple encapsulated in the surrogate fn for the original fn's arguments doesn't work when args are refs or crefs or rrefs/
+    // On the other hand, using the original locations doesn't work when
+    //	1. the inputs are const
+    //	2. the inputs are rvalues
+    // Option 2 is more consistent with what we have to do for the non-argument inputs. The user can clean up the arguments
+    // to get rid of consts or rvalues if necessary. Note this is only necessary for sampling, not for capturing!
+
+
+    // Option 3: Best of all? Collect args as well as f at construction time, bind parameters to args immediately.
+    // Capture works by calling f() OR f.capture() with no args
+    // Sampling works by calling f.sample() which rewrites the bound inputs and outputs according to some algorithm
+    // We keep the symmetry with
+
+    // Consider doing something with sparse grids
+}
 

@@ -172,9 +172,10 @@ struct ReferenceCapturingFunction {
 
     ReferenceCapturingFunction(std::function<RetT(ArgsT...)> f) : m_original(f) {
         // For each _input_ arg, we create a Parameter object that points to the correct slot in the m_inputs tuple
-	// std::apply([&](auto ... x){ (registerParam(std::ref(x)), ...); }, m_input_args);
 	std::apply([&](auto& ... x){ (registerParam(&x), ...); }, m_input_args);
+
 	// std::apply([&]<typename... X>(X& ... x){ (m_parameters.push_back(new ParameterT<X>(&x)), ...); }, m_input_args);
+	// Ideally we'd inline `registerParam`, however lambdas with template parameters require gcc >= 11
     }
 
     RetT operator()() {
@@ -187,6 +188,11 @@ struct ReferenceCapturingFunction {
 	return std::apply(m_original, m_input_args);
     }
 };
+
+template<typename ReturnT, typename... Args>
+ReferenceCapturingFunction<ReturnT, Args...> make_ref_capturing_function(Signature<ReturnT, Args...> f) {
+    return ReferenceCapturingFunction<ReturnT, Args...>(std::function<ReturnT(Args...)>(f));
+}
 
 } // namespace rcf
 } // namespace experiments
