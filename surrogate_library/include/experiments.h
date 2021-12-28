@@ -128,9 +128,69 @@ CapturingFunction<ReturnT, Args...> make_capturing_function(Signature<ReturnT, A
 }
 
 
+namespace rcf {
 
+struct Parameter {
+    virtual bool load(size_t index) = 0; // Returns true iff index is in range
+    virtual size_t store() = 0;          // Returns the index of the sample just stored
+};
 
+template <typename T>
+struct ParameterT : public rcf::Parameter {
+    std::vector<T> samples;
+    T& destination;
+    ParameterT(T& destination): destination(destination) {};
 
+    bool load(size_t index) override {
+        if (index >= samples.size()) return false;
+        destination = samples[index];
+        return true;
+    }
+    size_t store() override {
+        samples.push_back(destination);
+        return samples.size() - 1;
+    }
+};
+
+template <typename T>
+Parameter* make_parameter(T& t) {
+    return new ParameterT<T>(std::ref(t));
 }
+
+
+template <typename RetT, typename ...ArgsT>
+struct ReferenceCapturingFunction {
+
+    std::vector<Parameter*> m_parameters;
+    std::function<RetT(ArgsT...)> m_original;
+    std::tuple<ArgsT...> m_input_args;
+
+    void registerParam(int& t) {
+        m_parameters.push_back(new ParameterT<int>(std::ref(t)));
+    }
+    void registerParam(double& t) {
+	m_parameters.push_back(new ParameterT<double>(std::ref(t)));
+    }
+
+    ReferenceCapturingFunction(std::function<RetT(ArgsT...)> f) : m_original(f) {
+        // For each _input_ arg, we create a Parameter object that points to the correct slot in the m_inputs tuple
+	// std::apply([&](auto ... x){ (registerParam(std::ref(x)), ...); }, m_input_args);
+	std::apply([&](auto ... x){ (registerParam(std::ref(x)), ...); }, m_input_args);
+    }
+
+    RetT operator()() {
+        // for each _input_ parameter
+        for (auto& p : m_parameters) {
+	    // Copy data out of Parameter.value into Parameter.dest
+	    p->load(0);
+	}
+        // The m_input_args should be filled now
+	return std::apply(m_original, m_input_args);
+    }
+};
+
+} // namespace rcf
+} // namespace experiments
+
 
 #endif //SURROGATE_TOOLKIT_EXPERIMENTS_H

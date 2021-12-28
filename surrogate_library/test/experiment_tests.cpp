@@ -112,3 +112,35 @@ TEST_CASE("Using a free function to avoid redundant template params ala std::mak
     REQUIRE(result == 10.0);
 }
 
+TEST_CASE("Simplest possible reference-capturer") {
+    double a = 22;
+    double b = 44;
+    double& c = std::ref(a);
+
+    std::cout << "a before = " << a << std::endl;
+    c = 33;
+    std::cout << "a after = " << a << std::endl;
+
+    c = std::ref(b);
+    c = 55;
+    std::cout << "b after = " << c << std::endl;
+
+
+
+   std::tuple<double> t {4.0};
+   std::vector<rcf::Parameter*> parameters;
+
+   double& d = std::get<0>(t);
+   d = 33;
+   REQUIRE(std::get<0>(t) == 33);
+
+    rcf::ReferenceCapturingFunction<double, double> refcapfn(square);
+    // Eventually use the capture mechanism from CapturingFunction instead of this nonsense
+    auto p = static_cast<experiments::rcf::ParameterT<double>*>(refcapfn.m_parameters[0]);
+    p->samples.push_back(6.0);
+    REQUIRE(refcapfn() == 36.0);
+
+}
+
+
+
