@@ -138,23 +138,23 @@ struct Parameter {
 template <typename T>
 struct ParameterT : public rcf::Parameter {
     std::vector<T> samples;
-    T& destination;
-    ParameterT(T& destination): destination(destination) {};
+    T* destination;
+    ParameterT(T* destination): destination(destination) {};
 
     bool load(size_t index) override {
         if (index >= samples.size()) return false;
-        destination = samples[index];
+        *destination = samples[index];
         return true;
     }
     size_t store() override {
-        samples.push_back(destination);
+        samples.push_back(*destination);
         return samples.size() - 1;
     }
 };
 
 template <typename T>
-Parameter* make_parameter(T& t) {
-    return new ParameterT<T>(std::ref(t));
+Parameter* make_parameter(T* t) {
+    return new ParameterT<T>(t);
 }
 
 
@@ -165,17 +165,16 @@ struct ReferenceCapturingFunction {
     std::function<RetT(ArgsT...)> m_original;
     std::tuple<ArgsT...> m_input_args;
 
-    void registerParam(int& t) {
-        m_parameters.push_back(new ParameterT<int>(std::ref(t)));
-    }
-    void registerParam(double& t) {
-	m_parameters.push_back(new ParameterT<double>(std::ref(t)));
+    template <typename T>
+    void registerParam(T* t) {
+	m_parameters.push_back(new ParameterT<T>(t));
     }
 
     ReferenceCapturingFunction(std::function<RetT(ArgsT...)> f) : m_original(f) {
         // For each _input_ arg, we create a Parameter object that points to the correct slot in the m_inputs tuple
 	// std::apply([&](auto ... x){ (registerParam(std::ref(x)), ...); }, m_input_args);
-	std::apply([&](auto ... x){ (registerParam(std::ref(x)), ...); }, m_input_args);
+	std::apply([&](auto& ... x){ (registerParam(&x), ...); }, m_input_args);
+	// std::apply([&]<typename... X>(X& ... x){ (m_parameters.push_back(new ParameterT<X>(&x)), ...); }, m_input_args);
     }
 
     RetT operator()() {
