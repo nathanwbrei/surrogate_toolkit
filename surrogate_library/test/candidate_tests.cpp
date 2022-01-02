@@ -22,6 +22,23 @@ TEST_CASE("Capture int(int,int)") {
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
 }
 
+int mult_const(const int x, const int y) {
+    return x * y;
+}
+
+TEST_CASE("Capture int(const int, const int)") {
+
+    auto surrogate = make_surrogate(mult);
+    surrogate.input<int,0>("x");
+    surrogate.input<int,1>("y");
+    surrogate.returns<int>("z");
+
+    REQUIRE(surrogate.call_original_and_capture_sample(3, 5) == 15);
+    REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
+    REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
+    REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
+}
+
 int mult_with_ref(int& x, int&& y) {
     return x * y;
 }
@@ -107,7 +124,7 @@ TEST_CASE("Capture void(int)") {
 
 template <typename R, typename... A>
 struct Surr {
-    R test(A&&... a) {
+    R test(A&&...) {
         R r;
         return r;
     }
@@ -115,8 +132,7 @@ struct Surr {
 
 template <typename... A>
 struct Surr<void, A...> {
-    void test(A&&... a){
-        return;
+    void test(A&&...){
     }
 };
 TEST_CASE("Wild and crazy template stuff") {
