@@ -3,7 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include <catch.hpp>
-#include "candidate.h"
+#include "surrogate_builder.h"
 
 int mult(int x, int y) {
     return x * y;
@@ -16,7 +16,7 @@ TEST_CASE("Capture int(int,int)") {
     surrogate.input<int,1>("y");
     surrogate.returns<int>("z");
 
-    REQUIRE(surrogate.call_original_and_capture_sample(3, 5) == 15);
+    REQUIRE(surrogate.call_original_and_capture(3, 5) == 15);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
@@ -33,7 +33,7 @@ TEST_CASE("Capture int(const int, const int)") {
     surrogate.input<int,1>("y");
     surrogate.returns<int>("z");
 
-    REQUIRE(surrogate.call_original_and_capture_sample(3, 5) == 15);
+    REQUIRE(surrogate.call_original_and_capture(3, 5) == 15);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
@@ -50,7 +50,7 @@ TEST_CASE("Capture int(int&,int&&)") {
     surrogate.input<int,1>("y");
     surrogate.returns<int>("z");
     int x = 3;
-    REQUIRE(surrogate.call_original_and_capture_sample(x, 5) == 15);
+    REQUIRE(surrogate.call_original_and_capture(x, 5) == 15);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
@@ -70,7 +70,7 @@ TEST_CASE("Capture int(int&,int) [input and output]") {
     surrogate.returns<int>("z");
 
     int x = 3;
-    REQUIRE(surrogate.call_original_and_capture_sample(x, 5) == 15);
+    REQUIRE(surrogate.call_original_and_capture(x, 5) == 15);
     REQUIRE(x == 22);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
@@ -90,7 +90,7 @@ TEST_CASE("Capture int(int) [with global]") {
     surrogate.input<int>("g", [](){return &g;});
     surrogate.returns<int>("z");
 
-    REQUIRE(surrogate.call_original_and_capture_sample(5) == 110);
+    REQUIRE(surrogate.call_original_and_capture(5) == 110);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 5);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 22);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 110);
@@ -105,7 +105,7 @@ TEST_CASE("Capture int() [with no args]") {
     auto surrogate = make_surrogate(no_args);
     surrogate.returns<int>("z");
 
-    REQUIRE(surrogate.call_original_and_capture_sample() == 0);
+    REQUIRE(surrogate.call_original_and_capture() == 0);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 0);
 }
 
