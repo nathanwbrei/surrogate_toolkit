@@ -30,6 +30,10 @@ RUN yum install -y epel-release && \
 	&& ln -s /usr/bin/cmake3 /usr/local/bin/cmake \
 	&& rm -rf /var/cache/yum
 
+# Install PyTorch
+RUN wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip && \
+    unzip libtorch-shared-with-deps-latest.zip
+
 CMD /bin/bash
 
 

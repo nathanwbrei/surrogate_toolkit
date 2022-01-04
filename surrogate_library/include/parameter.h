@@ -14,23 +14,48 @@ enum class ParameterCategory {
     Continuous, Discrete, Categorical, Text
 };
 
-enum class ParameterDirection {
-    In, Out, Both
-};
-
-struct Parameter {
+struct Input {
     std::string name;
-    ParameterCategory category;
-    ParameterDirection direction;
-    virtual void ingest();
-    virtual void emit();
+    ParameterCategory category = ParameterCategory::Continuous;
+    virtual size_t capture() = 0;
+    virtual void deploy_sample() = 0;
+    virtual ~Input() = default;
 };
 
 template <typename T>
-struct ParameterT : public Parameter {
-    std::function<const T&(void)> get_readable;
-    std::function<T&(void)> get_writeable;
-    ranges::ParameterRange<T> range;
+struct InputT : public Input {
+    std::vector<T> captures;
+    T sample;
+    std::function<T*(void)> accessor;
+
+    size_t capture() override {
+	T dest = *accessor();
+	captures.push_back(dest);
+	return captures.size() - 1;
+    }
+
+    void deploy_sample() override {
+	*accessor() = sample;
+    }
+};
+
+struct Output {
+    std::string name;
+    ParameterCategory category = ParameterCategory::Continuous;
+    virtual size_t capture() = 0;
+    virtual ~Output() = default;
+};
+
+template <typename T>
+struct OutputT : public Output {
+    std::vector<T> captures;
+    std::function<T(void)> getter;
+
+    size_t capture() override {
+	T val = getter();
+	captures.push_back(val);
+	return captures.size() - 1;
+    }
 };
 
 

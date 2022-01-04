@@ -1,4 +1,24 @@
 
+# Readme
+
+## How to build
+```bash
+# Install PyTorch (detailed instructions on https://pytorch.org/)
+wget https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip  # macOS
+unzip libtorch-macos-1.10.1.zip
+export PATH_TO_LIBTORCH=`pwd`/libtorch
+
+git clone https://github.com/nathanwbrei/surrogate_toolkit
+cd surrogate_toolkit
+mkdir build
+cmake -DCMAKE_PREFIX_PATH=$PATH_TO_LIBTORCH/share/cmake/Torch ..
+make install
+```
+
+
+## Musings on decomposing nested data
+
+
 Structs we can always decompose into one param per field:
 `{a,b,c} --> (a,b,c)`
 

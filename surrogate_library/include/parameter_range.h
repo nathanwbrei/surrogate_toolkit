@@ -6,6 +6,9 @@
 #ifndef SURROGATE_TOOLKIT_PARAMETER_RANGE_H
 #define SURROGATE_TOOLKIT_PARAMETER_RANGE_H
 
+#include <set>
+#include <variant>
+
 namespace ranges {
 
 struct NoRange {};
@@ -67,7 +70,6 @@ void capture(Histogram<T> h, const T& t) {
     }
     else {
         size_t bucket = (t - h.lower_bound) / h.bucket_size;
-
     }
 }
 
