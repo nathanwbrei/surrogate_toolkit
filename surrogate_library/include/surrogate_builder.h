@@ -164,7 +164,7 @@ struct Surrogate {
 
     /// From some set of sampled _inputs_ (to be generated algorithmically), call the original function.
     /// This entails writing _into_ args, which means they need to be lvalues
-    void call_original_with_sampled_inputs(ArgsT&&...args) {
+    RetT call_original_with_sampled_inputs(ArgsT&&...args) {
         for (auto& input: inputs) {
             input->write_sample_to_args(std::forward<ArgsT>(args)...);
             input->capture(std::forward<ArgsT>(args)...);

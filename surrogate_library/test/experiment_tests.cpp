@@ -192,3 +192,17 @@ TEST_CASE("Something else") {
     // Consider doing something with sparse grids
 }
 
+struct Silly {
+    int x;
+    Silly(int x) : x(x) {}
+};
+
+TEST_CASE("Perfect forwarding with lvalues") {
+    std::vector<Silly> sillies;
+    sillies.emplace_back(3);
+    REQUIRE(sillies[0].x == 3);
+
+    int a = 5;
+    sillies.emplace_back(a);
+    REQUIRE(sillies[1].x == 5);
+}

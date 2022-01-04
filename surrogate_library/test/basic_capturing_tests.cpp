@@ -144,3 +144,21 @@ TEST_CASE("Wild and crazy template stuff") {
     // but it should definitely work.
 }
 
+
+TEST_CASE("Ugliness when passing in lvalues") {
+
+    auto sut = make_surrogate(mult);
+    sut.input<int, 0>("a");
+    sut.input<int, 1>("b");
+    sut.returns<int>("c");
+
+    int a = 3;
+    int b = 7;
+
+    int result = sut.call_original_and_capture(std::forward<int>(a), std::forward<int>(b));
+    REQUIRE(result == 21);
+
+}
+
+
+
