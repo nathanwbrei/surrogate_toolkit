@@ -37,6 +37,30 @@ TEST_CASE("Basic sample") {
     // REQUIRE(result == 36);
 }
 
+TEST_CASE("Basic sample using lambdas instead") {
+    int a = 3;
+    int b = 7;
+    // auto sut = make_surrogate([&](){return plus(a,b);});
+
+    auto sut = Surrogate<int>([&](){return plus(a,b);});
+    sut.input<int>("a", [&](){return &a;});
+    sut.input<int>("b", [&](){return &b;});
+    sut.returns<int>("c");
+
+    sut.setSampleInput(0, 17);
+    sut.setSampleInput(1, 19);
+
+    REQUIRE(a == 3);
+    REQUIRE(b == 7);
+
+    int result = sut.call_original_with_sampled_inputs();
+
+    REQUIRE(a == 17);
+    REQUIRE(b == 19);
+    REQUIRE(result == 36);
+
+}
+
 TEST_CASE ("More extensive sample") {
 
     auto sut = make_surrogate(func);

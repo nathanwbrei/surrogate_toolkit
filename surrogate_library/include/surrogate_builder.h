@@ -15,7 +15,7 @@
 using namespace parameter;
 using namespace ranges;
 
-template <typename RetT, typename ...ArgsT>
+template <typename RetT, typename...ArgsT>
 struct Surrogate {
 
     struct Input {
@@ -71,7 +71,7 @@ struct Surrogate {
     void input(std::string param_name, std::function<T*()> accessor) {
         auto input = new InputT<T>;
         input->name = param_name;
-        input->accessor = [=](ArgsT...) { return accessor(); };
+        input->accessor = [=](ArgsT&&...) { return accessor(); };
         inputs.push_back(std::unique_ptr<Input>(input));
     }
 
@@ -79,7 +79,7 @@ struct Surrogate {
     void input(std::string param_name) {
         auto input = new InputT<T>;
         input->name = param_name;
-        input->accessor = [](ArgsT... args) {
+        input->accessor = [](ArgsT&&... args) {
             auto t = std::make_tuple(args...);
             return &(std::get<Index>(t));
         };
@@ -90,7 +90,7 @@ struct Surrogate {
     void output(std::string param_name, std::function<T()> getter) {
         auto output = new OutputT<T>;
         output->name = param_name;
-        output->getter = [=](RetT, ArgsT...) { return getter(); };
+        output->getter = [=](RetT, ArgsT&&...) { return getter(); };
         outputs.push_back(std::unique_ptr<Output>(output));
     }
 
