@@ -11,12 +11,15 @@ int mult(int x, int y) {
 
 TEST_CASE("Capture int(int,int)") {
 
-    auto surrogate = make_surrogate(mult);
-    surrogate.input<int,0>("x");
-    surrogate.input<int,1>("y");
-    surrogate.returns<int>("z");
+    int x,y,z;
+    auto surrogate = make_surrogate([&](){z = mult(x,y);});
+    surrogate.input<int>("x", &x);
+    surrogate.input<int>("y", &y);
+    surrogate.output<int>("z", &z);
 
-    REQUIRE(surrogate.call_original_and_capture(3, 5) == 15);
+    x = 3; y = 5;
+    surrogate.call_original_and_capture();
+    REQUIRE(z == 15);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
@@ -28,12 +31,14 @@ int mult_const(const int x, const int y) {
 
 TEST_CASE("Capture int(const int, const int)") {
 
-    auto surrogate = make_surrogate(mult);
-    surrogate.input<int,0>("x");
-    surrogate.input<int,1>("y");
-    surrogate.returns<int>("z");
+    int x = 3,y = 5,z = 0;
+    auto surrogate = make_surrogate([&](){z = mult(x,y);});
+    surrogate.input<int>("x", &x);
+    surrogate.input<int>("y", &y);
+    surrogate.output<int>("z", &z);
 
-    REQUIRE(surrogate.call_original_and_capture(3, 5) == 15);
+    surrogate.call_original_and_capture();
+    REQUIRE(z == 15);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
@@ -45,12 +50,14 @@ int mult_with_ref(int& x, int&& y) {
 
 TEST_CASE("Capture int(int&,int&&)") {
 
-    auto surrogate = make_surrogate(mult_with_ref);
-    surrogate.input<int,0>("x");
-    surrogate.input<int,1>("y");
-    surrogate.returns<int>("z");
-    int x = 3;
-    REQUIRE(surrogate.call_original_and_capture(x, 5) == 15);
+    int x = 3, y = 5, z = 0;
+    auto surrogate = make_surrogate([&](){z = mult_with_ref(x,std::move(y));});
+    surrogate.input<int>("x", &x);
+    surrogate.input<int>("y", &y);
+    surrogate.output<int>("z", &z);
+
+    surrogate.call_original_and_capture();
+    REQUIRE(z == 15);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 15);
@@ -64,13 +71,14 @@ int mult_with_out_param(int& x, int y) {
 
 TEST_CASE("Capture int(int&,int) [input and output]") {
 
-    auto surrogate = make_surrogate(mult_with_out_param);
-    surrogate.input_output<int,0>("x");
-    surrogate.input<int,1>("y");
-    surrogate.returns<int>("z");
+    int x=3, y=5, z=0;
+    auto surrogate = make_surrogate([&](){z = mult_with_out_param(x,y);});
+    surrogate.input_output<int>("x", &x);
+    surrogate.input<int>("y", &y);
+    surrogate.output<int>("z", &z);
 
-    int x = 3;
-    REQUIRE(surrogate.call_original_and_capture(x, 5) == 15);
+    surrogate.call_original_and_capture();
+    REQUIRE(z == 15);
     REQUIRE(x == 22);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 5);
@@ -85,12 +93,14 @@ int mult_with_global(int x) {
 
 TEST_CASE("Capture int(int) [with global]") {
 
-    auto surrogate = make_surrogate(mult_with_global);
-    surrogate.input<int,0>("x");
-    surrogate.input<int>("g", [](){return &g;});
-    surrogate.returns<int>("z");
+    int x = 5, z = 0;
+    auto surrogate = make_surrogate([&](){z = mult_with_global(x);});
+    surrogate.input<int>("x", &x);
+    surrogate.input<int>("g", &g);
+    surrogate.output<int>("z", &z);
 
-    REQUIRE(surrogate.call_original_and_capture(5) == 110);
+    surrogate.call_original_and_capture();
+    REQUIRE(z == 110);
     REQUIRE(surrogate.getCapturedInput<int>(0,0) == 5);
     REQUIRE(surrogate.getCapturedInput<int>(0,1) == 22);
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 110);
@@ -102,10 +112,13 @@ int no_args(void) {
 
 TEST_CASE("Capture int() [with no args]") {
 
-    auto surrogate = make_surrogate(no_args);
-    surrogate.returns<int>("z");
+    int z = 22;
+    auto surrogate = make_surrogate([&](){z = no_args();});
+    surrogate.output<int>("z", &z);
 
-    REQUIRE(surrogate.call_original_and_capture() == 0);
+    surrogate.call_original_and_capture();
+    REQUIRE(z == 0);
+
     REQUIRE(surrogate.getCapturedOutput<int>(0,0) == 0);
 }
 
@@ -115,11 +128,12 @@ void return_void(int x) {
 
 TEST_CASE("Capture void(int)") {
 
-    // auto surrogate = make_surrogate(return_void);
-    // surrogate.input<int,0>("x");
+    int x = 3;
+    auto surrogate = make_surrogate([&](){return_void(x);});
+    surrogate.input<int>("x", &x);
 
-    // surrogate.call_original_and_capture_sample(3);
-    // REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
+    surrogate.call_original_and_capture();
+    REQUIRE(surrogate.getCapturedInput<int>(0,0) == 3);
 }
 
 template <typename R, typename... A>
@@ -144,7 +158,7 @@ TEST_CASE("Wild and crazy template stuff") {
     // but it should definitely work.
 }
 
-
+/*
 TEST_CASE("Ugliness when passing in lvalues") {
 
     auto sut = make_surrogate(mult);
@@ -159,6 +173,7 @@ TEST_CASE("Ugliness when passing in lvalues") {
     REQUIRE(result == 21);
 
 }
+*/
 
 
 
