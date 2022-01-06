@@ -8,7 +8,6 @@
 
 #include "parameter.h"
 
-using namespace parameter;
 
 struct Model { // This is an abstract class
 

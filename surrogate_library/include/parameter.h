@@ -6,9 +6,7 @@
 #ifndef SURROGATE_TOOLKIT_PARAMETER_H
 #define SURROGATE_TOOLKIT_PARAMETER_H
 
-#include "parameter_range.h"
-
-namespace parameter {
+#include "range.h"
 
 enum class ParameterCategory {
     Continuous, Discrete, Categorical, Text
@@ -17,8 +15,9 @@ enum class ParameterCategory {
 struct Input {
     std::string name;
     ParameterCategory category = ParameterCategory::Continuous;
-    virtual size_t capture() = 0;
-    virtual void deploy_sample() = 0;
+    virtual size_t capture_value() = 0;
+    virtual void capture_range() = 0;
+    virtual void deploy_sample_value() = 0;
     virtual ~Input() = default;
 };
 
@@ -27,14 +26,21 @@ struct InputT : public Input {
     std::vector<T> captures;
     T sample;
     std::function<T*(void)> accessor;
+    Range<T> range;
+    RangeFinder<T> rangeFinder;
 
-    size_t capture() override {
+
+    size_t capture_value() override {
 	T dest = *accessor();
 	captures.push_back(dest);
 	return captures.size() - 1;
     }
 
-    void deploy_sample() override {
+    void capture_range() override {
+        rangeFinder.capture(*accessor());
+    }
+
+    void deploy_sample_value() override {
 	*accessor() = sample;
     }
 };
@@ -58,7 +64,5 @@ struct OutputT : public Output {
     }
 };
 
-
-} // namespace parameter
 
 #endif //SURROGATE_TOOLKIT_PARAMETER_H

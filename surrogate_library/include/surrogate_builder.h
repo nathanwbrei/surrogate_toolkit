@@ -12,10 +12,7 @@
 #include <vector>
 
 #include "parameter.h"
-#include "parameter_range.h"
-
-using namespace parameter;
-using namespace ranges;
+#include "range.h"
 
 
 struct Surrogate {
@@ -28,7 +25,7 @@ struct Surrogate {
     explicit Surrogate(std::function<void(void)> f) : original_function(std::move(f)) {};
 
     template <typename T>
-    void input(std::string param_name, T* slot) {
+    void input(std::string param_name, T* slot, std::variant<FiniteSet<T>,Interval<T>> range = Interval<T>()) {
 	auto input = new InputT<T>;
 	input->name = param_name;
 	input->accessor = [=](){return slot;};
@@ -36,7 +33,7 @@ struct Surrogate {
     }
 
     template<typename T>
-    void input(std::string param_name, std::function<T*()> accessor) {
+    void input(std::string param_name, std::function<T*()> accessor, std::variant<FiniteSet<T>,Interval<T>> range = Interval<T>()) {
         auto input = new InputT<T>;
         input->name = param_name;
         input->accessor = accessor;
@@ -60,7 +57,7 @@ struct Surrogate {
     }
 
     template<typename T>
-    void input_output(std::string param_name, T* slot) {
+    void input_output(std::string param_name, T* slot, std::variant<FiniteSet<T>,Interval<T>> range = Interval<T>()) {
         input<T>(param_name, slot);
         output<T>(param_name, slot);
     }
@@ -88,15 +85,26 @@ struct Surrogate {
 
     void train_model_on_samples() {};
 
-    void call_original();
+    void call_original() {
+        original_function();
+    };
 
-    void call_model();
+    void call_model() {
+        // model.infer();
+    };
+
+
+    void capture_input_distribution() {
+	for (auto& input: inputs) {
+	    input->capture_range();
+	}
+    }
 
 
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
         for (auto& input: inputs) {
-            input->capture();
+            input->capture_value();
         }
         original_function();
         for (auto& output: outputs) {
@@ -108,8 +116,8 @@ struct Surrogate {
     /// This entails writing _into_ args, which means they need to be lvalues
     void call_original_with_sampled_inputs() {
         for (auto& input: inputs) {
-            input->deploy_sample();
-            input->capture();
+            input->deploy_sample_value();
+            input->capture_value();
         }
 	original_function();
 	for (auto& output: outputs) {
