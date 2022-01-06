@@ -11,9 +11,9 @@ install(TARGETS surrogate_library DESTINATION lib)
 
 set(SURROGATE_LIBRARY_TEST_SOURCES
         test/experiment_tests.cpp
-        test/basic_capturing_tests.cpp
-        test/basic_sampling_tests.cpp
-        test/basic_sampling_tests.cpp
+        test/capturing_tests.cpp
+        test/sampling_tests.cpp
+        test/sampling_tests.cpp
         test/pytorch_model_tests.cpp
         )
 add_executable("surrogate_library_tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
