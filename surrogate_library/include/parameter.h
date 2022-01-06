@@ -15,6 +15,7 @@ enum class ParameterCategory {
 struct Input {
     std::string name;
     ParameterCategory category = ParameterCategory::Continuous;
+    virtual void bind(void* ptr) = 0;
     virtual size_t capture_value() = 0;
     virtual void capture_range() = 0;
     virtual void deploy_sample_value() = 0;
@@ -27,6 +28,10 @@ struct InputT : public Input {
     T sample;
     std::function<T*(void)> accessor;
     Range<T> range;
+
+    void bind(void* ptr) override {
+        accessor = [=](){return (T*) ptr;};
+    }
 
     size_t capture_value() override {
 	T dest = *accessor();
@@ -48,6 +53,7 @@ struct Output {
     ParameterCategory category = ParameterCategory::Continuous;
     virtual size_t capture() = 0;
     virtual ~Output() = default;
+    virtual void bind(void* ptr) = 0;
 };
 
 template <typename T>
@@ -59,6 +65,10 @@ struct OutputT : public Output {
 	T val = getter();
 	captures.push_back(val);
 	return captures.size() - 1;
+    }
+
+    void bind(void* ptr) override {
+	getter = [=](){return *((T*) ptr);};
     }
 };
 

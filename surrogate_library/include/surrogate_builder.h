@@ -87,6 +87,23 @@ struct Surrogate {
 
     void train_model_on_samples() {};
 
+    void bind(const std::vector<void*>& input_pointers, const std::vector<void*>& output_pointers) {
+        size_t inputs_size = inputs.size();
+        size_t outputs_size = outputs.size();
+        if (inputs_size != input_pointers.size()) {
+            throw std::range_error("Wrong size: input_pointers");
+        }
+	if (outputs_size != output_pointers.size()) {
+	    throw std::range_error("Wrong size: output_pointers");
+	}
+	for (size_t i = 0; i<inputs_size; ++i) {
+	    inputs[i]->bind(input_pointers[i]);
+	}
+	for (size_t i = 0; i<outputs_size; ++i) {
+	    outputs[i]->bind(output_pointers[i]);
+	}
+    }
+
     void call_original() {
         original_function();
     };
@@ -126,7 +143,6 @@ struct Surrogate {
 	    output->capture();
 	}
     };
-
 };
 
 inline Surrogate make_surrogate(std::function<void()> f) {

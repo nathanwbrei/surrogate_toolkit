@@ -4,6 +4,7 @@
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+#include <cstdarg>
 
 #include "experiments.h"
 using namespace experiments;
@@ -205,4 +206,23 @@ TEST_CASE("Perfect forwarding with lvalues") {
     int a = 5;
     sillies.emplace_back(a);
     REQUIRE(sillies[1].x == 5);
+}
+
+struct SM {
+    int call(int count,...) {
+        int acc = 0;
+	std::va_list args;
+	va_start(args, count);
+	for (int i=0; i<count; ++i) {
+	    acc += va_arg(args, int);
+	}
+	va_end(args);
+        return acc;
+    }
+};
+
+TEST_CASE("Varargs") {
+    SM sm;
+    REQUIRE (sm.call(0) == 0);
+    REQUIRE (sm.call(3,1,2,3) == 6);
 }
