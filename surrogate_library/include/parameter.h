@@ -27,8 +27,6 @@ struct InputT : public Input {
     T sample;
     std::function<T*(void)> accessor;
     Range<T> range;
-    RangeFinder<T> rangeFinder;
-
 
     size_t capture_value() override {
 	T dest = *accessor();
@@ -37,7 +35,7 @@ struct InputT : public Input {
     }
 
     void capture_range() override {
-        rangeFinder.capture(*accessor());
+        range.capture(*accessor());
     }
 
     void deploy_sample_value() override {

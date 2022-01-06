@@ -8,61 +8,54 @@
 
 #include <set>
 #include <map>
+#include <vector>
 #include <limits>
+#include <ostream>
 
+
+enum class RangeType {Interval, FiniteSet };
 
 template <typename T>
 struct Range {
-    virtual bool contains(T) = 0;
-    virtual ~Range() = default;
-};
-
-template <typename T>
-struct FiniteSet : public Range<T> {
+    RangeType rangeType;
     std::set<T> items;
-    FiniteSet(std::set<T> items) : items(items) {};
-    bool contains(T t) override {
-        return (items.find(t) != items.end());
-    }
-};
-
-
-template <typename T>
-struct Interval : public Range<T> {
     T lower_bound_inclusive = std::numeric_limits<T>::lowest();
     T upper_bound_inclusive = std::numeric_limits<T>::max();
 
-    Interval() {};
-    Interval(T lower, T upper) : lower_bound_inclusive(lower), upper_bound_inclusive(upper) {}
-    bool contains(T t) override {
-        return (t = lower_bound_inclusive) && (t <= upper_bound_inclusive);
+    // For range-finding
+    size_t remaining_captures = 10000;
+    std::map<T, size_t> distribution;
+    T bucket_count = 50;
+
+    Range() : rangeType(RangeType::Interval) {};
+    Range(std::set<T> items) : rangeType(RangeType::FiniteSet), items(std::move(items)) {}
+    Range(T lower, T upper) : rangeType(RangeType::Interval), lower_bound_inclusive(lower), upper_bound_inclusive(upper) {}
+
+    bool contains(T t) {
+        if (rangeType == RangeType::FiniteSet) {
+	    return (items.find(t) != items.end());
+	}
+        else {
+	    return (t >= lower_bound_inclusive) && (t <= upper_bound_inclusive);
+	}
     }
-};
-
-
-template <typename T>
-struct RangeFinder {
-    size_t remaining_captures;
-    size_t bucket_count = 50;
-    T lower_bound_inclusive = std::numeric_limits<T>::lowest();
-    T upper_bound_inclusive = std::numeric_limits<T>::max();
-    std::map<T, size_t> counts;
-
-    RangeFinder(size_t max_captures = 10000) : remaining_captures(max_captures) {};
 
     void capture(T t) {
 	if (t < lower_bound_inclusive) lower_bound_inclusive = t;
 	if (t > upper_bound_inclusive) upper_bound_inclusive = t;
+	if (rangeType == RangeType::FiniteSet) {
+	    items.insert(t);
+	}
 	if (remaining_captures > 0) {
 	    remaining_captures -= 1;
-	    counts[t] += 1;
+	    distribution[t] += 1;
 	}
     }
 
     std::vector<size_t> make_histogram() {
 	T bucket_size = (upper_bound_inclusive - lower_bound_inclusive) / bucket_count;
 	std::vector<size_t> hist(bucket_count, 0);
-	for (auto pair : counts) {
+	for (auto pair : distribution) {
 	    size_t bucket = (pair.first - lower_bound_inclusive) / bucket_size;
 	    hist[bucket] += pair.second;
 	}
@@ -72,9 +65,9 @@ struct RangeFinder {
     void report(std::ostream &os) {
 	os << "Min = " << lower_bound_inclusive << std::endl;
 	os << "Max = " << upper_bound_inclusive << std::endl;
-	os << "Distribution = " << upper_bound_inclusive << std::endl;
-	if (counts.size() < bucket_count) {
-	    for (auto &pair : counts) {
+	os << "Distribution = " << std::endl;
+	if (distribution.size() < bucket_count) {
+	    for (auto &pair : distribution) {
 		os << pair.first << ": " << pair.second << std::endl;
 	    }
 	    os << std::endl;

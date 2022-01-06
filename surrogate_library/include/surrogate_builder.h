@@ -25,17 +25,19 @@ struct Surrogate {
     explicit Surrogate(std::function<void(void)> f) : original_function(std::move(f)) {};
 
     template <typename T>
-    void input(std::string param_name, T* slot, std::variant<FiniteSet<T>,Interval<T>> range = Interval<T>()) {
+    void input(std::string param_name, T* slot, Range<T> range = Range<T>()) {
 	auto input = new InputT<T>;
 	input->name = param_name;
+	input->range = std::move(range);
 	input->accessor = [=](){return slot;};
 	inputs.push_back(std::unique_ptr<Input>(input));
     }
 
     template<typename T>
-    void input(std::string param_name, std::function<T*()> accessor, std::variant<FiniteSet<T>,Interval<T>> range = Interval<T>()) {
+    void input(std::string param_name, std::function<T*()> accessor, Range<T> range = Range<T>()) {
         auto input = new InputT<T>;
         input->name = param_name;
+        input->range = std::move(range);
         input->accessor = accessor;
         inputs.push_back(std::unique_ptr<Input>(input));
     }
@@ -57,8 +59,8 @@ struct Surrogate {
     }
 
     template<typename T>
-    void input_output(std::string param_name, T* slot, std::variant<FiniteSet<T>,Interval<T>> range = Interval<T>()) {
-        input<T>(param_name, slot);
+    void input_output(std::string param_name, T* slot, Range<T> range = Range<T>()) {
+        input<T>(param_name, slot, range);
         output<T>(param_name, slot);
     }
 
