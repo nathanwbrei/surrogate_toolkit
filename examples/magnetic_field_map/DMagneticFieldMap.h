@@ -6,7 +6,7 @@
 #ifndef SURROGATE_TOOLKIT_DMAGNETICFIELDMAP_H
 #define SURROGATE_TOOLKIT_DMAGNETICFIELDMAP_H
 
-#include "DVector3.h"
+#include "TVector3.h"
 
 class DMagneticFieldMap{
 public:
