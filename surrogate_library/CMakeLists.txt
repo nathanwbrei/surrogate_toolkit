@@ -15,7 +15,8 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/sampling_tests.cpp
         test/sampling_tests.cpp
         test/pytorch_model_tests.cpp
-        test/range_tests.cc
+        test/pytorch_tests.cpp
+        test/range_tests.cpp
         )
 add_executable("surrogate_library_tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(surrogate_library_tests PRIVATE include)

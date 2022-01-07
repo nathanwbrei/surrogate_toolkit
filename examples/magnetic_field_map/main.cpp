@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include <JANA/JApplication.h>
+
 int main() {
     std::cout << "Hello from magnetic_field_map_before" << std::endl;
 }
