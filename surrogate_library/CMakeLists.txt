@@ -2,7 +2,7 @@
 find_package(Torch REQUIRED)
 
 
-set(SURROGATE_LIBRARY_SOURCES src/surrogate_builder.cpp)
+set(SURROGATE_LIBRARY_SOURCES src/surrogate.cpp src/model.cpp)
 add_library(surrogate_library STATIC ${SURROGATE_LIBRARY_SOURCES})
 target_include_directories(surrogate_library PRIVATE include ${TORCH_INCLUDE_DIRS})
 target_link_libraries(surrogate_library ${TORCH_LIBRARIES})

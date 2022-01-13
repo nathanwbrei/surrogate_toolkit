@@ -4,7 +4,7 @@
 
 
 #include <catch.hpp>
-#include "surrogate_builder.h"
+#include "surrogate.h"
 
 int func(int a, int& b, const int& c, int&& d, int* e, const int* f) {
     return a + b + c + d + *e + *f;

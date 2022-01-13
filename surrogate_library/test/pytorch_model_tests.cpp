@@ -5,7 +5,7 @@
 #include <catch.hpp>
 #include "pytorch_model.h"
 
-#include "surrogate_builder.h"
+#include "surrogate.h"
 
 double square(double x);
 

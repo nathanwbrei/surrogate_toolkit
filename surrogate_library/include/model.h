@@ -7,6 +7,7 @@
 #define SURROGATE_TOOLKIT_MODEL_H
 
 #include "parameter.h"
+#include <iosfwd>  // Forward decls for std::ostream
 
 
 struct Model { // This is an abstract class
@@ -15,6 +16,7 @@ struct Model { // This is an abstract class
     std::vector<std::shared_ptr<Output>> outputs;
     std::map<std::string, std::shared_ptr<Input>> input_map;
     std::map<std::string, std::shared_ptr<Output>> output_map;
+    size_t captured_rows;
 
     template <typename T>
     void input(std::string param_name, Range<T> range = Range<T>()) {
@@ -101,16 +103,13 @@ struct Model { // This is an abstract class
     // We want to be able to inherit from this
     virtual ~Model() = default;
 
-
     // Train takes all of the captures associated with each parameter
     void train(std::vector<std::unique_ptr<Input>>& inputs, std::vector<std::unique_ptr<Output>>& outputs) = delete;
 
     // Infer takes the sample associated with each parameter
     void infer(std::vector<std::unique_ptr<Input>>& inputs, std::vector<std::unique_ptr<Output>>& outputs) = delete;
 
-    void dump_captures_to_csv(std::string filename) {
-
-    }
+    void dump_captures_to_csv(std::ostream&);
 
 };
 

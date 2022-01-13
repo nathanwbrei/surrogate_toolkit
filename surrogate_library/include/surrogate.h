@@ -3,8 +3,8 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 
-#ifndef SURROGATE_TOOLKIT_SURROGATE_BUILDER_H
-#define SURROGATE_TOOLKIT_SURROGATE_BUILDER_H
+#ifndef SURROGATE_TOOLKIT_SURROGATE_H
+#define SURROGATE_TOOLKIT_SURROGATE_H
 
 #include <set>
 #include <utility>
@@ -150,6 +150,7 @@ struct Surrogate {
         for (auto& output: output_bindings) {
             output->capture();
         }
+        model->captured_rows++;
     }
 
     /// From some set of sampled _inputs_ (to be generated algorithmically), call the original function.
@@ -163,8 +164,9 @@ struct Surrogate {
 	for (auto& output: output_bindings) {
 	    output->capture();
 	}
+	model->captured_rows++;
     };
 };
 
 
-#endif //SURROGATE_TOOLKIT_SURROGATE_BUILDER_H
+#endif //SURROGATE_TOOLKIT_SURROGATE_H

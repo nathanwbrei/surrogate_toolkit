@@ -2,8 +2,10 @@
 // Copyright 2021, Jefferson Science Associates, LLC.
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
+#include "surrogate.h"
+
 #include <catch.hpp>
-#include "surrogate_builder.h"
+#include <iostream>
 
 int mult(int x, int y) {
     return x * y;
@@ -104,6 +106,8 @@ TEST_CASE("Capture int(int&,int) [input and output]") {
     REQUIRE(surrogate.get_captured_input<int>(0, 1) == 5);
     REQUIRE(surrogate.get_captured_output<int>(0, 0) == 22);
     REQUIRE(surrogate.get_captured_output<int>(0, 1) == 15);
+
+    m->dump_captures_to_csv(std::cout);
 }
 
 int g = 22;

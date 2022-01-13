@@ -15,25 +15,28 @@ enum class ParameterCategory {
 struct Input {
     std::string name;
     ParameterCategory category = ParameterCategory::Continuous;
+    virtual void stringify(std::ostream&, size_t sample_index) = 0;
     virtual ~Input() = default;
 };
 
 template <typename T>
 struct InputT : public Input {
     std::vector<T> captures;
-    T sample; // TODO: Does this live on param or param binding?
     Range<T> range;
+    void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };
 
 struct Output {
     std::string name;
     ParameterCategory category = ParameterCategory::Continuous;
+    virtual void stringify(std::ostream&, size_t sample_index) = 0;
     virtual ~Output() = default;
 };
 
 template <typename T>
 struct OutputT : public Output {
     std::vector<T> captures;
+    void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };
 
 
