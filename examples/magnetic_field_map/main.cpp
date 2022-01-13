@@ -11,13 +11,24 @@
 #include "DMagneticFieldMapFineMesh.h"
 
 int main() {
-    std::cout << "Hello from magnetic_field_map_before" << std::endl;
     japp = new JApplication;
     auto calib_man = std::make_shared<JCalibrationManager>();
     // calib_man->AddCalibrationGenerator(new JCalibrationGeneratorCCDB);
+    // japp->SetParameterValue("jana:calib_url", "mysql://ccdb_user@hallddb.jlab.org/ccdb");
+    japp->SetParameterValue("jana:calib_url", "file:///cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources");
+    japp->SetParameterValue("jana:resource_dir", "/cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources");
     japp->ProvideService(calib_man);
-    DMagneticFieldMapFineMesh mfmfm(japp);
+    // DMagneticFieldMapFineMesh mfmfm(japp, 1, "Magnets/Solenoid/solenoid_1350A_poisson_20160222");
+    DMagneticFieldMapFineMesh mfmfm(japp, "/cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources/Magnets/Solenoid/finemeshes/solenoid_1350A_poisson_20160222.evio");
 
-    std::cout << mfmfm.GetBz(0.0, 0.0, 0.0) << std::endl;
+    double bx, by, bz;
+    mfmfm.GetField(0.0, 0.0, 0.0, bx, by, bz);
+    std::cout << bx << ", " << by << ", " << bz << std::endl;
+
+    mfmfm.GetField(1.0, 1.0, 1.0, bx, by, bz);
+    std::cout << bx << ", " << by << ", " << bz << std::endl;
+
+    mfmfm.GetField(0.001, 0.001, 0.001, bx, by, bz);
+    std::cout << bx << ", " << by << ", " << bz << std::endl;
 }
 

@@ -20,6 +20,10 @@ using namespace evio;
 
 #include "HDEVIO.h"
 
+DMagneticFieldMapFineMesh::DMagneticFieldMapFineMesh(JApplication *app, string path_to_evio_file)
+{
+    ReadEvioFile(path_to_evio_file);
+}
 
 //---------------------------------
 // DMagneticFieldMapFineMesh    (Constructor)

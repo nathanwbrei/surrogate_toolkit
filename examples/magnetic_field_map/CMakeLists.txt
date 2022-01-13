@@ -6,7 +6,6 @@ set(MAGNETIC_FIELD_MAP_SOURCES
         main.cpp
         DMagneticFieldMapFineMesh.cc
         HDEVIO.cc
-        TVector3.cxx
         )
 
 add_executable(magnetic_field_map ${MAGNETIC_FIELD_MAP_SOURCES})

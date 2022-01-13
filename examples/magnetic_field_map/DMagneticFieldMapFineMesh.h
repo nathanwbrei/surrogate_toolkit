@@ -19,6 +19,7 @@ using std::string;
 
 class DMagneticFieldMapFineMesh:public DMagneticFieldMap{
 public:
+    DMagneticFieldMapFineMesh(JApplication *app, string path_to_evio_file);
     DMagneticFieldMapFineMesh(JApplication *japp, int32_t runnumber=1, string namepath = "Magnets/Solenoid/solenoid_1350_poisson_20130925");
     DMagneticFieldMapFineMesh(JCalibration *jcalib, string namepath = "Magnets/Solenoid/solenoid_1350_poisson_20130925", int32_t runnumber=1);
     virtual ~DMagneticFieldMapFineMesh();
