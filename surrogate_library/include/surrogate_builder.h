@@ -13,16 +13,18 @@
 
 #include "parameter.h"
 #include "range.h"
+#include "model.h"
 
 
 struct Surrogate {
 
     std::function<void(void)> original_function;
-    std::vector<std::unique_ptr<Input>> inputs;
-    std::vector<std::unique_ptr<Output>> outputs;
+    std::shared_ptr<Model> model;
 
 
-    explicit Surrogate(std::function<void(void)> f) : original_function(std::move(f)) {};
+    explicit Surrogate(std::function<void(void)> f) : original_function(std::move(f)) {
+        model = std::make_shared<Model>();
+    };
 
     template <typename T>
     void input(std::string param_name, T* slot, Range<T> range = Range<T>()) {
@@ -30,7 +32,7 @@ struct Surrogate {
 	input->name = param_name;
 	input->range = std::move(range);
 	input->accessor = [=](){return slot;};
-	inputs.push_back(std::unique_ptr<Input>(input));
+	model->inputs.push_back(std::unique_ptr<Input>(input));
     }
 
     template<typename T>
@@ -39,7 +41,7 @@ struct Surrogate {
         input->name = param_name;
         input->range = std::move(range);
         input->accessor = accessor;
-        inputs.push_back(std::unique_ptr<Input>(input));
+        model->inputs.push_back(std::unique_ptr<Input>(input));
     }
 
     template<typename T>
@@ -47,7 +49,7 @@ struct Surrogate {
 	auto output = new OutputT<T>;
 	output->name = param_name;
 	output->getter = [=](){ return *slot; };
-	outputs.push_back(std::unique_ptr<Output>(output));
+	model->outputs.push_back(std::unique_ptr<Output>(output));
     }
 
     template<typename T>
@@ -55,7 +57,7 @@ struct Surrogate {
         auto output = new OutputT<T>;
         output->name = param_name;
         output->getter = [=]() { return getter(); };
-        outputs.push_back(std::unique_ptr<Output>(output));
+        model->outputs.push_back(std::unique_ptr<Output>(output));
     }
 
     template<typename T>
@@ -67,19 +69,19 @@ struct Surrogate {
 
     template <typename T>
     void setSampleInput(size_t parameter_index, T sample_value) {
-        auto* param = dynamic_cast<InputT<T>*>(inputs[parameter_index].get());
+        auto* param = dynamic_cast<InputT<T>*>(model->inputs[parameter_index].get());
         param->sample = sample_value;
     }
 
     template <typename T>
     T getCapturedInput(size_t sample_index, size_t parameter_index) {
-        auto* param = dynamic_cast<InputT<T>*>(inputs[parameter_index].get());
+        auto* param = dynamic_cast<InputT<T>*>(model->inputs[parameter_index].get());
         return param->captures[sample_index];
     }
 
     template <typename T>
     T getCapturedOutput(size_t sample_index, size_t parameter_index) {
-        auto* param = dynamic_cast<OutputT<T>*>(outputs[parameter_index].get());
+        auto* param = dynamic_cast<OutputT<T>*>(model->outputs[parameter_index].get());
         return param->captures[sample_index];
     }
 
@@ -88,8 +90,8 @@ struct Surrogate {
     void train_model_on_samples() {};
 
     void bind(const std::vector<void*>& input_pointers, const std::vector<void*>& output_pointers) {
-        size_t inputs_size = inputs.size();
-        size_t outputs_size = outputs.size();
+        size_t inputs_size = model->inputs.size();
+        size_t outputs_size = model->outputs.size();
         if (inputs_size != input_pointers.size()) {
             throw std::range_error("Wrong size: input_pointers");
         }
@@ -97,10 +99,10 @@ struct Surrogate {
 	    throw std::range_error("Wrong size: output_pointers");
 	}
 	for (size_t i = 0; i<inputs_size; ++i) {
-	    inputs[i]->bind(input_pointers[i]);
+	    model->inputs[i]->bind(input_pointers[i]);
 	}
 	for (size_t i = 0; i<outputs_size; ++i) {
-	    outputs[i]->bind(output_pointers[i]);
+	    model->outputs[i]->bind(output_pointers[i]);
 	}
     }
 
@@ -114,7 +116,7 @@ struct Surrogate {
 
 
     void capture_input_distribution() {
-	for (auto& input: inputs) {
+	for (auto& input: model->inputs) {
 	    input->capture_range();
 	}
     }
@@ -122,11 +124,11 @@ struct Surrogate {
 
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
-        for (auto& input: inputs) {
+        for (auto& input: model->inputs) {
             input->capture_value();
         }
         original_function();
-        for (auto& output: outputs) {
+        for (auto& output: model->outputs) {
             output->capture();
         }
     }
@@ -134,12 +136,12 @@ struct Surrogate {
     /// From some set of sampled _inputs_ (to be generated algorithmically), call the original function.
     /// This entails writing _into_ args, which means they need to be lvalues
     void call_original_with_sampled_inputs() {
-        for (auto& input: inputs) {
+        for (auto& input: model->inputs) {
             input->deploy_sample_value();
             input->capture_value();
         }
 	original_function();
-	for (auto& output: outputs) {
+	for (auto& output: model->outputs) {
 	    output->capture();
 	}
     };

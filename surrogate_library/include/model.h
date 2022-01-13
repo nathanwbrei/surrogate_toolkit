@@ -14,16 +14,16 @@ struct Model { // This is an abstract class
     // We want to be able to inherit from this
     virtual ~Model() = default;
 
+    std::vector<std::shared_ptr<Input>> inputs;
+    std::vector<std::shared_ptr<Output>> outputs;
+
     // Train takes all of the captures associated with each parameter
     void train(std::vector<std::unique_ptr<Input>>& inputs, std::vector<std::unique_ptr<Output>>& outputs) = delete;
 
     // Infer takes the sample associated with each parameter
     void infer(std::vector<std::unique_ptr<Input>>& inputs, std::vector<std::unique_ptr<Output>>& outputs) = delete;
 
-};
-
-struct MemorizingModel : public Model {
-    void write_to_file() {
+    void dump_captures_to_file(std::string filename) {
 
     }
 
