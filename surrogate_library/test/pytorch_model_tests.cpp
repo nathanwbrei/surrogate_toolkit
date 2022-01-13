@@ -10,22 +10,19 @@
 double square(double x);
 
 TEST_CASE("Can we build against pytorch at all?") {
-    PyTorchModel m;
+
+    auto m = std::make_shared<PyTorchModel>();
+    m->input<double>("x", {-3,3});
+    m->output<double>("y");
 
     double x, y;
-    auto s = Surrogate([&](){y = square(x);});
-    s.input("x", &x, {-3,3});
-    s.output("y", &x);
+    auto s = Surrogate([&](){y = square(x);}, m);
+    s.bind_input("x", &x);
+    s.bind_output("y", &y);
 
     for (int i = -3; i<3; ++i) {
         // x =
 	// s.call_original_and_capture();
 
     }
-
-
-
-
-
-
 }

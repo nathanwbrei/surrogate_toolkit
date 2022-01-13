@@ -11,9 +11,9 @@
 #include <variant>
 #include <vector>
 
-#include "parameter.h"
 #include "range.h"
 #include "model.h"
+#include "binding.h"
 
 
 struct Surrogate {
@@ -21,74 +21,93 @@ struct Surrogate {
     std::function<void(void)> original_function;
     std::shared_ptr<Model> model;
 
+    std::vector<std::shared_ptr<InputBinding>> input_bindings;
+    std::vector<std::shared_ptr<OutputBinding>> output_bindings;
+    std::map<std::string, std::shared_ptr<InputBinding>> input_binding_map;
+    std::map<std::string, std::shared_ptr<OutputBinding>> output_binding_map;
 
-    explicit Surrogate(std::function<void(void)> f) : original_function(std::move(f)) {
-        model = std::make_shared<Model>();
-    };
 
-    template <typename T>
-    void input(std::string param_name, T* slot, Range<T> range = Range<T>()) {
-	auto input = new InputT<T>;
-	input->name = param_name;
-	input->range = std::move(range);
-	input->accessor = [=](){return slot;};
-	model->inputs.push_back(std::unique_ptr<Input>(input));
-    }
-
-    template<typename T>
-    void input(std::string param_name, std::function<T*()> accessor, Range<T> range = Range<T>()) {
-        auto input = new InputT<T>;
-        input->name = param_name;
-        input->range = std::move(range);
-        input->accessor = accessor;
-        model->inputs.push_back(std::unique_ptr<Input>(input));
-    }
-
-    template<typename T>
-    void output(std::string param_name, T* slot) {
-	auto output = new OutputT<T>;
-	output->name = param_name;
-	output->getter = [=](){ return *slot; };
-	model->outputs.push_back(std::unique_ptr<Output>(output));
-    }
-
-    template<typename T>
-    void output(std::string param_name, std::function<T()> getter) {
-        auto output = new OutputT<T>;
-        output->name = param_name;
-        output->getter = [=]() { return getter(); };
-        model->outputs.push_back(std::unique_ptr<Output>(output));
-    }
-
-    template<typename T>
-    void input_output(std::string param_name, T* slot, Range<T> range = Range<T>()) {
-        input<T>(param_name, slot, range);
-        output<T>(param_name, slot);
-    }
-
+    explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
+        : original_function(std::move(f)), model(std::move(model)) { };
 
     template <typename T>
-    void setSampleInput(size_t parameter_index, T sample_value) {
-        auto* param = dynamic_cast<InputT<T>*>(model->inputs[parameter_index].get());
+    void bind_input(std::string param_name, T* slot) {
+	auto input = std::make_shared<InputBindingT<T>>();
+	input->slot = slot;
+	input->parameter = model->get_input<T>(param_name);
+	input_bindings.push_back(input);
+	if (input_binding_map.find(param_name) != input_binding_map.end()) {
+	    throw ("Input binding already exists!");
+	}
+	input_binding_map[param_name] = input;
+    }
+
+    template<typename T>
+    void bind_output(std::string param_name, T* slot) {
+	auto output = std::make_shared<OutputBindingT<T>>();
+	output->slot = slot;
+        output->parameter = model->get_output<T>(param_name);
+        output_bindings.push_back(output);
+        if (output_binding_map.find(param_name) != output_binding_map.end()) {
+            throw ("Output binding already exists!");
+        }
+        output_binding_map[param_name] = output;
+    }
+
+    template<typename T>
+    void bind_input_output(std::string param_name, T* slot) {
+        bind_input<T>(param_name, slot);
+        bind_output<T>(param_name, slot);
+    }
+
+    template<typename T>
+    std::shared_ptr<InputBindingT<T>> get_input_binding(size_t index) {
+        if (index >= input_bindings.size()) {
+            throw "Index out of range for input binding";
+        }
+        auto input = input_bindings[index];
+        auto downcasted = std::dynamic_pointer_cast<InputBindingT<T>>(input);
+        if (downcasted == nullptr) {
+            throw "Wrong type for input binding";
+        }
+        return downcasted;
+    }
+
+    template<typename T>
+    std::shared_ptr<OutputBindingT<T>> get_output_binding(size_t index) {
+        if (index >= output_bindings.size()) {
+            throw "Index out of range for output binding";
+        }
+        auto output = output_bindings[index];
+        auto downcasted = std::dynamic_pointer_cast<OutputBindingT<T>>(output);
+        if (downcasted == nullptr) {
+            throw "Wrong type for output binding";
+        }
+        return downcasted;
+    }
+
+    template <typename T>
+    void set_sample_input(size_t parameter_index, T sample_value) {
+        auto param = get_input_binding<T>(parameter_index);
         param->sample = sample_value;
     }
 
     template <typename T>
-    T getCapturedInput(size_t sample_index, size_t parameter_index) {
-        auto* param = dynamic_cast<InputT<T>*>(model->inputs[parameter_index].get());
+    T get_captured_input(size_t sample_index, size_t parameter_index) {
+        auto param = model->get_input<T>(parameter_index);
         return param->captures[sample_index];
     }
 
     template <typename T>
-    T getCapturedOutput(size_t sample_index, size_t parameter_index) {
-        auto* param = dynamic_cast<OutputT<T>*>(model->outputs[parameter_index].get());
+    T get_captured_output(size_t sample_index, size_t parameter_index) {
+        auto param = model->get_output<T>(parameter_index);
         return param->captures[sample_index];
     }
 
     void load_args_into_params() {};
 
     void train_model_on_samples() {};
-
+/*
     void bind(const std::vector<void*>& input_pointers, const std::vector<void*>& output_pointers) {
         size_t inputs_size = model->inputs.size();
         size_t outputs_size = model->outputs.size();
@@ -105,7 +124,7 @@ struct Surrogate {
 	    model->outputs[i]->bind(output_pointers[i]);
 	}
     }
-
+*/
     void call_original() {
         original_function();
     };
@@ -116,19 +135,19 @@ struct Surrogate {
 
 
     void capture_input_distribution() {
-	for (auto& input: model->inputs) {
-	    input->capture_range();
+	for (auto& input: input_bindings) {
+	    // input->capture_range();
 	}
     }
 
 
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
-        for (auto& input: model->inputs) {
-            input->capture_value();
+        for (auto& input: input_bindings) {
+            input->capture();
         }
         original_function();
-        for (auto& output: model->outputs) {
+        for (auto& output: output_bindings) {
             output->capture();
         }
     }
@@ -136,19 +155,16 @@ struct Surrogate {
     /// From some set of sampled _inputs_ (to be generated algorithmically), call the original function.
     /// This entails writing _into_ args, which means they need to be lvalues
     void call_original_with_sampled_inputs() {
-        for (auto& input: model->inputs) {
-            input->deploy_sample_value();
-            input->capture_value();
+        for (auto& input: input_bindings) {
+            input->deploy_sample();
+            input->capture();
         }
 	original_function();
-	for (auto& output: model->outputs) {
+	for (auto& output: output_bindings) {
 	    output->capture();
 	}
     };
 };
 
-inline Surrogate make_surrogate(std::function<void()> f) {
-    return Surrogate(std::move(f));
-}
 
 #endif //SURROGATE_TOOLKIT_SURROGATE_BUILDER_H
