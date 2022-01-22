@@ -156,7 +156,7 @@ struct Surrogate {
     };
 
     void call_model() {
-        // model.infer();
+        model->infer(*this);
     };
 
 

@@ -18,7 +18,7 @@ class Model { // This is an abstract class
     std::vector<std::shared_ptr<Output>> outputs;
     std::map<std::string, std::shared_ptr<Input>> input_map;
     std::map<std::string, std::shared_ptr<Output>> output_map;
-    size_t captured_rows;
+    size_t captured_rows = 0;
 
 public:
     template <typename T>
