@@ -74,6 +74,19 @@ struct Surrogate {
     }
 
     template<typename T>
+    std::shared_ptr<InputBindingT<T>> get_input_binding(std::string name) {
+        auto pair = input_binding_map.find(name);
+        if (pair == input_binding_map.end()) {
+            throw ("Invalid input parameter name");
+        }
+        auto downcasted_input = std::dynamic_pointer_cast<InputBindingT<T>>(pair->second);
+        if (downcasted_input == nullptr) {
+            throw("Wrong type for input parameter");
+        }
+        return downcasted_input;
+    }
+
+    template<typename T>
     std::shared_ptr<OutputBindingT<T>> get_output_binding(size_t index) {
         if (index >= output_bindings.size()) {
             throw "Index out of range for output binding";
@@ -84,6 +97,19 @@ struct Surrogate {
             throw "Wrong type for output binding";
         }
         return downcasted;
+    }
+
+    template<typename T>
+    std::shared_ptr<OutputBindingT<T>> get_output_binding(std::string name) {
+        auto pair = output_binding_map.find(name);
+        if (pair == output_binding_map.end()) {
+            throw ("Invalid output parameter name");
+        }
+        auto downcasted_output = std::dynamic_pointer_cast<OutputBindingT<T>>(pair->second);
+        if (downcasted_output == nullptr) {
+            throw("Wrong type for input parameter");
+        }
+        return downcasted_output;
     }
 
     template <typename T>

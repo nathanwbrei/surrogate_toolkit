@@ -9,8 +9,10 @@
 #include "parameter.h"
 #include <iosfwd>  // Forward decls for std::ostream
 
+class Surrogate;
 
-struct Model { // This is an abstract class
+class Model { // This is an abstract class
+    friend class Surrogate;
 
     std::vector<std::shared_ptr<Input>> inputs;
     std::vector<std::shared_ptr<Output>> outputs;
@@ -18,6 +20,7 @@ struct Model { // This is an abstract class
     std::map<std::string, std::shared_ptr<Output>> output_map;
     size_t captured_rows;
 
+public:
     template <typename T>
     void input(std::string param_name, Range<T> range = Range<T>()) {
         auto input = std::make_shared<InputT<T>>();
@@ -100,14 +103,16 @@ struct Model { // This is an abstract class
         return downcasted_output;
     }
 
+    size_t get_capture_count() { return captured_rows; }
+
     // We want to be able to inherit from this
     virtual ~Model() = default;
 
     // Train takes all of the captures associated with each parameter
-    void train(std::vector<std::unique_ptr<Input>>& inputs, std::vector<std::unique_ptr<Output>>& outputs) = delete;
+    virtual void train() {};
 
     // Infer takes the sample associated with each parameter
-    void infer(std::vector<std::unique_ptr<Input>>& inputs, std::vector<std::unique_ptr<Output>>& outputs) = delete;
+    virtual void infer(Surrogate&) {};
 
     void dump_captures_to_csv(std::ostream&);
 
