@@ -10,6 +10,24 @@ int func(int a, int& b, const int& c, int&& d, int* e, const int* f) {
     return a + b + c + d + *e + *f;
 }
 
+TEST_CASE("set all inputs to min") {
+    auto m = std::make_shared<Model>();
+    m->input<int>("a");
+    m->input<int>("b");
+    m->output<int>("c");
+
+    int a,b,c;
+    Surrogate s([&](){c = a+b;}, m);
+    s.bind_input<int32_t>("a", &a);
+    s.bind_input("b", &b);
+    s.bind_output("c", &c);
+
+    InputBindingVisitor v;
+    for (auto input_binding : s.input_bindings) {
+        input_binding->accept(v);
+    }
+}
+
 TEST_CASE("Basic sample") {
 
     auto m = std::make_shared<Model>();
