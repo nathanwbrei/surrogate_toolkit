@@ -11,7 +11,6 @@
 
 struct InputBinding {
     virtual void capture() = 0;
-    virtual void deploy_sample() = 0;
     virtual ~InputBinding() = default;
     virtual void accept(InputBindingVisitor& v) = 0;
 };
@@ -21,14 +20,9 @@ struct InputBindingT : public InputBinding {
 
     std::shared_ptr<InputT<T>> parameter;
     T* slot; // TODO: Replace with accessor or Lens or something when the time comes
-    T sample;
 
     void capture() override {
         parameter->captures.push_back(*slot);
-    }
-
-    void deploy_sample() override {
-        *slot = sample;
     }
 
     void accept(InputBindingVisitor& v) override {

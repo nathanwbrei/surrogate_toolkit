@@ -16,7 +16,7 @@
 #include "binding.h"
 
 
-struct Surrogate {
+class Surrogate {
 
     std::function<void(void)> original_function;
     std::shared_ptr<Model> model;
@@ -26,7 +26,7 @@ struct Surrogate {
     std::map<std::string, std::shared_ptr<InputBinding>> input_binding_map;
     std::map<std::string, std::shared_ptr<OutputBinding>> output_binding_map;
 
-
+public:
     explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
         : original_function(std::move(f)), model(std::move(model)) { };
 
@@ -113,12 +113,6 @@ struct Surrogate {
     }
 
     template <typename T>
-    void set_sample_input(size_t parameter_index, T sample_value) {
-        auto param = get_input_binding<T>(parameter_index);
-        param->sample = sample_value;
-    }
-
-    template <typename T>
     T get_captured_input(size_t sample_index, size_t parameter_index) {
         auto param = model->get_input<T>(parameter_index);
         return param->captures[sample_index];
@@ -179,19 +173,6 @@ struct Surrogate {
         model->captured_rows++;
     }
 
-    /// From some set of sampled _inputs_ (to be generated algorithmically), call the original function.
-    /// This entails writing _into_ args, which means they need to be lvalues
-    void call_original_with_sampled_inputs() {
-        for (auto& input: input_bindings) {
-            input->deploy_sample();
-            input->capture();
-        }
-	original_function();
-	for (auto& output: output_bindings) {
-	    output->capture();
-	}
-	model->captured_rows++;
-    };
 };
 
 
