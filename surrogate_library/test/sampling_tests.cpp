@@ -5,6 +5,68 @@
 
 #include <catch.hpp>
 #include "surrogate.h"
+#include "sampler.h"
+
+
+TEST_CASE("Basic GridSampler") {
+
+    int x = 100;
+    auto i = std::make_shared<InputT<int>>();
+    i->range.lower_bound_inclusive = 3;
+    i->range.upper_bound_inclusive = 5;
+    InputBindingT<int> b;
+    b.parameter = i;
+    b.slot = &x;
+    GridSampler<int> s(b);
+
+    bool result;
+    result = s.next();
+    REQUIRE(result == true);
+    REQUIRE(x == 3);
+
+    result = s.next();
+    REQUIRE(result == true);
+    REQUIRE(x == 4);
+
+    result = s.next();
+    REQUIRE(result == false);
+    REQUIRE(x == 5);
+
+    result = s.next();
+    REQUIRE(result == true); // Wraps around
+    REQUIRE(x == 3);
+}
+
+
+TEST_CASE("Basic FiniteSetSampler") {
+    int x = 100;
+    auto i = std::make_shared<InputT<int>>();
+    i->range.items = {7,8,9};
+    InputBindingT<int> b;
+    b.parameter = i;
+    b.slot = &x;
+    FiniteSetSampler<int> s(b);
+
+    bool result;
+    result = s.next();
+    REQUIRE(result == true);
+    REQUIRE(x == 7);
+
+    result = s.next();
+    REQUIRE(result == true);
+    REQUIRE(x == 8);
+
+    result = s.next();
+    REQUIRE(result == false);
+    REQUIRE(x == 9);
+
+    result = s.next();
+    REQUIRE(result == true); // Wraps around
+    REQUIRE(x == 7);
+}
+
+
+/// Everything below here is old and will probably be discarded
 
 int func(int a, int& b, const int& c, int&& d, int* e, const int* f) {
     return a + b + c + d + *e + *f;
