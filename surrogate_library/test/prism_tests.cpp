@@ -20,19 +20,21 @@ struct Overload : Ts ... {
 template<class... Ts> Overload(Ts...) -> Overload<Ts...>;
 
 
-template <typename T>
-struct Just { T t; };
+template <template<typename> typename F, typename A, typename B>
+struct Functor {
+    static F<B> fmap(std::function<B(A)> fab, F<A> ma);
+};
 
+
+template <typename T> struct Just { T t; };
 struct Nothing {};
-
-template <typename T>
-using Maybe = std::variant<Just<T>, Nothing>;
+template <typename T> using Maybe = std::variant<Just<T>, Nothing>;
 
 TEST_CASE("Maybe constructors work") {
     Maybe<int> m = Just<int>{22};
     REQUIRE(1==1);
 }
-/*
+
 template <typename A, typename B>
 Maybe<B> fmap(std::function<B(A)> fab, Maybe<A> ma) {
     Maybe<B> mb = std::visit(Overload{
@@ -41,30 +43,27 @@ Maybe<B> fmap(std::function<B(A)> fab, Maybe<A> ma) {
               }, ma);
     return mb;
 }
-*/
 
-template <template<typename> typename F, typename A, typename B>
-struct Functor {
-    F<B> fmap(std::function<B(A)> fab, F<A> ma);
-};
 
 template<typename A, typename B>
 struct Functor<Maybe, A, B> {
 
     static Maybe<B> fmap(std::function<B(A)> fab, Maybe<A> ma) {
-        Maybe<B> mb = std::visit(Overload{
-                [=](Just<A> j){ return Maybe<B>{Just<B>{fab(j.t)}};},
-                [=](Nothing){ return Maybe<B>{Nothing{}}; }
-        }, ma);
-        return mb;
+        return ::fmap(fab, ma);
     }
 };
+
+/*
+template <typename A, typename B>
+concept FunctorC
+*/
+
+// https://stackoverflow.com/questions/39725190/monad-interface-in-c
 
 TEST_CASE("Maybe fmap works") {
     Maybe<std::string> ms = Just<std::string>{"Hello!"};
     Maybe<size_t> mi = Functor<Maybe, std::string, size_t>::fmap([](std::string s) {return s.length();}, ms);
     REQUIRE(std::get<Just<size_t>>(mi).t == 6);
-
 }
 
 /*
