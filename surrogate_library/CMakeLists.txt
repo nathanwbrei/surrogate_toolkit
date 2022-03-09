@@ -20,6 +20,7 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/memorizing_tests.cpp
         test/visitor_tests.cpp
         test/prism_tests.cpp
+        test/optics_tests.cpp
         )
 add_executable("surrogate_library_tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(surrogate_library_tests PRIVATE include)
