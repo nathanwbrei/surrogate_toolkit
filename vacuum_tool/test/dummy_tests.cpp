@@ -4,6 +4,8 @@
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+#include <dwarf.h>
+#include <libdwarf.h>
 
 TEST_CASE("Dummy test cases for vacuum tool") {
     SECTION("JustForFun") {
