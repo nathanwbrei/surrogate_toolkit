@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <iostream>
 #include "pin.H"
+#include "utils.hpp"
 
 FILE* trace;
 
 std::vector<std::string> routine_names;
-uint64_t current_routine;
-
+uint64_t current_routine = 0;
+bool in_target_routine = false;
 
 VOID record_read_ins(VOID* ip, VOID* addr) {
     fprintf(trace, "%p: R %p\n", ip, addr);
@@ -59,7 +60,7 @@ VOID instrument_ins(INS ins, VOID* v) {
 // Called every time a _new_ routine is _executed_
 void instrument_rtn(RTN rtn, VOID* v) {
 
-    std::string rtn_name = RTN_Name(rtn);
+    std::string rtn_name = demangle(RTN_Name(rtn));
     ADDRINT rtn_address = RTN_Address(rtn);
 
     routine_names.push_back(rtn_name);

@@ -6,14 +6,13 @@
 #include "catch.hpp"
 #include <dwarf.h>
 #include <libdwarf.h>
+#include "utils.hpp"
 
-TEST_CASE("Dummy test cases for vacuum tool") {
-    SECTION("JustForFun") {
-        REQUIRE(1 == 1);
-    }
-    SECTION("AndAnother") {
-        REQUIRE(2 == 2);
-    }
+
+TEST_CASE("Demangling a string") {
+    std::string name = "__Z7target1id";   // macOS does this!
+    auto result = demangle(name);
+    REQUIRE(result == "target1(int, double)");
 }
 
 

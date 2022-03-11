@@ -10,7 +10,7 @@ target_link_libraries(vacuum_tool ${LIBDWARF_LIBRARY})
 
 set(VACUUM_TOOL_TEST_SOURCES test/dummy_tests.cpp)
 add_executable("vacuum_tool_tests" ${VACUUM_TOOL_TEST_SOURCES})
-target_include_directories(vacuum_tool_tests PRIVATE ${LIBDWARF_INCLUDE_DIRS})
+target_include_directories(vacuum_tool_tests PRIVATE src ${LIBDWARF_INCLUDE_DIRS})
 target_link_libraries(vacuum_tool_tests ${LIBDWARF_LIBRARY})
 
 install(TARGETS vacuum_tool DESTINATION bin)
