@@ -4,26 +4,32 @@
 #include "pin.H"
 #include "utils.hpp"
 
-FILE* trace;
+// FILE* trace;
 
 std::vector<std::string> routine_names;
-uint64_t current_routine = 0;
+uint64_t current_routine = -1;
 bool in_target_routine = false;
 
 VOID record_read_ins(VOID* ip, VOID* addr) {
-    fprintf(trace, "%p: R %p\n", ip, addr);
+    if (in_target_routine) {
+        printf("%p: R %p\n", ip, addr);
+    }
 }
 
 VOID record_write_ins(VOID* ip, VOID* addr, UINT32 memop) {
-    fprintf(trace, "%p: W %p %d\n", ip, addr, memop);
+    if (in_target_routine) {
+        printf("%p: W %p %d\n", ip, addr, memop);
+    }
 }
 
 VOID record_enter_rtn(UINT64 routine_id, VOID* addr) {
-    fprintf(trace, "%p: Entering %s (%llu)\n", addr, routine_names[routine_id].c_str(), routine_id);
+    in_target_routine = true;
+    printf("%p: Entering %s (%llu)\n", addr, routine_names[routine_id].c_str(), routine_id);
 }
 
 VOID record_exit_rtn(UINT64 routine_id, VOID* addr) {
-    fprintf(trace, "%p: Exiting %s (%llu)\n", addr, routine_names[routine_id].c_str(), routine_id);
+    in_target_routine = false;
+    printf("%p: Exiting %s (%llu)\n", addr, routine_names[routine_id].c_str(), routine_id);
 }
 
 
@@ -65,28 +71,29 @@ void instrument_rtn(RTN rtn, VOID* v) {
 
     routine_names.push_back(rtn_name);
     current_routine++;
+    if (rtn_name == "target5(int, int)") {
+        printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
 
-    printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
+        RTN_Open(rtn);
+        // Insert a call to record_enter_rtn at the routine's entry point
+        RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_enter_rtn,
+                       IARG_UINT64, current_routine,
+                       IARG_ADDRINT, rtn_address,
+                       IARG_END);
 
-    RTN_Open(rtn);
-    // Insert a call to record_enter_rtn at the routine's entry point
-    RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_enter_rtn,
-                   IARG_UINT64, current_routine,
-                   IARG_ADDRINT, rtn_address,
-                   IARG_END);
-
-    // Insert a call to record_exit_rtn at the routine's exit point
-    // (Warning: PIN might not find all exit points!)
-    RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR) record_exit_rtn,
-                   IARG_UINT64, current_routine,
-                   IARG_ADDRINT, rtn_address,
-                   IARG_END);
-    RTN_Close(rtn);
+        // Insert a call to record_exit_rtn at the routine's exit point
+        // (Warning: PIN might not find all exit points!)
+        RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR) record_exit_rtn,
+                       IARG_UINT64, current_routine,
+                       IARG_ADDRINT, rtn_address,
+                       IARG_END);
+        RTN_Close(rtn);
+    }
 }
 
 VOID instrument_finish(INT32 code, VOID* v) {
-    fprintf(trace, "#eof\n");
-    fclose(trace);
+    // printf("#eof\n");
+    // fclose(trace);
 }
 
 INT32 print_usage() {
@@ -99,7 +106,7 @@ int main(int argc, char* argv[]) {
     PIN_InitSymbols();
     if (PIN_Init(argc, argv)) return print_usage();
 
-    trace = fopen("pinatrace.out", "w");
+    // trace = fopen("pinatrace.out", "w");
 
     RTN_AddInstrumentFunction(instrument_rtn, 0);
     INS_AddInstrumentFunction(instrument_ins, 0);

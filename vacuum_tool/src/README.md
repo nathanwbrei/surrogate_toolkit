@@ -9,6 +9,14 @@
 3. `make`. No CMake support yet. Builds in-source to `obj-intel64` directory
 4. $PIN_ROOT/pin -t obj-intel64/pinatrace.dylib -- ../../cmake-build-debug-local/vacuum_target/vaccum_target
 
+```bash
+export PIN_ROOT=/Users/nbrei/projects/surrogate/Pin/pin-3.22-98547-g7a303a835-clang-mac/
+export VACUUMTARGET=/Users/nbrei/projects/surrogate/surrogate_toolkit/cmake-build-debug-local/vacuum_target/vacuum_target
+export VACUUMTOOL=/Users/nbrei/projects/surrogate/surrogate_toolkit/vacuum_tool/src/obj-intel64/pinatrace.dylib
+make
+$PIN_ROOT/pin -t $VACUUMTOOL -- $VACUUMTARGET
+```
+
 ## Sources
 
 [1]: https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-binary-instrumentation-tool-downloads.html
