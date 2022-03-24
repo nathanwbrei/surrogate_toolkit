@@ -151,11 +151,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DW_PR_DSx "llx"
 #define DW_PR_DUu "llu"
 #define DW_PR_DSd "lld"
-#ifdef HAVE_UNUSED_ATTRIBUTE
-#define  UNUSEDARG __attribute__ ((unused))
-#else
-#define  UNUSEDARG
-#endif
+#define UNUSEDARG __attribute__ ((unused))
 
 
 struct srcfilesdata {
@@ -1101,7 +1097,7 @@ print_die_data_i(Dwarf_Debug dbg, Dwarf_Die print_me,
         exit(1);
     }
     if (res == DW_DLV_NO_ENTRY) {
-        name = "<no DW_AT_name attr>";
+        name = (char*) "<no DW_AT_name attr>";
     }
     res = dwarf_tag(print_me,&tag,errp);
     if (res != DW_DLV_OK) {
