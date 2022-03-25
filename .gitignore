@@ -1,5 +1,6 @@
-
 .idea/
+deps/
+build/
 cmake-build*/
 vacuum_tool/src/obj*/
 pin.log

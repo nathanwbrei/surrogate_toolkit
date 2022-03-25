@@ -1,6 +1,7 @@
 
-#find_package(libdwarf)
-set(LIBDWARF_INCLUDE_DIRS ${LIBDWARF_DIR}/include/libdwarf-0)
+#find_package(libdwarf REQUIRED)
+#TODO: Access libdwarf as a CMake target instead
+set(LIBDWARF_INCLUDE_DIRS ${LIBDWARF_DIR}/include/libdwarf)
 set(LIBDWARF_LIBRARY ${LIBDWARF_DIR}/lib/libdwarf.a)
 
 find_package(ZLIB)

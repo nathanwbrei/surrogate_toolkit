@@ -8,6 +8,7 @@
 
 #include "parameter.h"
 #include <iosfwd>  // Forward decls for std::ostream
+#include <memory>
 
 class Surrogate;
 

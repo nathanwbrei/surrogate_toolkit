@@ -26,8 +26,11 @@ if [[ $MACOS -eq 1 ]]; then
     wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip
     unzip libtorch-macos-1.10.1.zip
 else
-    wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
-    unzip libtorch-cxx11-abi-shared-with-deps-1.11.0+cpu.zip
+    # If you are getting weird linker errors mentioning GLIBCXX and basic_string, it may have to do with the cxx11 ABI change
+    # In which case try this version instead:
+    #    wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
+    wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
+    unzip libtorch-shared-with-deps-1.11.0+cpu.zip
 fi
 
 # Download PIN
@@ -44,11 +47,24 @@ fi
 # Build and install JANA2
 git clone http://github.com/JeffersonLab/JANA2
 mkdir JANA2/install
-export JANA_HOME=JANA2/install
+export JANA_HOME=`pwd`/JANA2/install
 mkdir JANA2/build
 cd JANA2/build
 cmake .. -DCMAKE_INSTALL_PREFIX=$JANA_HOME
 make -j8 install
+cd ../..
+
+# Build and install libdwarf
+#git clone https://github.com/davea42/libdwarf-code libdwarf
+wget https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
+tar -xf libdwarf-0.3.4.tar.xz
+mkdir libdwarf-0.3.4/build
+mkdir libdwarf-0.3.4/install
+cd libdwarf-0.3.4/build
+cmake .. -DCMAKE_INSTALL_PREFIX=$DEPSDIR/libdwarf-0.3.4/install
+make install
+
 
 echo "Download succeeded!"
-echo "Pass these variables to CMake:"
+echo "Pass to CMake:"
+echo "-DCMAKE_PREFIX_PATH=\"$DEPSDIR/libtorch;$DEPSDIR/JANA2/install;$DEPSDIR/libdwarf-0.3.4/install\""

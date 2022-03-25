@@ -4,6 +4,7 @@
 
 #include "dwarf_utils.hpp"
 #include <iostream>
+#include <cstring>
 
 void hello_from_vacuum_tool() {
     std::cout << "Vacuum tool" << std::endl;

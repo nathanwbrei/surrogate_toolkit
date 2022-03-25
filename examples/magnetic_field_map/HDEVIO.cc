@@ -8,9 +8,10 @@
 // n.b. the async_filebuf code does not currently compile
 // on Mac OSX so we disable it's use here when compiling
 // on that pltform.
-#ifndef __APPLE__
-#define USE_ASYNC_FILEBUF 1
-#endif // __APPLE__
+// #ifndef __APPLE__
+// #define USE_ASYNC_FILEBUF 1
+// #endif // __APPLE__
+// NWB: Never use async_filebuf, because I don't want to have to copy the code into this project
 
 #include <stdlib.h>
 #include <string.h>

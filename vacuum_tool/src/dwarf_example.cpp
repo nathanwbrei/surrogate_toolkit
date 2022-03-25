@@ -121,9 +121,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#ifdef HAVE_STDINT_H
 #include <stdint.h> /* For uintptr_t */
-#endif /* HAVE_STDINT_H */
+
 #include "dwarf.h"
 #include "libdwarf.h"
 // #include "libdwarf_private.h"

@@ -10,6 +10,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <functional>
 
 #include "range.h"
 #include "model.h"

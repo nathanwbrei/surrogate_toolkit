@@ -24,6 +24,6 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         )
 add_executable("surrogate_library_tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(surrogate_library_tests PRIVATE include)
-target_link_libraries(surrogate_library_tests surrogate_library)
+target_link_libraries(surrogate_library_tests surrogate_library ${TORCH_LIBRARIES})
 
 
