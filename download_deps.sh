@@ -33,10 +33,12 @@ fi
 # Download PIN
 if [[ $MACOS -eq 1 ]]; then
     wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-clang-mac.tar.gz
-    unzip pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
+    tar -xf pin-3.22-98547-g7a303a835-clang-mac.tar.gz
+    mv pin-3.22-98547-g7a303a835-clang-mac pin
 else
     wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
-    unzip pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
+    tar -xf pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
+    mv pin-3.22-98547-g7a303a835-gcc-linux pin
 fi
 
 # Build and install JANA2
