@@ -7,6 +7,7 @@
 #define SURROGATE_TOOLKIT_OPTICS_H
 
 #include <torch/torch.h>
+// #include <concepts>
 
 // These aren't really optics yet (will they ever be?), but they are operational at least
 // I'm calling them "Accessors" instead. The idea is that they form a declarative, composable
@@ -26,98 +27,91 @@ float convert_from_float(float f) {
     return static_cast<T>(f);
 }
 
-/// Abstract base class for accessing a primitive or a fixed-size data structure
-struct Accessor {
-    virtual std::vector<size_t> get_shape() = 0;
-    virtual void fill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) = 0;
-    virtual void unfill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) = 0;
+/// TensorLens<T> goes from a T* to a Tensor and vice versa.
+/// This should be a Concept instead?!
+
+namespace optics {
+
+    /*
+template <typename T>
+concept Optic = requires(T t) {
+    {t.shape()} -> std::same_as<std::vector<size_t>>;
+
+};
+     */
+
+// TODO: Restrict T to _actual_ primitives
+template <typename T>
+class Primitive {
+public:
+    Primitive() {};
+    std::vector<size_t> shape() { return {1}; }
+    torch::Tensor to(T* source) {
+        return torch::tensor({*source}, torch::TensorOptions().dtype(torch::kFloat32));
+    }
+    void from(torch::Tensor source, T* dest) {
+        *dest = *source.data_ptr<T>();
+    }
 };
 
 template <typename T>
-class PrimitiveAccessor : public Accessor {
-    T* m_pointer;
+class PrimitiveArray {
+    const std::vector<size_t> m_shape;
+    const std::vector<size_t> m_strides;
 public:
-    explicit PrimitiveAccessor(T* pointer) : m_pointer(pointer) {};
-    std::vector<size_t> get_shape() override { return {}; }
-    void fill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) override {
-        // t[indices] = *m_pointer;
+    explicit PrimitiveArray(const std::vector<size_t>& shape, const std::vector<size_t>& strides)
+    : m_shape(shape), m_strides(strides) {};
+
+    std::vector<size_t> shape() { return m_shape; }
+    torch::Tensor to(T* source) {
+        return torch::tensor({*source, }, torch::TensorOptions().dtype(torch::kFloat32));
     }
-    void unfill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) override {
-        // *m_pointer = t[indices]
+    void from(torch::Tensor source, T* dest) {
+        *dest = source.data_ptr<T>();
     }
 };
 
-template <typename T>
-class ArrayAccessor : public Accessor {
-    T* m_pointer;
-    std::vector<size_t> m_shape;
-    std::vector<size_t> m_stride; // Handles row-major vs column-major
+template <typename T, class OpticT>
+class Pointer {
+    OpticT m_optic;
 public:
-    explicit ArrayAccessor(T* pointer, size_t length) :
-            m_pointer(pointer), m_shape({length}), m_stride({1}) {}
-
-    explicit ArrayAccessor(T* pointer, size_t lengths[2], bool row_major=true) :
-            m_pointer(pointer), m_shape({lengths[0], lengths[1]}) {
-
-        if (row_major) {
-            m_stride = {1,lengths[0]};
-        }
-        else {
-            m_stride = {lengths[1],1};
-        }
-        // Will this transpose the matrix on us? Also, does Torch care what order as long as we are consistent?
+    Pointer(OpticT optic) : m_optic(optic) {};
+    std::vector<size_t> shape() { return m_optic.shape(); }
+    torch::Tensor to(T* source) {
+        return m_optic.to(source);
     }
-
-    explicit ArrayAccessor(T* pointer, std::vector<size_t> shape, std::vector<size_t> stride, bool row_major) :
-    m_pointer(pointer), m_shape(shape), m_stride(stride) {}
-
-    std::vector<size_t> get_shape() { return m_shape; }
-    void fill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) override {
-    }
-    void unfill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) override {
+    void from(torch::Tensor source, T* dest) {
+        return m_optic.from(source, dest);
     }
 };
 
-// TODO: For now we are using virtual functions but this is going to be slow
-//       Experiment with making Accessor be a Concept instead of an abstract base class.
-//       If we do this, the optimizer could collapse the entire Accessor composite into a pile of for loops
-class PointerAccessor : public Accessor {
-    Accessor* m_underlying;
+// Field is an Optic that accepts a struct of type StructT, knows how to extract a field of type FieldT from the StructT,
+// and forwards the field to an inner optic of type OpticT that accepts FieldT. The user needs to compose
+
+// TODO: Should be some constraint on OpticT requiring it to accept a FieldT
+template <typename StructT, typename FieldT, typename OpticT>
+class Field {
+    OpticT m_optic;
+    std::function<FieldT*(StructT*)> m_accessor;
 public:
-    PointerAccessor(Accessor* underlying) : m_underlying(underlying) {};
-
-    std::vector<size_t> get_shape() override { return m_underlying->get_shape(); }
-    void fill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) override {
-        return m_underlying->fill_tensor(t, indices);
+    Field(OpticT optic, std::function<FieldT*(StructT*)> accessor) : m_optic(optic), m_accessor(accessor) {};
+    std::vector<size_t> shape() { return m_optic.shape(); }
+    torch::Tensor to(StructT* source) {
+        return m_optic.to(m_accessor(source));
     }
-    void unfill_tensor(torch::Tensor& t, const std::vector<size_t>& indices) {
-        return m_underlying->unfill_tensor(t, indices);
+    void from(torch::Tensor source, StructT* dest) {
+        return m_optic.from(source, m_accessor(dest));
     }
 };
 
-// TODO: We can definitely make this more efficient
-template <typename Outer, typename Inner>
-class StructAccessor : public Accessor {
-    std::function<Inner&(const Outer&)> m_access;
-public:
-    StructAccessor(std::function<Inner&(const Outer&)> access) : m_access(access) {};
+template <typename StructT, typename FieldT, typename OpticT>
+Field<StructT, FieldT, OpticT> make_field_lens(OpticT optic, std::function<FieldT*(StructT*)> fn) {
+    return Field(optic, fn);
 };
 
 
-// Bundles together a bunch of different Accessors side-by-side in a Tensor.
-class ProductAccessor : public Accessor {
-    std::vector<Accessor*> underlying;
-};
 
-
-// Handles trees and linked lists
-class TraversableAccessor : public Accessor {
-};
-
-// Case we haven't figured out yet: Handling sum types: unions, variants, and optionals
-// If the inner types are primitives, we can expand sum<a,b,c> into tuple<a,b,c>, pad missing items with zeros.
-// But what if they are nested structures?
-
+} // namespace optics
 
 
 
