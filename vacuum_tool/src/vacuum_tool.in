@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# If PIN_ROOT is not defined or is the empty string, use the PIN_ROOT specified when built
+if [ -z $PIN_ROOT ]; then PIN_ROOT=@PIN_ROOT@; fi
+
+# Vacuum tool pin plugin lives in same directory as this script
+VACUUM_TOOL_DIR=`dirname $0`
+
+# Resolve confusion over .dylib and .so
+if [ -f "$VACUUM_TOOL_DIR/vacuum_pin_plugin.so" ];
+then
+    VACUUM_TOOL="$VACUUM_TOOL_DIR/vacuum_pin_plugin.so"
+elif [ -f "$VACUUM_TOOL_DIR/vacuum_pin_plugin.dylib" ]
+then
+    VACUUM_TOOL="$VACUUM_TOOL_DIR/vacuum_pin_plugin.dylib";
+else
+    echo "Unable to find vacuum tool plugin. Checked:
+    echo "    $VACUUM_TOOL_DIR/vacuum_pin_plugin.so"
+    echo "    $VACUUM_TOOL_DIR/vacuum_pin_plugin.dylib"
+    exit 1
+fi
+
+$PIN_ROOT/pin -t $VACUUM_TOOL -- $1
