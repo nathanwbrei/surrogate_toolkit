@@ -35,19 +35,30 @@ concept Optic = requires(T t) {
     {t.shape()} -> std::same_as<std::vector<size_t>>;
 };
 */
+template <typename T>
+torch::Dtype choose_dtype_automatically() {
+    if (std::is_same_v<T, u_int8_t>) return torch::kUInt8;
+    if (std::is_same_v<T, int16_t>) return torch::kI16;
+    if (std::is_same_v<T, int32_t>) return torch::kI32;
+    if (std::is_same_v<T, int64_t>) return torch::kI64;
+    if (std::is_same_v<T, float>) return torch::kF32;
+    if (std::is_same_v<T, double>) return torch::kF64;
+    return torch::kF32;
+}
 
 // TODO: Restrict T to _actual_ primitives
 template <typename T>
 class Primitive : public Optic<T>{
+    torch::Dtype m_dtype;
 public:
-    Primitive() {};
+    Primitive(torch::Dtype dtype=choose_dtype_automatically<T>()) : m_dtype(dtype) {}
     std::vector<size_t> shape() override { return {1}; }
     torch::Tensor to(T* source) override {
-        return torch::tensor({*source}, torch::TensorOptions().dtype(torch::kFloat32));
+        return torch::tensor({*source}, torch::TensorOptions().dtype(m_dtype));
     }
     void from(torch::Tensor source, T* dest) override {
-        *dest = *source.data_ptr<float>();
-        // TODO: Support tensors of all primitive types
+        *dest = *source.data_ptr<T>();
+        // TODO: This will throw an exception if the specified dtype isn't compatible with T (instead of converting)
     }
 };
 

@@ -8,10 +8,10 @@
 void Model::dump_captures_to_csv(std::ostream& os) {
     // print column header
     for (auto input : inputs) {
-        std::cout << input->name << ", ";
+        os << input->name << ", ";
     }
     for (size_t i=0; i<outputs.size(); ++i) {
-        std::cout << outputs[i]->name;
+        os << outputs[i]->name;
         if (i < (outputs.size()-1)) std::cout << ", ";
     }
     std::cout << std::endl;
@@ -20,13 +20,13 @@ void Model::dump_captures_to_csv(std::ostream& os) {
     for (size_t i=0; i<captured_rows; ++i) {
         for (size_t j=0; j<inputs.size(); ++j) {
             inputs[j]->stringify(std::cout, i);
-            std::cout << ", ";
+            os << ", ";
         }
         for (size_t j=0; j<outputs.size(); ++j) {
             outputs[j]->stringify(std::cout, i);
             if (j < (outputs.size()-1)) std::cout << ", ";
         }
-        std::cout << std::endl;
+        os << std::endl;
     }
-    std::cout << std::endl;
+    os << std::endl;
 }

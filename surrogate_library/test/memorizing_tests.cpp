@@ -23,7 +23,7 @@ public:
         for (size_t i = 0; i<get_capture_count(); ++i) {
             torch::Tensor x = xs[i];
             torch::Tensor y = ys[i];
-            double xx = *x.data_ptr<float>();
+            double xx = *x.data_ptr<double>();
             memorized_data[xx] = y;
         }
     }
@@ -31,7 +31,7 @@ public:
     void infer(Surrogate& surrogate) override {
         auto x = surrogate.get_input_binding<double>("x");
         torch::Tensor x_val = x->parameter->accessor->to(x->binding_root);
-        double xx = *x_val.data_ptr<float>();
+        double xx = *x_val.data_ptr<double>();
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {

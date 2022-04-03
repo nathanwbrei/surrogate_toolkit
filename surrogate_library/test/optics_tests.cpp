@@ -15,13 +15,14 @@ P<AA, BB> dimap (std::function<A(AA)>, std::function<BB(B)>, P<A,B>);
 
 TEST_CASE("Demonstrate two-way binding of a primitive") {
 
-    int x = 22;
+    int32_t x = 22;
 
     // Write out x into the tensor at index [1,1]
-    optics::Primitive<int> p;
+    optics::Primitive<int> p(torch::kInt32);
     auto t = p.to(&x);
 
-    float* tp = t[0].data_ptr<float>();
+    std::cout << t.dtype();
+    int32_t* tp = t[0].data_ptr<int>();
     REQUIRE(*tp == 22);
 
     // Modify the tensor

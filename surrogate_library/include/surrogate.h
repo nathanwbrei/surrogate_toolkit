@@ -117,7 +117,7 @@ public:
     T get_captured_input(size_t sample_index, size_t parameter_index) {
         auto param = model->get_input<T>(parameter_index);
         torch::Tensor result = param->captures[sample_index];
-        return *result.data_ptr<float>();
+        return *result.data_ptr<T>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
         // but this is only used for test cases anyhow and should be removed pretty soon.
@@ -128,7 +128,7 @@ public:
     T get_captured_output(size_t sample_index, size_t parameter_index) {
         auto param = model->get_output<T>(parameter_index);
         torch::Tensor result = param->captures[sample_index];
-        return *result.data_ptr<float>();
+        return *result.data_ptr<T>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
         // but this is only used for test cases anyhow and should be removed pretty soon.
