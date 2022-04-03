@@ -10,102 +10,97 @@
 // #include <concepts>
 
 // These aren't really optics yet (will they ever be?), but they are operational at least
-// I'm calling them "Accessors" instead. The idea is that they form a declarative, composable
-// way of converting arbitrary data structures into tensors of floats and back again.
-
-
-// For now we assume everything goes into a Tensor of floats. Eventually we can extend this by adding
-// an additional type parameter (just like we did for the {Input,Output}Bindings)
-// We might want to have custom logic for converting some primitive datatype into a float and vice versa.
-template <typename T>
-float convert_to_float(T t) {
-    return static_cast<float>(t);
-}
-
-template <typename T>
-float convert_from_float(float f) {
-    return static_cast<T>(f);
-}
-
-/// TensorLens<T> goes from a T* to a Tensor and vice versa.
-/// This should be a Concept instead?!
+// The idea is that they form a declarative, composable way of converting arbitrary data
+// structures into tensors of floats and back again. The real benefit of this comes when you
+// have structures of arrays of arrays of structures or whatever, and you need to turn that
+// into a Tensor sanely.
 
 namespace optics {
 
-    /*
+// This is the abstract base class for an optic.
+// Template parameter T means that we can accept a T*, traverse an arbitrary nesting of
+// structs, arrays, pointers, unions, etc, and return a Tensor containing the primitives
+// at the leaves of the traversal. This tensor describes one actual "input" of the function
+// being surrogated.
+template <typename T>
+struct Optic {
+    virtual std::vector<size_t> shape() = 0;
+    virtual torch::Tensor to(T* source) = 0;
+    virtual void from(torch::Tensor source, T* dest) = 0;
+};
+
+/*
 template <typename T>
 concept Optic = requires(T t) {
     {t.shape()} -> std::same_as<std::vector<size_t>>;
-
 };
-     */
+*/
 
 // TODO: Restrict T to _actual_ primitives
 template <typename T>
-class Primitive {
+class Primitive : public Optic<T>{
 public:
     Primitive() {};
-    std::vector<size_t> shape() { return {1}; }
-    torch::Tensor to(T* source) {
+    std::vector<size_t> shape() override { return {1}; }
+    torch::Tensor to(T* source) override {
         return torch::tensor({*source}, torch::TensorOptions().dtype(torch::kFloat32));
     }
-    void from(torch::Tensor source, T* dest) {
+    void from(torch::Tensor source, T* dest) override {
         *dest = *source.data_ptr<T>();
     }
 };
 
 template <typename T>
-class PrimitiveArray {
+class PrimitiveArray : public Optic<T> {
     const std::vector<size_t> m_shape;
     const std::vector<size_t> m_strides;
 public:
     explicit PrimitiveArray(const std::vector<size_t>& shape, const std::vector<size_t>& strides)
     : m_shape(shape), m_strides(strides) {};
 
-    std::vector<size_t> shape() { return m_shape; }
-    torch::Tensor to(T* source) {
+    std::vector<size_t> shape() override { return m_shape; }
+    torch::Tensor to(T* source) override {
         return torch::tensor({*source, }, torch::TensorOptions().dtype(torch::kFloat32));
     }
-    void from(torch::Tensor source, T* dest) {
+    void from(torch::Tensor source, T* dest) override {
         *dest = source.data_ptr<T>();
     }
 };
 
-template <typename T, class OpticT>
-class Pointer {
-    OpticT m_optic;
+template <typename T>
+class Pointer : public Optic<T*> {
+    Optic<T>* m_optic;
 public:
-    Pointer(OpticT optic) : m_optic(optic) {};
-    std::vector<size_t> shape() { return m_optic.shape(); }
-    torch::Tensor to(T* source) {
-        return m_optic.to(source);
+    Pointer(Optic<T>* optic) : m_optic(optic) {};
+    std::vector<size_t> shape() override { return m_optic->shape(); }
+    torch::Tensor to(T* source) override {
+        return m_optic->to(source);
     }
-    void from(torch::Tensor source, T* dest) {
-        return m_optic.from(source, dest);
+    void from(torch::Tensor source, T* dest) override {
+        return m_optic->from(source, dest);
     }
 };
 
 // Field is an Optic that accepts a struct of type StructT, knows how to extract a field of type FieldT from the StructT,
 // and forwards the field to an inner optic of type OpticT that accepts FieldT. The user needs to compose
 
-// TODO: Should be some constraint on OpticT requiring it to accept a FieldT
-template <typename StructT, typename FieldT, typename OpticT>
-class Field {
-    OpticT m_optic;
+template <typename StructT, typename FieldT>
+class Field : public Optic<StructT> {
+    Optic<FieldT>* m_optic;
     std::function<FieldT*(StructT*)> m_accessor;
 public:
-    Field(OpticT optic, std::function<FieldT*(StructT*)> accessor) : m_optic(optic), m_accessor(accessor) {};
-    std::vector<size_t> shape() { return m_optic.shape(); }
+    Field(Optic<FieldT>* optic, std::function<FieldT*(StructT*)> accessor) : m_optic(optic), m_accessor(accessor) {};
+    std::vector<size_t> shape() { return m_optic->shape(); }
     torch::Tensor to(StructT* source) {
-        return m_optic.to(m_accessor(source));
+        return m_optic->to(m_accessor(source));
     }
     void from(torch::Tensor source, StructT* dest) {
-        return m_optic.from(source, m_accessor(dest));
+        return m_optic->from(source, m_accessor(dest));
     }
 };
 
-template <typename StructT, typename FieldT, typename OpticT>
-Field<StructT, FieldT, OpticT> make_field_lens(OpticT optic, std::function<FieldT*(StructT*)> fn) {
+template <typename StructT, typename FieldT>
+Field<StructT, FieldT> make_field_lens(Optic<FieldT>* optic, std::function<FieldT*(StructT*)> fn) {
     return Field(optic, fn);
 };
 

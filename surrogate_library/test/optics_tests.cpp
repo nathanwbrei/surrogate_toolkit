@@ -64,7 +64,7 @@ TEST_CASE("Composition of a Field lens with a Primitive") {
 
     auto primitive_lens = optics::Primitive<float>();
     auto getY = [](MyStruct* s){return &(s->y);};
-    auto field_lens = optics::Field<MyStruct, float, optics::Primitive<float>>(primitive_lens, getY);
+    auto field_lens = optics::Field<MyStruct, float>(&primitive_lens, getY);
     // auto field_lens = optics::Field(primitive_lens, getY);
 
     // Obviously we need to get template type deduction working... maybe just use a newer compiler?
@@ -88,9 +88,9 @@ TEST_CASE("Composition of two structs") {
 
     auto primitive_lens = optics::Primitive<float>();
     auto getY = [](MyStruct* s){return &(s->y);};
-    auto inner_lens = optics::Field<MyStruct, float, typeof(primitive_lens)>(primitive_lens, getY);
+    auto inner_lens = optics::Field<MyStruct, float>(&primitive_lens, getY);
     auto getMs = [](OtherStruct* os){return os->s;};
-    auto outer_lens = optics::Field<OtherStruct, MyStruct, typeof(inner_lens)>(inner_lens, getMs);
+    auto outer_lens = optics::Field<OtherStruct, MyStruct>(&inner_lens, getMs);
 
     auto t = outer_lens.to(&os);
     float* tp = t[0].data_ptr<float>();
