@@ -7,6 +7,7 @@
 #define SURROGATE_TOOLKIT_PARAMETER_H
 
 #include "range.h"
+#include "optics.h"
 #include <torch/torch.h>
 
 enum class ParameterCategory {
@@ -22,6 +23,7 @@ struct Input {
 
 template <typename T>
 struct InputT : public Input {
+    optics::Optic<T>* accessor;
     std::vector<torch::Tensor> captures;
     Range<float> range;
     void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
@@ -36,6 +38,7 @@ struct Output {
 
 template <typename T>
 struct OutputT : public Output {
+    optics::Optic<T>* accessor;
     std::vector<torch::Tensor> captures;
     void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };

@@ -12,6 +12,9 @@
 
 class Surrogate;
 
+/// There should be exactly one Model in your codebase for each unique function that you wish to surrogate.
+/// Contrast this with Surrogate. There should be one Surrogate for each call site of that function,
+/// and each of these Surrogates delegate to the same underlying model.
 class Model { // This is an abstract class
     friend class Surrogate;
 
@@ -23,9 +26,10 @@ class Model { // This is an abstract class
 
 public:
     template <typename T>
-    void input(std::string param_name, Range<float> range = Range<float>()) {
+    void input(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>()) {
         auto input = std::make_shared<InputT<T>>();
         input->name = param_name;
+        input->accessor = accessor;
         input->range = std::move(range);
         inputs.push_back(input);
         if (input_map.find(param_name) != input_map.end()) {
@@ -35,9 +39,10 @@ public:
     }
 
     template<typename T>
-    void output(std::string param_name) {
+    void output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>()) {
         auto output = std::make_shared<OutputT<T>>();
         output->name = param_name;
+        output->accessor = accessor;
         outputs.push_back(output);
         if (output_map.find(param_name) != output_map.end()) {
             throw "Output parameter already exists!";
@@ -46,9 +51,9 @@ public:
     }
 
     template<typename T>
-    void input_output(std::string param_name, Range<float> range = Range<float>()) {
-        input<T>(param_name, range);
-        output<T>(param_name);
+    void input_output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>()) {
+        input<T>(param_name, accessor, range);
+        output<T>(param_name, accessor);
     }
 
     template <typename T>

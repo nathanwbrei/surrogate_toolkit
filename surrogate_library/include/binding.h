@@ -21,11 +21,10 @@ struct InputBindingT : public InputBinding {
 
     std::shared_ptr<InputT<T>> parameter;
     T* binding_root;  // This has to be either a global or a stack variable. Possibly the root of a nested data structure.
-    optics::Optic<T>* accessor;  // This traverses the data structure at T* to obtain a tensor of primitives
 
 
     void capture() override {
-        torch::Tensor data = accessor->to(binding_root);
+        torch::Tensor data = parameter->accessor->to(binding_root);
         parameter->captures.push_back(std::move(data));
     }
 
@@ -48,10 +47,9 @@ template <typename T>
 struct OutputBindingT : public OutputBinding {
     std::shared_ptr<OutputT<T>> parameter;
     T* binding_root;
-    optics::Optic<T>* accessor;  // This traverses the data structure at T* and fills it from a tensor of primitives
 
     void capture() override {
-        torch::Tensor data = accessor->to(binding_root);
+        torch::Tensor data = parameter->accessor->to(binding_root);
         parameter->captures.push_back(std::move(data));
     }
 

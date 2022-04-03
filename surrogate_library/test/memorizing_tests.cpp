@@ -30,13 +30,13 @@ public:
 
     void infer(Surrogate& surrogate) override {
         auto x = surrogate.get_input_binding<double>("x");
-        torch::Tensor x_val = x->accessor->to(x->binding_root);
+        torch::Tensor x_val = x->parameter->accessor->to(x->binding_root);
         double xx = *x_val.data_ptr<float>();
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {
             auto y = surrogate.get_output_binding<double>("y");
-            y->accessor->from(pair->second, y->binding_root);
+            y->parameter->accessor->from(pair->second, y->binding_root);
         }
     }
 };
