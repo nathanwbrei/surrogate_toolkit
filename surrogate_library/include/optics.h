@@ -46,7 +46,8 @@ public:
         return torch::tensor({*source}, torch::TensorOptions().dtype(torch::kFloat32));
     }
     void from(torch::Tensor source, T* dest) override {
-        *dest = *source.data_ptr<T>();
+        *dest = *source.data_ptr<float>();
+        // TODO: Support tensors of all primitive types
     }
 };
 

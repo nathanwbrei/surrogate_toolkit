@@ -95,11 +95,11 @@ struct FiniteSetSampler : public Sampler {
 
 struct InputBindingVisitorChild : public InputBindingVisitor {
 
-    template<typename T> inline void visitReal(InputBindingT<T>& t) {
+    template<typename T> inline void visitReal(InputBindingT<T>&) {
         std::cout << "Visiting some kind of real number" << std::endl;
     }
 
-    template<typename T> inline void visitInt(InputBindingT<T>& t) {
+    template<typename T> inline void visitInt(InputBindingT<T>&) {
         std::cout << "Visiting some kind of int" << std::endl;
     }
 

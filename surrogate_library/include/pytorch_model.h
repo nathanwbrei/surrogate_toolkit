@@ -46,13 +46,13 @@ struct PyTorchModel : public Model {
 
     }
 
-    torch::Tensor preprocess(std::vector<std::unique_ptr<Input>>& inputs) {
+    torch::Tensor preprocess(std::vector<std::unique_ptr<Input>>&) {
         return torch::ones({2,2});
     }
 
 
     // Train takes all of the captures associated with each parameter
-    void train(torch::Tensor batch) override {
+    void train(torch::Tensor) override {
         auto dataset = torch::data::datasets::MNIST("./mnist")
                 .map(torch::data::transforms::Normalize<>(0.5, 0.5))
                 .map(torch::data::transforms::Stack<>());
@@ -88,7 +88,7 @@ struct PyTorchModel : public Model {
     }
 
     // Infer takes the sample associated with each parameter
-    void infer(torch::Tensor batch) {
+    void infer(Surrogate&) override {
 
         // (*net)()
 

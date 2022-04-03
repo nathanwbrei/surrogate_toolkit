@@ -35,6 +35,7 @@ public:
     void bind_input(std::string param_name, T* slot) {
 	auto input = std::make_shared<InputBindingT<T>>();
 	input->binding_root = slot;
+        input->accessor = new optics::Primitive<T>();
 	input->parameter = model->get_input<T>(param_name);
 	input_bindings.push_back(input);
 	if (input_binding_map.find(param_name) != input_binding_map.end()) {
@@ -47,6 +48,7 @@ public:
     void bind_output(std::string param_name, T* slot) {
 	auto output = std::make_shared<OutputBindingT<T>>();
 	output->binding_root = slot;
+        output->accessor = new optics::Primitive<T>();
         output->parameter = model->get_output<T>(param_name);
         output_bindings.push_back(output);
         if (output_binding_map.find(param_name) != output_binding_map.end()) {
@@ -117,7 +119,7 @@ public:
     T get_captured_input(size_t sample_index, size_t parameter_index) {
         auto param = model->get_input<T>(parameter_index);
         torch::Tensor result = param->captures[sample_index];
-        return *result.data_ptr<T>();
+        return *result.data_ptr<float>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
         // but this is only used for test cases anyhow and should be removed pretty soon.
@@ -128,7 +130,7 @@ public:
     T get_captured_output(size_t sample_index, size_t parameter_index) {
         auto param = model->get_output<T>(parameter_index);
         torch::Tensor result = param->captures[sample_index];
-        return *result.data_ptr<T>();
+        return *result.data_ptr<float>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
         // but this is only used for test cases anyhow and should be removed pretty soon.
@@ -166,9 +168,9 @@ public:
 
 
     void capture_input_distribution() {
-	for (auto& input: input_bindings) {
+	// for (auto& input: input_bindings) {
 	    // input->capture_range();
-	}
+	// }
     }
 
 
