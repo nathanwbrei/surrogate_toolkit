@@ -7,6 +7,7 @@
 #define SURROGATE_TOOLKIT_PARAMETER_H
 
 #include "range.h"
+#include <torch/torch.h>
 
 enum class ParameterCategory {
     Continuous, Discrete, Categorical, Text
@@ -21,8 +22,8 @@ struct Input {
 
 template <typename T>
 struct InputT : public Input {
-    std::vector<T> captures;
-    Range<T> range;
+    std::vector<torch::Tensor> captures;
+    Range<float> range;
     void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };
 
@@ -35,7 +36,7 @@ struct Output {
 
 template <typename T>
 struct OutputT : public Output {
-    std::vector<T> captures;
+    std::vector<torch::Tensor> captures;
     void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };
 

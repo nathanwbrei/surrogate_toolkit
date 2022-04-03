@@ -7,7 +7,8 @@
 
 class MemorizingModel : public Model {
 
-    std::map<double, double> memorized_data;
+    std::unordered_map<int, torch::Tensor> memorized_data;
+    // TODO: Figure out how to generalize this completely by correctly hashing torch::Tensor
 
 public:
 
@@ -16,22 +17,26 @@ public:
         output<double>("y");
     }
 
-    void train() override {
+    void train(torch::Tensor batch) override {
         auto& xs = get_input<double>("x")->captures;
         auto& ys = get_output<double>("y")->captures;
         for (size_t i = 0; i<get_capture_count(); ++i) {
-            double x = xs[i];
-            double y = ys[i];
-            memorized_data[x] = y;
+            torch::Tensor x = xs[i];
+            torch::Tensor y = ys[i];
+            double xx = *x.data_ptr<double>();
+            memorized_data[xx] = y;
         }
     }
 
     void infer(Surrogate& surrogate) override {
-        double x_val = *(surrogate.get_input_binding<double>("x")->slot);
-        auto pair = memorized_data.find(x_val);
+        auto x = surrogate.get_input_binding<double>("x");
+        torch::Tensor x_val = x->accessor->to(x->binding_root);
+        double xx = *x_val.data_ptr<double>();
+
+        auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {
             auto y = surrogate.get_output_binding<double>("y");
-            *(y->slot) = pair->second;
+            y->accessor->from(pair->second, y->binding_root);
         }
     }
 };
@@ -52,7 +57,7 @@ TEST_CASE("Memorizing model memorizes!") {
     s.call_original_and_capture();
     REQUIRE(y == 4.0);  // Correct value comes from original function.
 
-    m->train();  // Load the captures into the cache
+    m->train({});  // Load the captures into the cache
 
     y = 7.0;  // Reset to garbage value
     s.call_model();

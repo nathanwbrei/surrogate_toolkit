@@ -16,7 +16,7 @@ TEST_CASE("Basic GridSampler") {
     i->range.upper_bound_inclusive = 5;
     InputBindingT<int> b;
     b.parameter = i;
-    b.slot = &x;
+    b.binding_root = &x;
     GridSampler<int> s(b);
 
     bool result;
@@ -44,7 +44,7 @@ TEST_CASE("Basic FiniteSetSampler") {
     i->range.items = {7,8,9};
     InputBindingT<int> b;
     b.parameter = i;
-    b.slot = &x;
+    b.binding_root = &x;
     FiniteSetSampler<int> s(b);
 
     bool result;

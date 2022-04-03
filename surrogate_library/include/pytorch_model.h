@@ -52,7 +52,7 @@ struct PyTorchModel : public Model {
 
 
     // Train takes all of the captures associated with each parameter
-    void train(torch::Tensor batch) {
+    void train(torch::Tensor batch) override {
         auto dataset = torch::data::datasets::MNIST("./mnist")
                 .map(torch::data::transforms::Normalize<>(0.5, 0.5))
                 .map(torch::data::transforms::Stack<>());

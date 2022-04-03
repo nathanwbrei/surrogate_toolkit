@@ -6,6 +6,7 @@
 #define SURROGATE_TOOLKIT_BINDINGS_H
 
 #include "parameter.h"
+#include "optics.h"
 
 #include "binding_visitor.h"
 
@@ -19,10 +20,13 @@ template <typename T>
 struct InputBindingT : public InputBinding {
 
     std::shared_ptr<InputT<T>> parameter;
-    T* slot; // TODO: Replace with accessor or Lens or something when the time comes
+    T* binding_root;  // This has to be either a global or a stack variable. Possibly the root of a nested data structure.
+    optics::Optic<T>* accessor;  // This traverses the data structure at T* to obtain a tensor of primitives
+
 
     void capture() override {
-        parameter->captures.push_back(*slot);
+        torch::Tensor data = accessor->to(binding_root);
+        parameter->captures.push_back(std::move(data));
     }
 
     void accept(InputBindingVisitor& v) override {
@@ -43,10 +47,12 @@ public:
 template <typename T>
 struct OutputBindingT : public OutputBinding {
     std::shared_ptr<OutputT<T>> parameter;
-    T* slot;
+    T* binding_root;
+    optics::Optic<T>* accessor;  // This traverses the data structure at T* and fills it from a tensor of primitives
 
     void capture() override {
-        parameter->captures.push_back(*slot);
+        torch::Tensor data = accessor->to(binding_root);
+        parameter->captures.push_back(std::move(data));
     }
 
     void accept(OutputBindingVisitor& v) override {

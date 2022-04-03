@@ -35,7 +35,7 @@ struct GridSampler : public Sampler {
         current_sample = initial_sample;
         step_size = (final_sample - current_sample) / nsteps;
         if (step_size < 1) step_size = 1;
-        slot = binding.slot;
+        slot = binding.binding_root;
     }
 
     bool next() override {
@@ -76,7 +76,7 @@ struct FiniteSetSampler : public Sampler {
     T* slot;
 
     FiniteSetSampler(InputBindingT<T>& binding) {
-        slot = binding.slot;
+        slot = binding.binding_root;
         auto& s = binding.parameter->range.items;
         samples.insert(samples.end(), s.begin(), s.end());
     }

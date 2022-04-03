@@ -23,7 +23,7 @@ class Model { // This is an abstract class
 
 public:
     template <typename T>
-    void input(std::string param_name, Range<T> range = Range<T>()) {
+    void input(std::string param_name, Range<float> range = Range<float>()) {
         auto input = std::make_shared<InputT<T>>();
         input->name = param_name;
         input->range = std::move(range);
@@ -46,7 +46,7 @@ public:
     }
 
     template<typename T>
-    void input_output(std::string param_name, Range<T> range = Range<T>()) {
+    void input_output(std::string param_name, Range<float> range = Range<float>()) {
         input<T>(param_name, range);
         output<T>(param_name);
     }
@@ -110,7 +110,7 @@ public:
     virtual ~Model() = default;
 
     // Train takes all of the captures associated with each parameter
-    virtual void train() {};
+    virtual void train(torch::Tensor) {};
 
     // Infer takes the sample associated with each parameter
     virtual void infer(Surrogate&) {};
