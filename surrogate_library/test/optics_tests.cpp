@@ -48,12 +48,9 @@ TEST_CASE("PyTorch tensor operations") {
     float arr[9] = {1.2,2,3,4,5,6,7,8,9};
     std::vector<size_t> shape {3,3};
     std::vector<size_t> strides {1,3};
-
     auto t = torch::tensor({arr, 9});
     std::cout << t << std::endl;
-
     // auto t = torch::from_blob(arr);// , shape, strides).clone();
-
     */
 }
 
@@ -66,10 +63,12 @@ TEST_CASE("Composition of a Field lens with a Primitive") {
     MyStruct s { 49.0, 7.6};
 
     auto primitive_lens = optics::Primitive<float>();
-    auto field_lens = optics::Field<MyStruct, float, optics::Primitive<float>>(primitive_lens, [](MyStruct* s){return &(s->y);});
+    auto getY = [](MyStruct* s){return &(s->y);};
+    auto field_lens = optics::Field<MyStruct, float, optics::Primitive<float>>(primitive_lens, getY);
+    // auto field_lens = optics::Field(primitive_lens, getY);
 
     // Obviously we need to get template type deduction working... maybe just use a newer compiler?
-    // auto field_lens = optics::Field(primitive_lens, [](MyStruct* s){return &(s->y);});
+    // auto field_lens = optics::make_field_lens(primitive_lens, [](MyStruct* s){return &(s->y);});
 
     // Should extract y and stick it in a tensor
     auto t = field_lens.to(&s);
@@ -77,3 +76,24 @@ TEST_CASE("Composition of a Field lens with a Primitive") {
     REQUIRE(*tp == (float) 7.6);
 
 }
+
+struct OtherStruct {
+    int w;
+    MyStruct* s;
+};
+
+TEST_CASE("Composition of two structs") {
+    MyStruct ms {1,2};
+    OtherStruct os {3, &ms};
+
+    auto primitive_lens = optics::Primitive<float>();
+    auto getY = [](MyStruct* s){return &(s->y);};
+    auto inner_lens = optics::Field<MyStruct, float, typeof(primitive_lens)>(primitive_lens, getY);
+    auto getMs = [](OtherStruct* os){return os->s;};
+    auto outer_lens = optics::Field<OtherStruct, MyStruct, typeof(inner_lens)>(inner_lens, getMs);
+
+    auto t = outer_lens.to(&os);
+    float* tp = t[0].data_ptr<float>();
+    REQUIRE(*tp == (float) 2.0);
+}
+
