@@ -24,7 +24,7 @@ namespace optics {
 // being surrogated.
 template <typename T>
 struct Optic {
-    virtual std::vector<size_t> shape() = 0;
+    virtual std::vector<int64_t> shape() = 0; // Torch uses int64_t instead of size_t for its indices and offsets
     virtual torch::Tensor to(T* source) = 0;
     virtual void from(torch::Tensor source, T* dest) = 0;
 };
@@ -59,9 +59,9 @@ template <typename T>
 class Primitive : public Optic<T>{
 public:
     Primitive() {}
-    std::vector<size_t> shape() override { return {1}; }
+    std::vector<int64_t> shape() override { return {}; }
     torch::Tensor to(T* source) override {
-        return torch::tensor({*source}, torch::dtype<T>());
+        return torch::tensor(at::ArrayRef<T>(source,1), torch::dtype<T>());
     }
     void from(torch::Tensor source, T* dest) override {
         *dest = *source.data_ptr<T>();
@@ -84,21 +84,22 @@ public:
 /// matrices instead, which are column-major)
 template <typename T>
 class PrimitiveArray : public Optic<T> {
-    const std::vector<size_t> m_shape;
+    const std::vector<int64_t> m_shape;
     // const std::vector<size_t> m_strides;
 public:
 
-    explicit PrimitiveArray(std::vector<size_t> shape)
+    explicit PrimitiveArray(std::vector<int64_t> shape)
             : m_shape(std::move(shape)) {};
 
-    std::vector<size_t> shape() override { return m_shape; }
+    std::vector<int64_t> shape() override { return m_shape; }
     torch::Tensor to(T* source) override {
         size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 0ull);
-        return torch::tensor(at::ArrayRef<T>(source, length), torch::dtype<T>()).reshape(m_shape);
+        auto t = torch::tensor(at::ArrayRef<T>(source, length), torch::dtype<T>());
+        return t.reshape(at::ArrayRef(m_shape.data(), m_shape.size()));
     }
     void from(torch::Tensor source, T* dest) override {
         size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 0ull);
-        T* ptr = source.data_ptr();
+        T* ptr = source.data_ptr<T>();
         for (size_t i=0; i<length; ++i) {
             dest[i] = ptr[i];
         }
@@ -111,7 +112,7 @@ class Pointer : public Optic<T*> {
     Optic<T>* m_optic;
 public:
     Pointer(Optic<T>* optic) : m_optic(optic) {};
-    std::vector<size_t> shape() override { return m_optic->shape(); }
+    std::vector<int64_t> shape() override { return m_optic->shape(); }
     torch::Tensor to(T* source) override {
         return m_optic->to(source);
     }
@@ -129,7 +130,7 @@ class Field : public Optic<StructT> {
     std::function<FieldT*(StructT*)> m_accessor;
 public:
     Field(Optic<FieldT>* optic, std::function<FieldT*(StructT*)> accessor) : m_optic(optic), m_accessor(accessor) {};
-    std::vector<size_t> shape() { return m_optic->shape(); }
+    std::vector<int64_t> shape() { return m_optic->shape(); }
     torch::Tensor to(StructT* source) {
         return m_optic->to(m_accessor(source));
     }
