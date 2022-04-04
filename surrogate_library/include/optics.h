@@ -46,7 +46,13 @@ torch::Dtype choose_dtype_automatically() {
     return torch::kF32;
 }
 
-// TODO: Restrict T to _actual_ primitives
+/// The simplest optic. Converts a single primitive value into a Torch Tensor. Can be used as-is (for primitive inputs)
+/// or composed with another optic (e.g. a Lens) to traverse from a locally visible variable to a nested primitive.
+/// Primitive ought to be an Iso<T,Tensor>. But (unlike real optics) our optics are constrained to always have a Primitive
+/// or PrimitiveArray at the back of the composition chain, so we can throw away the second template parameter.
+/// Probably a more rigorous way to do this would be to make Primitive be an Iso<T,Tensor>, so the overall
+/// composition chain becomes an Iso<T, Tensor>.
+/// TODO: Restrict T to _actual_ primitives
 template <typename T>
 class Primitive : public Optic<T>{
     torch::Dtype m_dtype;
@@ -62,23 +68,44 @@ public:
     }
 };
 
+
+/// The second simplest Optic. We may want to merge these two eventually. This and `Primitive` are the back of the
+/// composition chain of optics.
+///
+/// This does a byte-for-byte copy of a multidimensional C++ array into a Torch tensor. It assumes that the data is
+/// contiguous both in the array and in the tensor, and also that we don't have to worry about row-major
+/// vs column-major ordering because the neural net won't care as long as we are consistent.
+/// Both of these assumptions will eventually break down. Firstly, the Tensor may have been built up from smaller Tensors
+/// recursively, and we may somehow take a slice that is not contiguous. (Admittedly this problem is much more likely to
+/// manifest on the Array optic than on the PrimitiveArray one.) It may be possible to prove that this is not the case
+/// when using these Optics, although it is certainly the case generally.
+/// Secondly, we may wish to use the same trained model on inputs which use a different major ordering (e.g.
+/// we train a model on a codebase that uses plain arrays, but then reuse it on a different codebase that uses Eigen
+/// matrices instead, which are column-major)
 template <typename T>
 class PrimitiveArray : public Optic<T> {
     const std::vector<size_t> m_shape;
-    const std::vector<size_t> m_strides;
+    // const std::vector<size_t> m_strides;
 public:
-    explicit PrimitiveArray(const std::vector<size_t>& shape, const std::vector<size_t>& strides)
-    : m_shape(shape), m_strides(strides) {};
+
+    explicit PrimitiveArray(std::vector<size_t> shape)
+            : m_shape(std::move(shape)) {};
 
     std::vector<size_t> shape() override { return m_shape; }
     torch::Tensor to(T* source) override {
-        return torch::tensor({*source, }, torch::TensorOptions().dtype(torch::kFloat32));
+        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 0ull);
+        return torch::tensor(at::ArrayRef<T>(source, length), torch::dtype<T>()).reshape(m_shape);
     }
     void from(torch::Tensor source, T* dest) override {
-        *dest = source.data_ptr<T>();
+        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 0ull);
+        T* ptr = source.data_ptr();
+        for (size_t i=0; i<length; ++i) {
+            dest[i] = ptr[i];
+        }
     }
 };
 
+/// Pointer is a Lens that performs a pointer dereference
 template <typename T>
 class Pointer : public Optic<T*> {
     Optic<T>* m_optic;
