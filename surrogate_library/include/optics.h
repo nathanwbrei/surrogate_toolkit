@@ -53,18 +53,18 @@ torch::Dtype choose_dtype_automatically() {
 /// Probably a more rigorous way to do this would be to make Primitive be an Iso<T,Tensor>, so the overall
 /// composition chain becomes an Iso<T, Tensor>.
 /// TODO: Restrict T to _actual_ primitives
+/// Improvements: Add the ability to choose a different dtype for the tensor other than T.
+
 template <typename T>
 class Primitive : public Optic<T>{
-    torch::Dtype m_dtype;
 public:
-    Primitive(torch::Dtype dtype=choose_dtype_automatically<T>()) : m_dtype(dtype) {}
+    Primitive() {}
     std::vector<size_t> shape() override { return {1}; }
     torch::Tensor to(T* source) override {
-        return torch::tensor({*source}, torch::TensorOptions().dtype(m_dtype));
+        return torch::tensor({*source}, torch::dtype<T>());
     }
     void from(torch::Tensor source, T* dest) override {
         *dest = *source.data_ptr<T>();
-        // TODO: This will throw an exception if the specified dtype isn't compatible with T (instead of converting)
     }
 };
 

@@ -18,7 +18,7 @@ TEST_CASE("Demonstrate two-way binding of a primitive") {
     int32_t x = 22;
 
     // Write out x into the tensor at index [1,1]
-    optics::Primitive<int> p(torch::kInt32);
+    optics::Primitive<int> p;
     auto t = p.to(&x);
 
     std::cout << t.dtype();
