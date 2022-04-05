@@ -36,19 +36,14 @@ struct PyTorchModel : public Model {
 
     PyTorchModel() {
         // Create a new Net.
-        auto net = std::make_shared<Net>();
-
-        // Create a multi-threaded data loader for the MNIST dataset.
-        auto data_loader = torch::data::make_data_loader(
-                torch::data::datasets::MNIST("./data").map(
-                        torch::data::transforms::Stack<>()),
-                64);
-
+        net = std::make_shared<Net>();
     }
 
+    /*
     torch::Tensor preprocess(std::vector<std::unique_ptr<Input>>&) {
         return torch::ones({2,2});
     }
+    */
 
 
     // Train takes all of the captures associated with each parameter

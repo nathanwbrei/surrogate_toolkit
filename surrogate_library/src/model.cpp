@@ -19,11 +19,10 @@ void Model::dump_captures_to_csv(std::ostream& os) {
     // print body
     for (size_t i=0; i<captured_rows; ++i) {
         for (size_t j=0; j<inputs.size(); ++j) {
-            inputs[j]->stringify(std::cout, i);
-            os << ", ";
+            os << inputs[j]->captures[i] << ", ";
         }
         for (size_t j=0; j<outputs.size(); ++j) {
-            outputs[j]->stringify(std::cout, i);
+            std::cout << outputs[j]->captures[i];
             if (j < (outputs.size()-1)) std::cout << ", ";
         }
         os << std::endl;

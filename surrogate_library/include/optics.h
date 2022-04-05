@@ -93,12 +93,12 @@ public:
 
     std::vector<int64_t> shape() override { return m_shape; }
     torch::Tensor to(T* source) override {
-        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 0ull);
+        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;});
         auto t = torch::tensor(at::ArrayRef<T>(source, length), torch::dtype<T>());
         return t.reshape(at::ArrayRef(m_shape.data(), m_shape.size()));
     }
     void from(torch::Tensor source, T* dest) override {
-        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 0ull);
+        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;});
         T* ptr = source.data_ptr<T>();
         for (size_t i=0; i<length; ++i) {
             dest[i] = ptr[i];

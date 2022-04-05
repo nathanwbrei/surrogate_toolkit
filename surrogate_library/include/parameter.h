@@ -17,30 +17,26 @@ enum class ParameterCategory {
 struct Input {
     std::string name;
     ParameterCategory category = ParameterCategory::Continuous;
-    virtual void stringify(std::ostream&, size_t sample_index) = 0;
+    std::vector<torch::Tensor> captures;
     virtual ~Input() = default;
 };
 
 template <typename T>
 struct InputT : public Input {
     optics::Optic<T>* accessor;
-    std::vector<torch::Tensor> captures;
     Range<float> range;
-    void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };
 
 struct Output {
     std::string name;
     ParameterCategory category = ParameterCategory::Continuous;
-    virtual void stringify(std::ostream&, size_t sample_index) = 0;
+    std::vector<torch::Tensor> captures;
     virtual ~Output() = default;
 };
 
 template <typename T>
 struct OutputT : public Output {
     optics::Optic<T>* accessor;
-    std::vector<torch::Tensor> captures;
-    void stringify(std::ostream& os, size_t sample_index) override { os << captures[sample_index]; }
 };
 
 

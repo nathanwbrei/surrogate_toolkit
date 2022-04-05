@@ -71,13 +71,14 @@ int main() {
 
     std::cout << "Buffer after being reset:" << std::endl;
     fill_matrix(matrix, 4, 5);
+    print_matrix(std::cout, matrix, 4, 5);
 
     std::cout << "Buffer after running the surrogate model:" << std::endl;
 
     auto model = std::make_shared<PyTorchModel>();
     model->input_output("arr", new optics::PrimitiveArray<float>({4,5}));
     model->input("nrows", new optics::Primitive<int>());
-    model->input("cols", new optics::Primitive<int>());
+    model->input("ncols", new optics::Primitive<int>());
 
     int nrows = 4;
     int ncols = 5;
@@ -87,6 +88,9 @@ int main() {
     surrogate.bind_input("ncols", &ncols);
 
     surrogate.call_original_and_capture();
+    std::cout << model->get_input<float>("arr")->captures[0] << std::endl;
+    std::cout << model->get_output<float>("arr")->captures[0] << std::endl;
+
 
 
 }

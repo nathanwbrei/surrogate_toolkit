@@ -3,6 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include <catch.hpp>
+#include <optics.h>
 #include <torch/torch.h>
 
 TEST_CASE("Getting a multidimensional array into a Torch tensor") {
@@ -50,5 +51,17 @@ TEST_CASE("Getting a multidimensional array out of a Torch tensor with arbitrary
 
     std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << std::endl;
     std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << std::endl;
+}
+
+
+TEST_CASE("Using tensors with optics") {
+    double mat[2][3] = {{1,2,3},{4,5,6}};
+    auto p = optics::PrimitiveArray<double>({2,3});
+    auto t = p.to(mat[0]);
+
+    auto firstitem = t[0][0].item<double>();
+    REQUIRE(firstitem == 1.0);
+    REQUIRE(t.size(0) == 2);
+    REQUIRE(t.size(1) == 3);
 }
 
