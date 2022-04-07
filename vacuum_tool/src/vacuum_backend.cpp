@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
     std::string path = argv[1]; // Super safe
     DwarfContext dwarfContext {path};
     dwarfContext.identify_global_primitive();
+    dwarfContext.print_locals();
     return 0;
 }
 

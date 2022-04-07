@@ -170,12 +170,85 @@ void DwarfContext::visit_die(Dwarf_Die die, int level) {
         exit(1);
     }
     else if (result == DW_DLV_NO_ENTRY) {
-        name = (char*) "<no DW_AT_name attr>";
+        name = (char*) "???";
     }
 
     for (int i=0; i<level; ++i) {
         std::cout << "  ";
     }
     std::cout << tag_name << " " << name << std::endl;
+    if (strcmp(tag_name, "DW_TAG_variable") == 0) {
+        std::cout << "Visiting variable die" << std::endl;
+        visit_variable_die(die, name);
+    }
+    else if (strcmp(tag_name, "DW_TAG_subprogram") == 0) {
+        std::cout << "Visiting subprogram die" << std::endl;
+        visit_subprogram_die(die, name);
+    }
+    else if (strcmp(tag_name, "DW_TAG_formal_parameter") == 0) {
+        std::cout << "Visiting formal parameter die" << std::endl;
+        visit_formal_parameter_die(die, name);
+    }
+}
+
+void DwarfContext::visit_subprogram_die(Dwarf_Die die, std::string name) {
+    auto* f = new dwarf::Function {std::move(name)};
+    program.functions.push_back(f);
+    die_stack.push_back(f);
+}
+
+void DwarfContext::visit_variable_die(Dwarf_Die die, std::string name) {
+    auto* v = new dwarf::Variable {std::move(name)};
+    if (die_stack.empty()) {
+        program.globals.push_back(v);
+        v->has_global_addr = true;
+    }
+    else {
+        auto* f = dynamic_cast<dwarf::Function*>(die_stack.back());
+        if (f != nullptr) {
+            f->locals.push_back(v);
+            v->has_global_addr = false;
+        }
+        else {
+            std::cout << "Warning: local variable belongs to something other than a Function" << std::endl;
+        }
+    }
+}
+
+void DwarfContext::visit_formal_parameter_die(Dwarf_Die die, std::string name) {
+    auto* p = new dwarf::Variable {std::move(name)};
+    p->has_global_addr = false;
+    if (die_stack.empty()) {
+        std::cout << "Warning: formal parameter in the top level" << std::endl;
+    }
+    else {
+        auto* f = dynamic_cast<dwarf::Function*>(die_stack.back());
+        if (f != nullptr) {
+            f->parameters.push_back(p);
+        }
+        else {
+            std::cout << "Warning: formal parameter belongs to something other than a subprogram" << std::endl;
+        }
+    }
+
+}
+
+void DwarfContext::print_locals() {
+    std::cout << "PROGRAM GLOBALS" << std::endl;
+    for (auto var: program.globals) {
+        std::cout << var->name << std::endl;
+    }
+
+    std::cout << "PROGRAM FUNCTIONS" << std::endl;
+    for (auto function : program.functions) {
+        std::cout << function->name << "(";
+        for (auto param : function->parameters) {
+            std::cout << param->name << ",";
+        }
+        std::cout << ")" << std::endl;
+        for (auto var : function->locals) {
+            std::cout << "   " << var->name << std::endl;
+        }
+    }
 }
 

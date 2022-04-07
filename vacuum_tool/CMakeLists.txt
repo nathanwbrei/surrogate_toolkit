@@ -9,7 +9,7 @@ add_executable(dwarf_example src/dwarf_example.cpp)
 target_include_directories(dwarf_example PRIVATE ${LIBDWARF_INCLUDE_DIRS})
 target_link_libraries(dwarf_example ${LIBDWARF_LIBRARY} ${ZLIB_LIBRARY})
 
-set(VACUUM_TOOL_SOURCES src/vacuum_backend.cpp src/dwarf_utils.cpp)
+set(VACUUM_TOOL_SOURCES src/vacuum_backend.cpp src/dwarf_utils.cpp src/dwarf_model.hpp)
 add_executable("vacuum_backend" ${VACUUM_TOOL_SOURCES})
 target_include_directories(vacuum_backend PRIVATE ${LIBDWARF_INCLUDE_DIRS})
 target_link_libraries(vacuum_backend ${LIBDWARF_LIBRARY} ${ZLIB_LIBRARY})
