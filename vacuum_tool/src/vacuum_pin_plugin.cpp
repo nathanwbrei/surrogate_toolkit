@@ -13,26 +13,26 @@ bool target_function_found = false;
 
 KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "target5", "Specify name of function to target");
 
-VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len) {
+VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp) {
     if (in_target_routine) {
-        printf("%p: R %p [%d bytes]\n", ip, addr, len);
+        printf("%p: R %p [%d bytes], $rbp=%p\n", ip, addr, len, (void*) rbp);
     }
 }
 
-VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len) {
+VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp) {
     if (in_target_routine) {
-        printf("%p: W %p [%d bytes]\n", ip, addr, len);
+        printf("%p: W %p [%d bytes], $rbp=%p\n", ip, addr, len, (void*) rbp);
     }
 }
 
-VOID record_enter_rtn(UINT64 routine_id, VOID* addr) {
+VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip) {
     in_target_routine = true;
-    printf("%p: Entering %s (%llu)\n", addr, routine_names[routine_id].c_str(), routine_id);
+    printf("%p: Entering target routine %s\n", ip, routine_names[routine_id].c_str());
 }
 
-VOID record_exit_rtn(UINT64 routine_id, VOID* addr) {
+VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
     in_target_routine = false;
-    printf("%p: Exiting %s (%llu)\n", addr, routine_names[routine_id].c_str(), routine_id);
+    printf("%p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
 }
 
 
@@ -52,6 +52,7 @@ VOID instrument_ins(INS ins, VOID* v) {
                                      IARG_INST_PTR,
                                      IARG_MEMORYOP_EA, memOp,
                                      IARG_MEMORYOP_SIZE, memOp,
+                                     IARG_REG_VALUE, REG_RBP,
                                      IARG_END);
         }
 
@@ -63,6 +64,7 @@ VOID instrument_ins(INS ins, VOID* v) {
                                      IARG_INST_PTR,
                                      IARG_MEMORYOP_EA, memOp,
                                      IARG_MEMORYOP_SIZE, memOp,
+                                     IARG_REG_VALUE, REG_RBP,
                                      IARG_END);
         }
     }
@@ -76,20 +78,22 @@ void instrument_rtn(RTN rtn, VOID* v) {
 
     routine_names.push_back(rtn_name);
     current_routine++;
+
+    // Instrument target routine to set in_target_routine to be true
     if (rtn_name == KnobTargetFunction.Value()) {
         printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
         target_function_found = true;
 
         RTN_Open(rtn);
         // Insert a call to record_enter_rtn at the routine's entry point
-        RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_enter_rtn,
+        RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_enter_target_rtn,
                        IARG_UINT64, current_routine,
                        IARG_ADDRINT, rtn_address,
                        IARG_END);
 
         // Insert a call to record_exit_rtn at the routine's exit point
         // (Warning: PIN might not find all exit points!)
-        RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR) record_exit_rtn,
+        RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR) record_exit_target_rtn,
                        IARG_UINT64, current_routine,
                        IARG_ADDRINT, rtn_address,
                        IARG_END);

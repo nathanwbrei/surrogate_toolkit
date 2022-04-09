@@ -69,11 +69,17 @@ void test_target4() {
 int w5 = 22;
 int z5 = 0;
 int target5(int x, int y) {
+    void* dest;
+    asm("movq %%rbp,%0" : "=r"(dest));
+    std::cout << "target5: $rbp = " << dest << ", &x = " << &x << ", &y = " << &y << std::endl;
     z5 = 1;
     return w5 + x * y;
 }
 
 void test_target5() {
+    void* dest;
+    asm("movq %%rbp,%0" : "=r"(dest));
+    std::cout << "test_target5: $rbp = " << dest << std::endl;
     std::cout << "test_target5: Expect a WRITE to z5 at " << &z5 << std::endl;
     std::cout << "test_target5: Expect a READ from w5 at " << &w5 << std::endl;
     int x5 = 3;
