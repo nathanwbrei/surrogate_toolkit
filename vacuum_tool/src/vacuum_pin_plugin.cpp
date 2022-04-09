@@ -9,16 +9,19 @@
 std::vector<std::string> routine_names;
 uint64_t current_routine = -1;
 bool in_target_routine = false;
+bool target_function_found = false;
 
-VOID record_read_ins(VOID* ip, VOID* addr) {
+KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "target5", "Specify name of function to target");
+
+VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len) {
     if (in_target_routine) {
-        printf("%p: R %p\n", ip, addr);
+        printf("%p: R %p [%d bytes]\n", ip, addr, len);
     }
 }
 
-VOID record_write_ins(VOID* ip, VOID* addr, UINT32 memop) {
+VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len) {
     if (in_target_routine) {
-        printf("%p: W %p %d\n", ip, addr, memop);
+        printf("%p: W %p [%d bytes]\n", ip, addr, len);
     }
 }
 
@@ -48,6 +51,7 @@ VOID instrument_ins(INS ins, VOID* v) {
             INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR) record_read_ins,
                                      IARG_INST_PTR,
                                      IARG_MEMORYOP_EA, memOp,
+                                     IARG_MEMORYOP_SIZE, memOp,
                                      IARG_END);
         }
 
@@ -58,6 +62,7 @@ VOID instrument_ins(INS ins, VOID* v) {
             INS_InsertPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR) record_write_ins,
                                      IARG_INST_PTR,
                                      IARG_MEMORYOP_EA, memOp,
+                                     IARG_MEMORYOP_SIZE, memOp,
                                      IARG_END);
         }
     }
@@ -71,8 +76,9 @@ void instrument_rtn(RTN rtn, VOID* v) {
 
     routine_names.push_back(rtn_name);
     current_routine++;
-    if (rtn_name == "target5(int, int)") {
+    if (rtn_name == KnobTargetFunction.Value()) {
         printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
+        target_function_found = true;
 
         RTN_Open(rtn);
         // Insert a call to record_enter_rtn at the routine's entry point
@@ -94,7 +100,11 @@ void instrument_rtn(RTN rtn, VOID* v) {
 VOID instrument_finish(INT32 code, VOID* v) {
     // printf("#eof\n");
     // fclose(trace);
+    if (!target_function_found) {
+        std::cout << "Couldn't find target function. Are you sure your binary has debug symbols?" << std::endl;
+    }
 }
+
 
 INT32 print_usage() {
     PIN_ERROR("This Pintool prints a trace of memory addresses\n" + KNOB_BASE::StringKnobSummary() + "\n");
@@ -106,8 +116,9 @@ int main(int argc, char* argv[]) {
     PIN_InitSymbols();
     if (PIN_Init(argc, argv)) return print_usage();
 
-    // trace = fopen("pinatrace.out", "w");
+    std::cout << "Targeting function " << KnobTargetFunction.Value() << std::endl;
 
+    // trace = fopen("pinatrace.out", "w");
     RTN_AddInstrumentFunction(instrument_rtn, 0);
     INS_AddInstrumentFunction(instrument_ins, 0);
     PIN_AddFiniFunction(instrument_finish, 0);
