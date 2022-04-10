@@ -17,7 +17,7 @@ public:
         output<double>("y");
     }
 
-    void train(torch::Tensor) override {
+    void train_from_captures() override {
         auto& xs = get_input<double>("x")->captures;
         auto& ys = get_output<double>("y")->captures;
         for (size_t i = 0; i<get_capture_count(); ++i) {
@@ -57,7 +57,7 @@ TEST_CASE("Memorizing model memorizes!") {
     s.call_original_and_capture();
     REQUIRE(y == 4.0);  // Correct value comes from original function.
 
-    m->train({});  // Load the captures into the cache
+    m->train_from_captures();  // Load the captures into the cache
 
     y = 7.0;  // Reset to garbage value
     s.call_model();

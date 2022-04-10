@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <model.h>
 #include <surrogate.h>
-#include "pytorch_model.h"
+#include "feedforward_model.h"
 
 /// Modify a 2D array by setting each cell in the top right to zero.
 /// The idea is that it should be pretty easy to train a neural net to
@@ -75,7 +75,7 @@ int main() {
 
     std::cout << "Buffer after running the surrogate model:" << std::endl;
 
-    auto model = std::make_shared<PyTorchModel>();
+    auto model = std::make_shared<FeedForwardModel>();
     model->input_output("arr", new optics::PrimitiveArray<float>({4,5}));
     model->input("nrows", new optics::Primitive<int>());
     model->input("ncols", new optics::Primitive<int>());

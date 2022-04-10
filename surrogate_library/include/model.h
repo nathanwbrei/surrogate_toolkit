@@ -18,6 +18,7 @@ class Surrogate;
 class Model { // This is an abstract class
     friend class Surrogate;
 
+protected:
     std::vector<std::shared_ptr<Input>> inputs;
     std::vector<std::shared_ptr<Output>> outputs;
     std::map<std::string, std::shared_ptr<Input>> input_map;
@@ -109,13 +110,16 @@ public:
         return downcasted_output;
     }
 
-    size_t get_capture_count() { return captured_rows; }
+    size_t get_capture_count() const { return captured_rows; }
 
     // We want to be able to inherit from this
     virtual ~Model() = default;
 
+    // Initialize the underlying neural net once all of the inputs and outputs are known
+    virtual void initialize() {};
+
     // Train takes all of the captures associated with each parameter
-    virtual void train(torch::Tensor) {};
+    virtual void train_from_captures() {};
 
     // Infer takes the sample associated with each parameter
     virtual void infer(Surrogate&) {};

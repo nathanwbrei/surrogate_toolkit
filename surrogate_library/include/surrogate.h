@@ -21,7 +21,7 @@ class Surrogate {
 
     std::function<void(void)> original_function;
     std::shared_ptr<Model> model;
-
+public:
     std::vector<std::shared_ptr<InputBinding>> input_bindings;
     std::vector<std::shared_ptr<OutputBinding>> output_bindings;
     std::map<std::string, std::shared_ptr<InputBinding>> input_binding_map;

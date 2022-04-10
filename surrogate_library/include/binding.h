@@ -11,6 +11,8 @@
 #include "binding_visitor.h"
 
 struct InputBinding {
+    virtual torch::Tensor get_tensor() = 0;
+    virtual void put_tensor(torch::Tensor) = 0;
     virtual void capture() = 0;
     virtual ~InputBinding() = default;
     virtual void accept(InputBindingVisitor& v) = 0;
@@ -22,6 +24,13 @@ struct InputBindingT : public InputBinding {
     std::shared_ptr<InputT<T>> parameter;
     T* binding_root;  // This has to be either a global or a stack variable. Possibly the root of a nested data structure.
 
+    torch::Tensor get_tensor() override {
+        return parameter->accessor->to(binding_root);
+    }
+
+    void put_tensor(torch::Tensor t) override {
+        parameter->accessor->from(t, binding_root);
+    }
 
     void capture() override {
         torch::Tensor data = parameter->accessor->to(binding_root);
@@ -37,6 +46,8 @@ struct InputBindingT : public InputBinding {
 
 struct OutputBinding {
 public:
+    virtual torch::Tensor get_tensor() = 0;
+    virtual void put_tensor(torch::Tensor) = 0;
     virtual void capture() = 0;
     virtual ~OutputBinding() = default;
     virtual void accept(OutputBindingVisitor&) = 0;
@@ -47,6 +58,14 @@ template <typename T>
 struct OutputBindingT : public OutputBinding {
     std::shared_ptr<OutputT<T>> parameter;
     T* binding_root;
+
+    torch::Tensor get_tensor() override {
+        return parameter->accessor->to(binding_root);
+    }
+
+    void put_tensor(torch::Tensor t) override {
+        parameter->accessor->from(t, binding_root);
+    }
 
     void capture() override {
         torch::Tensor data = parameter->accessor->to(binding_root);
