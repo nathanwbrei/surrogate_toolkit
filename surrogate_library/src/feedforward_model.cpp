@@ -82,7 +82,9 @@ void FeedForwardModel::train_from_captures() {
             // Execute the model on the input data.
             torch::Tensor prediction = m_network->forward(batch.first);
             // Compute a loss value to judge the prediction of our model.
-            torch::Tensor loss = torch::nll_loss(prediction, batch.second);
+            // std::cout << "prediction" << std::endl << prediction.dtype() << std::endl;
+            // std::cout << "actual" << std::endl << batch.second.dtype() << std::endl;
+            torch::Tensor loss = torch::mse_loss(prediction, batch.second);
             // Compute gradients of the loss w.r.t. the parameters of our model.
             loss.backward();
             // Update the parameters based on the calculated gradients.
@@ -100,8 +102,8 @@ void FeedForwardModel::train_from_captures() {
 
 
 torch::Tensor FeedForwardModel::FeedForwardNetwork::forward(torch::Tensor x) {
-    x = torch::relu(m_input_layer->forward(x.reshape({x.size(0), 784})));
-    x = torch::dropout(x, /*p=*/0.5, /*train=*/is_training());
+    x = torch::relu(m_input_layer->forward(x));
+    // x = torch::dropout(x, /*p=*/0.5, /*train=*/is_training());
     x = torch::relu(m_middle_layer->forward(x));
     x = torch::relu(m_output_layer->forward(x));
     return x;

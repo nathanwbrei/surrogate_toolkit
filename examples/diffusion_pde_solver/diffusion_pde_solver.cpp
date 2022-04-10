@@ -73,12 +73,12 @@ int main() {
     fill_matrix(matrix, 4, 5);
     print_matrix(std::cout, matrix, 4, 5);
 
-    std::cout << "Buffer after running the surrogate model:" << std::endl;
 
     auto model = std::make_shared<FeedForwardModel>();
     model->input_output("arr", new optics::PrimitiveArray<float>({4,5}));
     model->input("nrows", new optics::Primitive<int>());
     model->input("ncols", new optics::Primitive<int>());
+    model->initialize();
 
     int nrows = 4;
     int ncols = 5;
@@ -88,10 +88,12 @@ int main() {
     surrogate.bind_input("ncols", &ncols);
 
     surrogate.call_original_and_capture();
-    std::cout << model->get_input<float>("arr")->captures[0] << std::endl;
-    std::cout << model->get_output<float>("arr")->captures[0] << std::endl;
+    model->train_from_captures();
 
+    fill_matrix(matrix, 4, 5);
+    model->infer(surrogate);
 
-
+    std::cout << "Buffer after running the surrogate model:" << std::endl;
+    print_matrix(std::cout, matrix, 4, 5);
 }
 
