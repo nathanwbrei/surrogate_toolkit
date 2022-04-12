@@ -31,15 +31,3 @@ configure_file(src/vacuum_tool.in vacuum_tool
 install(TARGETS vacuum_backend dwarf_example DESTINATION bin)
 install(FILES ${CMAKE_BINARY_DIR}/vacuum_tool/vacuum_tool DESTINATION bin)
 
-set(VACUUM_PIN_PLUGIN_SOURCES vacuum_pin_plugin.cpp)
-add_custom_command(
-        OUTPUT src/obj-intel64/vacuum_pin_plugin.dylib
-        COMMAND echo "Running make Vacuum tool plugin" #make
-        DEPENDS ${VACUUM_PIN_PLUGIN_SOURCES}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src>
-        VERBATIM
-        )
-
-#add_dependencies(vacuum_backend src/obj-intel64/vacuum_pin_plugin.dylib)
-
-install(FILES src/obj-intel64/vacuum_pin_plugin.dylib DESTINATION bin)
