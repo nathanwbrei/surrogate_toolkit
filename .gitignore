@@ -5,3 +5,8 @@ cmake-build*/
 vacuum_tool/src/obj*/
 pin.log
 pinatrace.out
+a.out
+a.out.dSYM
+model.pt
+captures.csv
+*-checkpoint.ipynb
