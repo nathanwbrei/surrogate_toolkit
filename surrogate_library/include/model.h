@@ -126,6 +126,7 @@ public:
 
     void dump_captures_to_csv(std::ostream&);
 
+    virtual void save();
 };
 
 

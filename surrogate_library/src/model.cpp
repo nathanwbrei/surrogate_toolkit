@@ -29,3 +29,9 @@ void Model::dump_captures_to_csv(std::ostream& os) {
     }
     os << std::endl;
 }
+
+void Model::save() {
+    std::ofstream outfile("captures.csv");
+    dump_captures_to_csv(outfile);
+    outfile.close();
+}
