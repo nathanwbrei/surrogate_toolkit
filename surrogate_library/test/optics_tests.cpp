@@ -124,4 +124,71 @@ TEST_CASE("1-D Array of Primitive produces same Tensor as PrimitiveArray") {
     REQUIRE(*torch::all(t1 == t2).data_ptr<bool>() == true);
 }
 
+TEST_CASE("Iterate over std::vector") {
+    std::vector<MyStruct> aos = {{1,2},{5,6},{10,11},{15,16},{20,21}};
+    auto primitive_iso = optics::Primitive<float>();
+    auto inner_lens = optics::Field<MyStruct, float>(&primitive_iso, [](MyStruct* s){return &(s->y);});
+    using IterT = optics::STLIterator<std::vector<MyStruct>, MyStruct>;
+    auto vector_traversal = optics::Traversal<std::vector<MyStruct>, MyStruct, IterT>(&inner_lens, 5);
 
+    auto t = vector_traversal.to(&aos);
+    std::cout << t << std::endl;
+    REQUIRE(t.size(0) == 5);
+    REQUIRE(t.size(1) == 1);
+}
+
+struct MyOrderableStruct {
+    float x;
+    float y;
+    bool operator<(const MyOrderableStruct& other) {
+        if (x < other.x) return true;
+        if (x == other.x && y < other.y) return true;
+        return false;
+    }
+};
+
+
+/*
+TEST_CASE("Iterate over std::set just like above") {
+    std::set<MyOrderableStruct> aos = {{1,2},{5,6},{10,11},{15,16},{20,21}};
+    auto primitive_iso = optics::Primitive<float>();
+    auto inner_lens = optics::Field<MyOrderableStruct, float>(&primitive_iso, [](MyOrderableStruct* s){return &(s->y);});
+    using IterT = optics::STLIterator<std::set<MyOrderableStruct>, MyOrderableStruct>;
+    auto vector_traversal = optics::Traversal<std::set<MyOrderableStruct>, MyOrderableStruct, IterT>(&inner_lens, 5);
+
+    auto t = vector_traversal.to(&aos);
+    std::cout << t << std::endl;
+    REQUIRE(t.size(0) == 5);
+    REQUIRE(t.size(1) == 1);
+}
+*/
+// Write-back into containers such as sets and maps is a no-go. Their iterators are always const because otherwise
+// we could break the container. I think the correct thing to do in this case is to clear the container and re-enter
+// all of the values.
+
+
+struct Tree {
+    int data = 0;
+    Tree* left = nullptr;
+    Tree* right = nullptr;
+
+    Tree(int x) : data(x) {};
+    void Insert(int new_data) {
+        if (new_data < data) {
+            if (left == nullptr) {
+                left = new Tree(new_data);
+            }
+            else {
+                left->Insert(new_data);
+            }
+        }
+        else {
+            if (right == nullptr) {
+                right = new Tree(new_data);
+            }
+            else {
+                right->Insert(new_data);
+            }
+        }
+    }
+};

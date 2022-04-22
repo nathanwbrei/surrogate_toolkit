@@ -172,7 +172,61 @@ public:
 };
 
 
+// For now assume the traversable contains exactly as many elements as expected
+template <typename OuterT, typename InnerT, typename IteratorT>
+class Traversal : public Optic<OuterT> {
+    Optic<InnerT>* m_optic;
+    int64_t m_length;
 
+public:
+    Traversal(Optic<InnerT>* optic, size_t length) : m_optic(optic), m_length(length) {}
+    std::vector<int64_t> shape() {
+        std::vector<int64_t> result {m_length};
+        auto inner_shape = m_optic->shape();
+        result.insert(result.end(), inner_shape.begin(), inner_shape.end());
+        return result;
+    }
+    torch::Tensor to(OuterT* source) {
+        IteratorT it(source);
+        std::vector<torch::Tensor> tensors;
+
+        for (int i=0; i<m_length; ++i) {
+            tensors.push_back(m_optic->to(it.Current()));
+            it.Next();  // Returns true because container has m_length entries XD
+        }
+        return torch::stack(tensors);
+    }
+    void from(torch::Tensor source, OuterT* dest) {
+        auto unstacked = torch::unbind(source, 0);
+        IteratorT it(dest);
+        for (int i=0; i<m_length; ++i) {
+            m_optic->from(unstacked[i], it.Current());
+            it.Next();
+        }
+    }
+};
+
+template<typename OuterT, typename InnerT>
+class STLIterator {
+    OuterT* underlying;
+    typename OuterT::iterator it;
+public:
+    STLIterator(OuterT* v) : underlying(v), it(std::begin(*v)) {};
+    InnerT* Current() {
+        return &(*it);
+    }
+    bool Next() {
+        return (++it != std::end(*underlying));
+    }
+    /*
+    void Insert(InnerT&& item) {
+        // Problem: insert() doesn't behave consistently across STL containers
+        // Problem: I don't think it's safe to use the iterator after the modification has happened
+        // Probably the best thing to do is to construct the missing items and append them to the container at the very end
+        underlying->insert(it, std::move(item));
+    }
+    */
+};
 
 
 
