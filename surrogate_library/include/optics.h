@@ -144,6 +144,36 @@ Field<StructT, FieldT> make_field_lens(Optic<FieldT>* optic, std::function<Field
     return Field(optic, fn);
 };
 
+template <typename InnerT>
+class Array : public Optic<InnerT> {
+    Optic<InnerT>* m_optic;
+    int64_t m_length;
+public:
+    Array(Optic<InnerT>* optic, size_t length) : m_optic(optic), m_length(length) {}
+    std::vector<int64_t> shape() {
+        std::vector<int64_t> result {m_length};
+        auto inner_shape = m_optic->shape();
+        result.insert(result.end(), inner_shape.begin(), inner_shape.end());
+        return result;
+    }
+    torch::Tensor to(InnerT* source) {
+        std::vector<torch::Tensor> tensors;
+        for (int i=0; i<m_length; ++i) {
+            tensors.push_back(m_optic->to(source+i));
+        }
+        return torch::stack(tensors);
+    }
+    void from(torch::Tensor source, InnerT* dest) {
+        auto unstacked = torch::unbind(source, 0);
+        for (int i=0; i<m_length; ++i) {
+            m_optic->from(unstacked[i], dest+i);
+        }
+    }
+};
+
+
+
+
 
 
 } // namespace optics

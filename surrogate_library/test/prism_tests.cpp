@@ -106,3 +106,37 @@ Maybe<B> fmap(std::function<B>(A) f, Maybe<A> ma) {
 
 */
 
+template <typename S, typename T>
+struct Converter {
+    std::function<T(S)> convert;
+    explicit Converter(std::function<T(S)> fn) :  convert(fn) {};
+
+    template <typename U>
+    Converter<S, U> compose(Converter<T,U> c) {
+        return Converter<S,U>([=](S s){
+            T t = this->convert(s);
+            U u = c.convert(t);
+            return u;
+            });
+    }
+};
+
+template <typename S, typename T, typename U>
+Converter<S,U> operator|(Converter<S,T> f, Converter<T,U> g) {
+    return f.compose(g);
+}
+
+TEST_CASE("Composing functions via templates") {
+    auto a = Converter<int,int>([](int x){return x+1;});
+    auto b = Converter<int,float>([](int x){return 2.0*x;});
+    auto c = a.compose(b);
+    REQUIRE(c.convert(0) == 2.0);
+
+    auto d  = a | b;
+    REQUIRE(d.convert(0) == 2.0);
+
+    // auto e = [](int x)->int{return x+1;} | [](int x)->float{return 2.0*x;};
+    // REQUIRE(e.convert(0) == 2.0);
+
+}
+

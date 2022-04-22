@@ -98,3 +98,30 @@ TEST_CASE("Composition of two structs") {
     REQUIRE(*tp == (float) 2.0);
 }
 
+
+TEST_CASE("Array of structs") {
+    MyStruct aos[5] = {{1,2},{5,6},{10,11},{15,16},{20,21}};
+    auto primitive_iso = optics::Primitive<float>();
+    auto inner_lens = optics::Field<MyStruct, float>(&primitive_iso, [](MyStruct* s){return &(s->y);});
+    auto array_traversal = optics::Array<MyStruct>(&inner_lens, 5);
+
+    auto t = array_traversal.to(aos);
+    std::cout << t << std::endl;
+    REQUIRE(t.size(0) == 5);
+    REQUIRE(t.size(1) == 1);
+}
+
+
+TEST_CASE("1-D Array of Primitive produces same Tensor as PrimitiveArray") {
+    int xs[] = {1,2,3,4,5};
+    auto primitive_iso = optics::Primitive<int>();
+    auto array_trav = optics::Array<int>(&primitive_iso, 5);
+    auto primitive_array_iso = optics::PrimitiveArray<int>({5,1});  // Note we can also specify shape as {5}
+
+    auto t1 = array_trav.to(xs);
+    auto t2  = primitive_array_iso.to(xs);
+
+    REQUIRE(*torch::all(t1 == t2).data_ptr<bool>() == true);
+}
+
+
