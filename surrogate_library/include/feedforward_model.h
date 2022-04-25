@@ -38,6 +38,9 @@ private:
     std::vector<int64_t> m_output_lengths;
 
 public:
+    FeedForwardModel() = default;
+    ~FeedForwardModel();
+
     void initialize() override;
 
     void train_from_captures() override;

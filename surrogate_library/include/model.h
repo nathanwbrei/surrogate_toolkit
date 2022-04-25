@@ -26,6 +26,8 @@ protected:
     size_t captured_rows = 0;
 
 public:
+    virtual ~Model() = default; // We want to be able to inherit from this
+
     template <typename T>
     void input(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>()) {
         auto input = std::make_shared<InputT<T>>();
@@ -112,11 +114,11 @@ public:
 
     size_t get_capture_count() const { return captured_rows; }
 
-    // We want to be able to inherit from this
-    virtual ~Model() = default;
-
     // Initialize the underlying neural net once all of the inputs and outputs are known
     virtual void initialize() {};
+
+    // Performs tasks such as training or writing to CSV, right before the model gets destroyed
+    void finalize();
 
     // Train takes all of the captures associated with each parameter
     virtual void train_from_captures() {};
@@ -125,6 +127,8 @@ public:
     virtual void infer(Surrogate&) {};
 
     void dump_captures_to_csv(std::ostream&);
+
+    void dump_ranges(std::ostream&);
 
     virtual void save();
 };

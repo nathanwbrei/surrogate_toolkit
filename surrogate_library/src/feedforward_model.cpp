@@ -4,6 +4,11 @@
 
 #include "feedforward_model.h"
 
+
+FeedForwardModel::~FeedForwardModel() {
+    finalize();
+}
+
 void FeedForwardModel::initialize() {
     // Compute flattened input and output dimensions from shapes
     int64_t all_inputs_dim = 0;

@@ -18,7 +18,12 @@
 
 
 class Surrogate {
+public:
+    friend class Model;
+    enum class CallMode { NotSet, UseOriginal, UseModel, CaptureAndTrain, CaptureAndDump, CaptureAndSummarize };
 
+private:
+    static inline CallMode s_callmode = CallMode::NotSet;
     std::function<void(void)> original_function;
     std::shared_ptr<Model> model;
 public:
@@ -28,8 +33,8 @@ public:
     std::map<std::string, std::shared_ptr<OutputBinding>> output_binding_map;
 
 public:
-    explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
-        : original_function(std::move(f)), model(std::move(model)) { };
+    explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
+    static void set_call_mode(CallMode callmode) {s_callmode = callmode;}
 
     template <typename T>
     void bind_input(std::string param_name, T* slot) {
@@ -135,9 +140,6 @@ public:
         // TODO: Remove get_captured_output completely
     }
 
-    void load_args_into_params() {};
-
-    void train_model_on_samples() {};
 /*
     void bind(const std::vector<void*>& input_pointers, const std::vector<void*>& output_pointers) {
         size_t inputs_size = model->inputs.size();
@@ -156,6 +158,10 @@ public:
 	}
     }
 */
+
+    /// call() looks at PHASM_CALL_MODE env var to decide what to do
+    void call();
+
     void call_original() {
         original_function();
     };
@@ -164,13 +170,8 @@ public:
         model->infer(*this);
     };
 
-
     void capture_input_distribution() {
-	// for (auto& input: input_bindings) {
-	    // input->capture_range();
-	// }
     }
-
 
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {

@@ -14,6 +14,7 @@
 
 int main() {
 
+
     auto model = std::make_shared<FeedForwardModel>();
     model->input("x", new optics::Primitive<double>());
     model->input("y", new optics::Primitive<double>());
@@ -22,6 +23,8 @@ int main() {
     model->output("By", new optics::Primitive<double>());
     model->output("Bz", new optics::Primitive<double>());
     model->initialize();
+
+    Surrogate::set_call_mode(Surrogate::CallMode::CaptureAndDump);
 
     japp = new JApplication;
     auto calib_man = std::make_shared<JCalibrationManager>();
@@ -46,12 +49,9 @@ int main() {
     for (x = 0.0; x < 3.0; x+=.5) {
         for (y = 0.0; y < 3.0; y+=0.5) {
             for (z = 0.0; z < 3.0; z+=0.5) {
-                surrogate.call_original_and_capture();
+                surrogate.call();
             }
         }
     }
-    model->dump_captures_to_csv(std::cout);
-    model->train_from_captures();
-
 }
 
