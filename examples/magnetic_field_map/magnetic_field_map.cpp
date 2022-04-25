@@ -10,12 +10,12 @@
 #include <JANA/Calibrations/JCalibrationGeneratorCCDB.h>
 #include "DMagneticFieldMapFineMesh.h"
 #include "surrogate.h"
-#include "feedforward_model.h"
+#include "torchscript_model.h"
 
 int main() {
 
 
-    auto model = std::make_shared<FeedForwardModel>();
+    auto model = std::make_shared<TorchscriptModel>("model.pt");
     model->input("x", new optics::Primitive<double>());
     model->input("y", new optics::Primitive<double>());
     model->input("z", new optics::Primitive<double>());
