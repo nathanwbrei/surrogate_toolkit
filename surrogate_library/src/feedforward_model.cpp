@@ -111,7 +111,7 @@ torch::Tensor FeedForwardModel::FeedForwardNetwork::forward(torch::Tensor x) {
 
 torch::Tensor FeedForwardModel::flatten_and_join(std::vector<torch::Tensor> inputs) {
     for (auto& input : inputs) {
-        input = input.flatten(0, -1);
+        input = input.flatten(0, -1).toType(c10::ScalarType::Float);
     }
     auto result = torch::cat(inputs);
     return result;

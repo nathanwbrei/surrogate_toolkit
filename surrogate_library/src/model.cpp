@@ -8,22 +8,49 @@
 void Model::dump_captures_to_csv(std::ostream& os) {
     // print column header
     for (auto input : inputs) {
-        os << input->name << ", ";
+        int length = 1;
+        for (int dim : input->shape()) length *= dim;
+        if (length == 1) {
+            os << input->name << ", ";
+        }
+        else {
+            for (int i=0; i<length; ++i) {
+                os << input->name << "[" << i << "], ";
+            }
+        }
     }
     for (size_t i=0; i<outputs.size(); ++i) {
-        os << outputs[i]->name;
-        if (i < (outputs.size()-1)) std::cout << ", ";
+        int length = 1;
+        for (int dim : outputs[i]->shape()) length *= dim;
+        if (length == 1) {
+            os << outputs[i]->name;
+            if (i < (outputs.size()-1)) os << ", ";
+        }
+        else {
+            for (int j=0; j<length; ++j) {
+                os << outputs[i]->name << "[" << j << "]";
+                bool last_col = (i == outputs.size()-1) && (j==length-1);
+                if (!last_col) os << ", ";
+            }
+        }
     }
-    std::cout << std::endl;
+    os << std::endl;
 
     // print body
     for (size_t i=0; i<captured_rows; ++i) {
         for (size_t j=0; j<inputs.size(); ++j) {
-            os << inputs[j]->captures[i] << ", ";
+            auto t = inputs[j]->captures[i].flatten(0,-1);
+            for (int k=0; k<t.numel(); ++k) {
+                os << t[k].item().toFloat() << ", ";
+            }
         }
         for (size_t j=0; j<outputs.size(); ++j) {
-            std::cout << outputs[j]->captures[i];
-            if (j < (outputs.size()-1)) std::cout << ", ";
+            auto t = outputs[j]->captures[i].flatten(0,-1);
+            for (int k=0; k<t.numel(); ++k) {
+                os << t[k].item().toFloat();
+                bool last_col = (j == outputs.size()-1) && (k==t.numel()-1);
+                if (!last_col) os << ", ";
+            }
         }
         os << std::endl;
     }

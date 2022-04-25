@@ -9,8 +9,20 @@
 #include <JANA/Calibrations/JCalibrationManager.h>
 #include <JANA/Calibrations/JCalibrationGeneratorCCDB.h>
 #include "DMagneticFieldMapFineMesh.h"
+#include "surrogate.h"
+#include "feedforward_model.h"
 
 int main() {
+
+    auto model = std::make_shared<FeedForwardModel>();
+    model->input("x", new optics::Primitive<double>());
+    model->input("y", new optics::Primitive<double>());
+    model->input("z", new optics::Primitive<double>());
+    model->output("Bx", new optics::Primitive<double>());
+    model->output("By", new optics::Primitive<double>());
+    model->output("Bz", new optics::Primitive<double>());
+    model->initialize();
+
     japp = new JApplication;
     auto calib_man = std::make_shared<JCalibrationManager>();
     // calib_man->AddCalibrationGenerator(new JCalibrationGeneratorCCDB);
@@ -21,14 +33,25 @@ int main() {
     // DMagneticFieldMapFineMesh mfmfm(japp, 1, "Magnets/Solenoid/solenoid_1350A_poisson_20160222");
     DMagneticFieldMapFineMesh mfmfm(japp, "/cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources/Magnets/Solenoid/finemeshes/solenoid_1350A_poisson_20160222.evio");
 
-    double bx, by, bz;
-    mfmfm.GetField(0.0, 0.0, 0.0, bx, by, bz);
-    std::cout << bx << ", " << by << ", " << bz << std::endl;
+    double x, y, z, bx, by, bz;
 
-    mfmfm.GetField(1.0, 1.0, 1.0, bx, by, bz);
-    std::cout << bx << ", " << by << ", " << bz << std::endl;
+    Surrogate surrogate([&](){ mfmfm.GetField(x,y,z,bx,by,bz); }, model);
+    surrogate.bind_input("x", &x);
+    surrogate.bind_input("y", &y);
+    surrogate.bind_input("z", &z);
+    surrogate.bind_output("Bx", &bx);
+    surrogate.bind_output("By", &by);
+    surrogate.bind_output("Bz", &bz);
 
-    mfmfm.GetField(0.001, 0.001, 0.001, bx, by, bz);
-    std::cout << bx << ", " << by << ", " << bz << std::endl;
+    for (x = 0.0; x < 3.0; x+=.5) {
+        for (y = 0.0; y < 3.0; y+=0.5) {
+            for (z = 0.0; z < 3.0; z+=0.5) {
+                surrogate.call_original_and_capture();
+            }
+        }
+    }
+    model->dump_captures_to_csv(std::cout);
+    model->train_from_captures();
+
 }
 
