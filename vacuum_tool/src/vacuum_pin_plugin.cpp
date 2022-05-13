@@ -41,6 +41,18 @@ VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
     printf("%p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
 }
 
+VOID record_enter_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
+    if (in_target_routine) {
+        printf("%p: Entering routine %s, $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
+    }
+}
+
+VOID record_exit_rtn(UINT64 routine_id, VOID* ip) {
+    if (in_target_routine) {
+        printf("%p: Exiting routine %s\n", ip, routine_names[routine_id].c_str());
+    }
+}
+
 VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
     if (in_target_routine) {
         printf("%p Malloc request of size %llu\n", ip, size);
@@ -134,6 +146,20 @@ void instrument_rtn(RTN rtn, VOID* v) {
     else if (rtn_name == "free" || rtn_name == "_free") {
         RTN_Open(rtn);
         RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_free_first_argument, IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_INST_PTR,IARG_END);
+        RTN_Close(rtn);
+    }
+    else {
+        RTN_Open(rtn);
+        RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_enter_rtn,
+                       IARG_UINT64, current_routine,
+                       IARG_ADDRINT, rtn_address,
+                       IARG_REG_VALUE, REG_RSP,
+                       IARG_END);
+
+        RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR) record_exit_rtn,
+                       IARG_UINT64, current_routine,
+                       IARG_ADDRINT, rtn_address,
+                       IARG_END);
         RTN_Close(rtn);
     }
 }
