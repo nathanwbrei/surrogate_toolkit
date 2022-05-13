@@ -1,33 +1,39 @@
 
 #include <stdio.h>
+#include <map>
 #include <iostream>
 #include "pin.H"
 #include "utils.hpp"
 
 // FILE* trace;
 
+size_t last_malloc_request;
+// std::map<void*, bool> MallocTracker
+
 std::vector<std::string> routine_names;
 uint64_t current_routine = -1;
 bool in_target_routine = false;
 bool target_function_found = false;
+void* target_rbp = 0;
 
 KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "target6(int)", "Specify name of function to target");
 
-VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp) {
+VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("%p: R %p [%d bytes], $rbp=%p\n", ip, addr, len, (void*) rbp);
+        printf("%p: R %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
     }
 }
 
-VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp) {
+VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("%p: W %p [%d bytes], $rbp=%p\n", ip, addr, len, (void*) rbp);
+        printf("%p: W %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
     }
 }
 
-VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip) {
+VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     in_target_routine = true;
-    printf("%p: Entering target routine %s\n", ip, routine_names[routine_id].c_str());
+    target_rbp = (void*) rsp; // This is because record_enter_target_rtn is called before the target routine's prologue
+    printf("%p: Entering target routine %s, target $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
 }
 
 VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
@@ -70,7 +76,7 @@ VOID instrument_ins(INS ins, VOID* v) {
                                      IARG_MEMORYOP_EA, memOp,
                                      IARG_MEMORYOP_SIZE, memOp,
                                      IARG_REG_VALUE, REG_RBP,
-                                     // IARG_REG_VALUE, REG_RSP,
+                                     IARG_REG_VALUE, REG_RSP,
                                      IARG_END);
         }
 
@@ -83,7 +89,7 @@ VOID instrument_ins(INS ins, VOID* v) {
                                      IARG_MEMORYOP_EA, memOp,
                                      IARG_MEMORYOP_SIZE, memOp,
                                      IARG_REG_VALUE, REG_RBP,
-                                     // IARG_REG_VALUE, REG_RSP, // We'll want this later
+                                     IARG_REG_VALUE, REG_RSP, // We'll want this later
                                      IARG_END);
         }
     }
@@ -108,6 +114,7 @@ void instrument_rtn(RTN rtn, VOID* v) {
         RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_enter_target_rtn,
                        IARG_UINT64, current_routine,
                        IARG_ADDRINT, rtn_address,
+                       IARG_REG_VALUE, REG_RSP,
                        IARG_END);
 
         // Insert a call to record_exit_rtn at the routine's exit point
