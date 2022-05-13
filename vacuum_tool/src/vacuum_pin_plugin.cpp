@@ -11,7 +11,7 @@ uint64_t current_routine = -1;
 bool in_target_routine = false;
 bool target_function_found = false;
 
-KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "target5", "Specify name of function to target");
+KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "target6(int)", "Specify name of function to target");
 
 VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp) {
     if (in_target_routine) {
@@ -35,6 +35,23 @@ VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
     printf("%p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
 }
 
+VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
+    if (in_target_routine) {
+        printf("%p Malloc request of size %llu\n", ip, size);
+    }
+}
+
+VOID record_malloc_return(ADDRINT addr, VOID* ip) {
+    if (in_target_routine) {
+        printf("%p: Malloc returned %llx\n", ip, addr);
+    }
+}
+
+VOID record_free_first_argument(ADDRINT addr, VOID* ip) {
+    if (in_target_routine) {
+        printf("%p: Freeing %llx\n", ip, addr);
+    }
+};
 
 VOID instrument_ins(INS ins, VOID* v) {
     // Instruments memory accesses using a predicated call, i.e.
@@ -53,6 +70,7 @@ VOID instrument_ins(INS ins, VOID* v) {
                                      IARG_MEMORYOP_EA, memOp,
                                      IARG_MEMORYOP_SIZE, memOp,
                                      IARG_REG_VALUE, REG_RBP,
+                                     // IARG_REG_VALUE, REG_RSP,
                                      IARG_END);
         }
 
@@ -65,12 +83,13 @@ VOID instrument_ins(INS ins, VOID* v) {
                                      IARG_MEMORYOP_EA, memOp,
                                      IARG_MEMORYOP_SIZE, memOp,
                                      IARG_REG_VALUE, REG_RBP,
+                                     // IARG_REG_VALUE, REG_RSP, // We'll want this later
                                      IARG_END);
         }
     }
 }
 
-// Called every time a _new_ routine is _executed_
+// Called every time a new routine is jitted
 void instrument_rtn(RTN rtn, VOID* v) {
 
     std::string rtn_name = demangle(RTN_Name(rtn));
@@ -97,6 +116,17 @@ void instrument_rtn(RTN rtn, VOID* v) {
                        IARG_UINT64, current_routine,
                        IARG_ADDRINT, rtn_address,
                        IARG_END);
+        RTN_Close(rtn);
+    }
+    else if (rtn_name == "malloc" || rtn_name == "_malloc") {
+        RTN_Open(rtn);
+        RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_malloc_first_argument, IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_INST_PTR, IARG_END);
+        RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR) record_malloc_return, IARG_FUNCRET_EXITPOINT_VALUE, IARG_INST_PTR, IARG_END);
+        RTN_Close(rtn);
+    }
+    else if (rtn_name == "free" || rtn_name == "_free") {
+        RTN_Open(rtn);
+        RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR) record_free_first_argument, IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_INST_PTR,IARG_END);
         RTN_Close(rtn);
     }
 }

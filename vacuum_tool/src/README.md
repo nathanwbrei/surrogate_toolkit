@@ -11,8 +11,8 @@
 
 ```bash
 export PIN_ROOT=/Users/nbrei/projects/surrogate/Pin/pin-3.22-98547-g7a303a835-clang-mac/
-export VACUUMTARGET=/Users/nbrei/projects/surrogate/surrogate_toolkit/cmake-build-debug-local/vacuum_target/vacuum_target
-export VACUUMTOOL=/Users/nbrei/projects/surrogate/surrogate_toolkit/vacuum_tool/src/obj-intel64/pinatrace.dylib
+export VACUUMTARGET=/Users/nbrei/projects/surrogate/surrogate_toolkit/cmake-build-debug-local/vacuum_tool/vacuum_target
+export VACUUMTOOL=/Users/nbrei/projects/surrogate/surrogate_toolkit/vacuum_tool/src/obj-intel64/vacuum_pin_plugin.dylib
 make
 $PIN_ROOT/pin -t $VACUUMTOOL -- $VACUUMTARGET
 ```

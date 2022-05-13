@@ -91,11 +91,28 @@ void test_target5() {
     std::cout << "test_target5: Retval = " << retval << std::endl;
 }
 
+double* target6(int x) {
+    double* d = new double(10.0);
+    double* result = new double(*d + x);
+    delete d;
+    return result;
+}
+
+void test_target6() {
+    int x6 = 3;
+    std::cout << "test_target6: input x6 = " << x6 << std::endl;
+    std::cout << "test_target6: expected two allocs and one return" << std::endl;
+    double* retval = target6(x6);
+    std::cout << "test_target6: output = " << *retval << std::endl;
+    delete retval;
+}
+
 int main(int argc, char** argv) {
     test_target1();
     test_target2();
     test_target3();
     test_target4();
     test_target5();
+    test_target6();
 }
 
