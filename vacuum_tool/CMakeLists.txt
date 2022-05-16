@@ -14,7 +14,7 @@ add_executable("vacuum_backend" ${VACUUM_TOOL_SOURCES})
 target_include_directories(vacuum_backend PRIVATE ${LIBDWARF_INCLUDE_DIRS})
 target_link_libraries(vacuum_backend ${LIBDWARF_LIBRARY} ${ZLIB_LIBRARY})
 
-set(VACUUM_TOOL_TEST_SOURCES test/dummy_tests.cpp test/interpreter_tests.cpp src/vacuum_interpreter.cpp)
+set(VACUUM_TOOL_TEST_SOURCES test/dummy_tests.cpp test/interpreter_tests.cpp src/interpreter.cpp)
 add_executable("vacuum_tool_tests" ${VACUUM_TOOL_TEST_SOURCES})
 target_include_directories(vacuum_tool_tests PRIVATE src ${LIBDWARF_INCLUDE_DIRS})
 target_link_libraries(vacuum_tool_tests ${LIBDWARF_LIBRARY})

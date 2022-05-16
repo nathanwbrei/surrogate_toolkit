@@ -3,14 +3,14 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 
-#ifndef SURROGATE_TOOLKIT_VACUUM_INTERPRETER_HPP
-#define SURROGATE_TOOLKIT_VACUUM_INTERPRETER_HPP
+#ifndef SURROGATE_TOOLKIT_INTERPRETER_HPP
+#define SURROGATE_TOOLKIT_INTERPRETER_HPP
 
 #include <vector>
 #include <string>
 #include <map>
 
-namespace phasm::vacuumtool {
+namespace phasm::memtrace {
 
 struct CodeLocation {
     void* instruction = nullptr;
@@ -56,10 +56,10 @@ struct ProgramAddressRanges {
 };
 
 
-class VacuumInterpreter {
+class Interpreter {
 
 public:
-    VacuumInterpreter(int target_id, std::vector<std::string> routine_names);
+    Interpreter(int target_id, std::vector<std::string> routine_names);
 
     void enter_fun(void *rip, int fun_id, void *rbp);
 
@@ -79,9 +79,9 @@ public:
     // Helper class could read the stack address ranges from /proc
 
 
-    MemoryAllocation* find_corresponding_allocation(void *addr);
+    MemoryAllocation* find_allocation_containing(void *addr);
 
-    std::vector<Variable> get_variable();
+    std::vector<Variable> get_variables();
 
 private:
     std::vector<std::string> m_routine_names;
@@ -96,4 +96,4 @@ private:
 } // namespace phasm::vacuumtool
 
 
-#endif //SURROGATE_TOOLKIT_VACUUM_INTERPRETER_HPP
+#endif //SURROGATE_TOOLKIT_INTERPRETER_HPP
