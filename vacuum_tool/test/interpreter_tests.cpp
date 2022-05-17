@@ -89,7 +89,6 @@ TEST_CASE("Allocation tracker correctly handles multiple entries") {
 TEST_CASE("Interpreter recognizes target fun reading external primitive") {
     int x;
 
-    /*
     Interpreter sut(1, {"main", "target", "f"});
     sut.enter_fun(nullptr, 1, nullptr);
     sut.read_mem(nullptr, &x, 4, nullptr, nullptr);
@@ -99,14 +98,12 @@ TEST_CASE("Interpreter recognizes target fun reading external primitive") {
     REQUIRE(vars.size() == 1);
     REQUIRE(vars[0].sizes.size() == 1);
     REQUIRE(vars[0].sizes[0] == 4);
-    REQUIRE(vars[0].is_input == false);
-    REQUIRE(vars[0].is_output == true);
-    */
+    REQUIRE(vars[0].is_input == true);
+    REQUIRE(vars[0].is_output == false);
 }
 
 TEST_CASE("Interpreter recognizes allocation inside target function") {
     int x;
-/*
     Interpreter sut(1, {"main", "target", "f"});
     sut.enter_fun(nullptr, 1, nullptr);
     sut.request_malloc(nullptr, 4);
@@ -120,6 +117,4 @@ TEST_CASE("Interpreter recognizes allocation inside target function") {
     REQUIRE(vars[0].sizes[0] == 4);
     REQUIRE(vars[0].is_input == false);
     REQUIRE(vars[0].is_output == true);
-    */
-
 }

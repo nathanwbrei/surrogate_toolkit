@@ -91,6 +91,7 @@ void Interpreter::read_mem(void *rip, void *addr, size_t size, void *rbp, void *
                 loc.instruction = rip;
 
                 Variable var;
+                var.addr = addr;
                 var.callers.push_back(loc);
                 var.is_input = true;
                 var.sizes.push_back(size);
@@ -107,17 +108,33 @@ void Interpreter::read_mem(void *rip, void *addr, size_t size, void *rbp, void *
 
 void Interpreter::write_mem(void *rip, void *addr, size_t size, void *rbp, void *rsp) {
     if (m_inside_target_function > 0) {
+        CodeLocation loc;
+        loc.routine_id = m_call_stack.back();
+        loc.instruction = rip;
+
         auto allocation = find_allocation_containing(addr);
         if (allocation != nullptr) {
             // This is something target_function allocated.
             // Do we already have a variable for this?
-            // Need to search existing variables
-            auto it = m_stack_or_global_variables.find(addr);
-            if (it != m_stack_or_global_variables.end()) {
-                // We aleady have a variable for this
+            bool var_found = false;
+            for (auto& v : allocation->variables) {
+                if (v.addr == addr) {
+                    // We aleady have a variable for this
+                    v.callers.push_back(loc);
+                    v.is_output = true; // Whether or not it was used as an input, it is definitely an output unless target_fun deallocates it
+                    var_found = true;
+                }
             }
-            else {
+            if (!var_found) {
                 // We don't already have a variable for this
+                Variable var;
+                var.addr = addr;
+                var.callers.push_back(loc);
+                // Cannot be an input since the first thing we do is write to it
+                var.is_input = false;
+                var.is_output = true;
+                var.sizes.push_back(size);
+                allocation->variables.push_back(var);
             }
         }
         else {
@@ -125,9 +142,22 @@ void Interpreter::write_mem(void *rip, void *addr, size_t size, void *rbp, void 
             auto it = m_stack_or_global_variables.find(addr);
             if (it != m_stack_or_global_variables.end()) {
                 // We aleady have a variable for this
+                it->second.callers.push_back(loc);
+                // May or may not also be an input depending on whether the first op was a read
+                it->second.is_output = true;
+                it->second.sizes.push_back(size);
             }
             else {
                 // We don't already have a variable for this
+                Variable var;
+                var.addr = addr;
+                var.callers.push_back(loc);
+                // Cannot be an input since the first thing we do is write to it
+                // Because we aren't something target_fun can deallocate, var is definitely written out
+                var.is_input = false;
+                var.is_output = true;
+                var.sizes.push_back(size);
+                m_stack_or_global_variables[addr] = var;
             }
         }
 

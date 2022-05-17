@@ -21,6 +21,7 @@ struct CodeLocation {
 };
 
 struct Variable {
+    void* addr = nullptr;
     std::string symbol;
     bool is_input = false;
     bool is_output = false;
