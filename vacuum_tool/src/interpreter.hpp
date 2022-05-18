@@ -68,7 +68,7 @@ public:
 
     void request_malloc(void *rip, size_t size);
 
-    void receive_malloc(void *rip, void *buf);
+    void receive_malloc(void *rip, void *addr);
 
     void free(void *rip, void *buf);
 
@@ -84,6 +84,8 @@ public:
 
     std::vector<Variable> get_variables();
 
+    void print_variables(std::ostream& os);
+
 private:
     std::vector<std::string> m_routine_names;
     std::vector<int> m_call_stack;
@@ -92,6 +94,7 @@ private:
     int m_target_id = -1;
     int m_inside_target_function = 0;  // This is an int instead of a bool so that we can handle recursive functions
     size_t m_last_malloc_request = 0;
+    void* m_target_rbp = nullptr; // Used to decide if a stack address outlives the target function or not
 };
 
 } // namespace phasm::vacuumtool

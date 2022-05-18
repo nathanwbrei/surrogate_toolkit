@@ -5,70 +5,52 @@
 #include "pin.H"
 #include "utils.hpp"
 
+#include "interpreter.cpp"
+// This is a hack because PIN has its own complicated Makefiles that I don't fully understand
+
 // FILE* trace;
-
-size_t last_malloc_request;
-// std::map<void*, bool> MallocTracker
-
-std::vector<std::string> routine_names;
-uint64_t current_routine = -1;
-bool in_target_routine = false;
 bool target_function_found = false;
-void* target_rbp = 0;
+Interpreter* interpreter = nullptr;
+std::vector<std::string> routine_names;
+int current_routine = -1;
+int target_routine = -1;
 
 KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "target6(int)", "Specify name of function to target");
 
 VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
-    if (in_target_routine) {
-        printf("%p: R %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
-    }
+    interpreter->read_mem(ip, addr, len, rbp, rsp);
 }
 
 VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
-    if (in_target_routine) {
-        printf("%p: W %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
-    }
+    interpreter->write_mem(ip, addr, len, rbp, rsp);
 }
 
 VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
-    in_target_routine = true;
-    target_rbp = (void*) rsp; // This is because record_enter_target_rtn is called before the target routine's prologue
-    printf("%p: Entering target routine %s, target $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
+    interpreter->enter_fun(ip, routine_id, rsp);  // rsp turns into rbp after prolog completes
 }
 
 VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
-    in_target_routine = false;
-    printf("%p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
+    interpreter->exit_fun(ip);
 }
 
 VOID record_enter_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
-    if (in_target_routine) {
-        printf("%p: Entering routine %s, $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
-    }
+    interpreter->enter_fun(ip, routine_id, rsp);
 }
 
 VOID record_exit_rtn(UINT64 routine_id, VOID* ip) {
-    if (in_target_routine) {
-        printf("%p: Exiting routine %s\n", ip, routine_names[routine_id].c_str());
-    }
+    interpreter->exit_fun(ip);
 }
 
 VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
-    if (in_target_routine) {
-        printf("%p Malloc request of size %llu\n", ip, size);
-    }
+    interpreter->request_malloc(ip, size);
 }
 
 VOID record_malloc_return(ADDRINT addr, VOID* ip) {
-    if (in_target_routine) {
-        printf("%p: Malloc returned %llx\n", ip, addr);
-    }
+    interpreter->receive_malloc(ip, addr);
 }
 
 VOID record_free_first_argument(ADDRINT addr, VOID* ip) {
-    if (in_target_routine) {
-        printf("%p: Freeing %llx\n", ip, addr);
-    }
+    interpreter->free(ip, addr);
 };
 
 VOID instrument_ins(INS ins, VOID* v) {
@@ -120,6 +102,7 @@ void instrument_rtn(RTN rtn, VOID* v) {
     if (rtn_name == KnobTargetFunction.Value()) {
         printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
         target_function_found = true;
+        target_routine = current_routine;
 
         RTN_Open(rtn);
         // Insert a call to record_enter_rtn at the routine's entry point
@@ -170,6 +153,9 @@ VOID instrument_finish(INT32 code, VOID* v) {
     if (!target_function_found) {
         std::cout << "Couldn't find target function. Are you sure your binary has debug symbols?" << std::endl;
     }
+    else {
+        interpreter->print_variables(std::cout);
+    }
 }
 
 
@@ -179,6 +165,10 @@ INT32 print_usage() {
 }
 
 int main(int argc, char* argv[]) {
+
+    for (int i=0; i<argc; ++i) {
+        std::cout << argv[i] << std::endl;
+    }
 
     PIN_InitSymbols();
     if (PIN_Init(argc, argv)) return print_usage();
@@ -190,6 +180,7 @@ int main(int argc, char* argv[]) {
     INS_AddInstrumentFunction(instrument_ins, 0);
     PIN_AddFiniFunction(instrument_finish, 0);
 
+    interpreter = new Interpreter(target_routine, routine_names);
     PIN_StartProgram(); // Never returns
     return 0;
 }

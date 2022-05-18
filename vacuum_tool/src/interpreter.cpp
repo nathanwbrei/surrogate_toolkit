@@ -4,6 +4,7 @@
 
 
 #include "interpreter.hpp"
+#include <iostream>
 
 using namespace phasm::memtrace;
 
@@ -14,21 +15,35 @@ Interpreter::Interpreter(int target_id, std::vector<std::string> routine_names)
 
 void Interpreter::enter_fun(void *rip, int fun_id, void *rbp) {
     m_call_stack.push_back(fun_id);
-    if (fun_id == m_target_id) m_inside_target_function += 1;
+    if (fun_id == m_target_id) {
+        printf("%p: Entering target routine %s, target $rbp=%p\n", rip, m_routine_names[fun_id].c_str(), rbp);
+        m_target_rbp = rbp;
+        m_inside_target_function += 1;
+    }
 }
 
 void Interpreter::exit_fun(void *rip) {
-    m_call_stack.pop_back();
     // This trusts that our frontend is able to properly detect exiting the function.
     // PIN docs suggest this isn't always true. Maybe because of high optimization levels, -fomit-frame-pointer,
     // or maybe because of things like coroutines.
     // We may want to store frame pointers so that we can validate our call stack's integrity.
     // However, I'm holding off on implementing this until I find a case where PIN fails at detecting a function exit.
+
+    int fun_id = m_call_stack.back();
+    if (fun_id == m_target_id) {
+        m_inside_target_function--;
+        printf("%p: Exiting target routine %s\n", rip, m_routine_names[fun_id].c_str());
+    }
+    else {
+        printf("%p: Exiting routine %s\n", rip, m_routine_names[fun_id].c_str());
+    }
+    m_call_stack.pop_back();
 }
 
 void Interpreter::request_malloc(void *rip, size_t size) {
     assert(m_last_malloc_request == 0);
     m_last_malloc_request = size;
+    printf("%p Malloc request of size %llu\n", rip, size);
     // This assumes that each thread has its own isolated VacuumInterpreter. This means that there won't be another
     // `request_malloc` event before its corresponding `receive_malloc`. However, in the real world, there is a single
     // malloc shared by all threads, so our representation could run into some weird threading problems still, such as
@@ -36,12 +51,13 @@ void Interpreter::request_malloc(void *rip, size_t size) {
     // before I encounter them in practice.
 }
 
-void Interpreter::receive_malloc(void *rip, void *buf) {
+void Interpreter::receive_malloc(void *rip, void *addr) {
 
     assert(m_last_malloc_request != 0);
+    printf("%p: Malloc returned %llx\n", rip, addr);
     MemoryAllocation alloc;
     alloc.size = m_last_malloc_request;
-    alloc.addr = buf;
+    alloc.addr = addr;
     alloc.location.routine_id = m_call_stack.back();
     m_last_malloc_request = 0;
 
@@ -51,14 +67,15 @@ void Interpreter::receive_malloc(void *rip, void *buf) {
     }
 }
 
-void Interpreter::free(void *rip, void *buf) {
+void Interpreter::free(void *rip, void *addr) {
 
     // The goal of all of this is to figure out which memory the target function allocated and didn't deallocate.
     // Anything it allocated+deallocated can be safely ignored, but anything not deallocated is either a memory
     // leak or a large write which we definitely want to know about.
     if (m_inside_target_function > 0) {
-        auto it = m_open_allocations.lower_bound((size_t) buf);
-        if (it->second.addr == buf) {
+        printf("%p: Freeing %llx\n", rip, addr);
+        auto it = m_open_allocations.lower_bound((size_t) addr);
+        if (it->second.addr == addr) {
             m_open_allocations.erase(it);
         }
     }
@@ -66,6 +83,7 @@ void Interpreter::free(void *rip, void *buf) {
 
 void Interpreter::read_mem(void *rip, void *addr, size_t size, void *rbp, void *rsp) {
     if (m_inside_target_function > 0) {
+        printf("%p: R %p [%lu bytes], $rbp=%p, $rsp=%p\n", rip, addr, size, rbp, rsp);
         if (find_allocation_containing(addr) == nullptr) {
             // This is not something we allocated. Which means we are reading from the outside.
 
@@ -78,6 +96,7 @@ void Interpreter::read_mem(void *rip, void *addr, size_t size, void *rbp, void *
                 CodeLocation loc;
                 loc.routine_id = m_call_stack.back();
                 loc.instruction = rip;
+                loc.routine_name = m_routine_names[loc.routine_id];
                 it->second.callers.push_back(loc);
 
                 // Also check if we have a size contradiction, just because I am curious if we find one
@@ -88,6 +107,7 @@ void Interpreter::read_mem(void *rip, void *addr, size_t size, void *rbp, void *
                 // Remains to be seen whether this is also an output.
                 CodeLocation loc;
                 loc.routine_id = m_call_stack.back();
+                loc.routine_name = m_routine_names[loc.routine_id];
                 loc.instruction = rip;
 
                 Variable var;
@@ -108,8 +128,11 @@ void Interpreter::read_mem(void *rip, void *addr, size_t size, void *rbp, void *
 
 void Interpreter::write_mem(void *rip, void *addr, size_t size, void *rbp, void *rsp) {
     if (m_inside_target_function > 0) {
+        printf("%p: W %p [%lu bytes], $rbp=%p, $rsp=%p\n", rip, addr, size, rbp, rsp);
+
         CodeLocation loc;
         loc.routine_id = m_call_stack.back();
+        loc.routine_name = m_routine_names[loc.routine_id];
         loc.instruction = rip;
 
         auto allocation = find_allocation_containing(addr);
@@ -186,6 +209,41 @@ MemoryAllocation* Interpreter::find_allocation_containing(void *addr) {
     }
 }
 
+void Interpreter::print_variables(std::ostream& os) {
+    std::vector<Variable> inputs, outputs;
+    for (auto pair : m_stack_or_global_variables) {
+        if (pair.second.is_input) {
+            inputs.push_back(pair.second);
+        }
+        else {
+            outputs.push_back(pair.second);
+        }
+    }
+    for (auto pair : m_open_allocations) {
+        for (auto v : pair.second.variables)
+            if (v.is_input) {
+                inputs.push_back(v);
+            }
+            else {
+                outputs.push_back(v);
+            }
+    }
+    os << "INPUTS" << std::endl;
+    for (auto& v : inputs) {
+        os << v.addr << " [" << v.sizes[0] << "B] called by ";
+        for (auto& c : v.callers) {
+            os << c.routine_name << " ";
+        }
+    }
+    os << "OUTPUTS" << std::endl;
+    for (auto& v : outputs) {
+        os << v.addr << " [" << v.sizes[0] << "B] called by ";
+        for (auto& c : v.callers) {
+            os << c.routine_name << " ";
+        }
+    }
+}
+
 std::vector<Variable> Interpreter::get_variables() {
     std::vector<Variable> vars;
     for (auto pair : m_stack_or_global_variables) {
@@ -204,6 +262,7 @@ bool ProgramAddressRanges::is_local_var(void *addr, void *current_rbp, void *cur
 }
 
 bool ProgramAddressRanges::is_stack_var_below_target(void *addr, void *current_rsp) {
+
     return false;
 }
 

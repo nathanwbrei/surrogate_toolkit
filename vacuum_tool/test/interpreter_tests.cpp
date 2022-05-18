@@ -79,7 +79,7 @@ TEST_CASE("Allocation tracker correctly handles multiple entries") {
         REQUIRE((result == nullptr || result->addr != x));
     }
     SECTION("Doesn't find allocation given address too high") {
-        auto *result = sut.find_allocation_containing(x + 4);
+        auto *result = sut.find_allocation_containing(x+4);
         REQUIRE((result == nullptr || result->addr != x));
     }
 }
