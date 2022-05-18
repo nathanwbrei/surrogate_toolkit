@@ -10,26 +10,17 @@ cd phasm
 ./download_deps.sh
 export DEPS=`pwd`/deps
 
-# Build everything except vacuum tool
+# Build 
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" ..
+cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
 make install
 
 # To run one of the examples:
 export LD_LIBRARY_PATH=$DEPS/libtorch/lib:$LD_LIBRARY_PATH
+
+# Run the PDE solver example and dump captured data to CSV
 PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
-
-
-# Build vacuum tool 
-# This is tricky because it uses a complicated Makefile thanks to PIN
-cd ..
-cd memtrace_pin
-export PIN_ROOT=$DEPS/pin
-make
-cd ../build
-cmake ..        # Now we need to rerun everything from CMake
-make install    # to get the final missing memtrace_pin_frontend.dylib into the cmake install directory
 
 # Run vacuum tool against the example target program
 install/bin/phasm-memtrace-pin install/bin/phasm-example-memtrace

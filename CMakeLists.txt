@@ -47,5 +47,6 @@ include_directories(external)
 add_subdirectory(examples)
 add_subdirectory(surrogate)
 add_subdirectory(memtrace)
+add_subdirectory(memtrace_pin)
 add_subdirectory(gpu_perf_tester)
 

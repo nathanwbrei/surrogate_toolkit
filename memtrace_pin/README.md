@@ -2,13 +2,6 @@
 
 # Experimenting with creating a vacuum tool using Pin
 
-## To build:
-
-1. Download Pin from [1] using `download_deps.sh`. 
-2. Set PIN_ROOT envvar: `export PIN_ROOT=$DEPS/pin` [2]
-3. Run `make`. No CMake support yet, probably ever. Builds in-source to `obj-intel64` directory
-4. Run `cmake install` to install the rest of the project
-
 ## To run:
 ```bash
 # From the phasm install directory
