@@ -66,10 +66,10 @@ struct TreeBuilder;
 template <typename HeadT, typename... RestTs>
 struct TreeCursor : public CursorHelper<HeadT, TreeCursor<HeadT, RestTs...>> {
     Node* focus;
-    TreeBuilder* builder = nullptr;
     // We actually know the type of this thing.
     // If RestTs = empty, this is a Root<HeadT>
     // Otherwise          this is a Branch<HeadT, head(RestTs)
+    TreeBuilder* builder = nullptr;
 
     TreeCursor(Node* focus, TreeBuilder* builder) : CursorHelper<HeadT, TreeCursor<HeadT, RestTs...>>(this), focus(focus), builder(builder) {}
 
@@ -128,6 +128,10 @@ struct TreeBuilder {
         return TreeCursor<T>(root, this);
     }
 
+    TreeBuilder& doMoreBuilderStuff() {
+        return *this;
+    };
+
     void print() {
         for (auto root : roots) {
             root->print(0);
@@ -156,8 +160,91 @@ TEST_CASE("Typed fluent 'LEGO' interface") {
         .attachBranch(new Branch<int, Silly>)
         .end()
     .end()
-    .attachRoot(new Root<Silly>).doSomethingSpecificWithSilly();
+    .attachRoot(new Root<Silly>)
+        .doSomethingSpecificWithSilly()
+        .attachLeaf(new Leaf<Silly>)
+        .end()
+    .doMoreBuilderStuff();
 
     builder.print();
-
 }
+
+
+template <typename... ParentT>
+struct BuilderA;
+
+template <typename ParentT>
+struct BuilderB {
+    ParentT* parent;
+    BuilderB(ParentT* parent) : parent(parent) {};
+    BuilderA<BuilderB<ParentT>> openBuilderA() {
+        return BuilderA(this);
+    }
+    BuilderB<BuilderB<ParentT>> openBuilderB() {
+        return BuilderB(this);
+    }
+    BuilderB& doBStuff() {
+        return *this;
+    }
+    ParentT& close() {
+        return *parent;
+    }
+};
+
+template <typename ParentT>
+struct BuilderA<ParentT> {
+    ParentT* parent;
+
+    BuilderA(ParentT* parent) : parent(parent) {};
+
+    ParentT& close() {
+        return *parent;
+    }
+
+    BuilderA<BuilderA<ParentT>> openBuilderA() {
+        return BuilderA<BuilderA<ParentT>>(this);
+    }
+    BuilderB<BuilderA<ParentT>> openBuilderB() {
+        return BuilderB(this);
+    }
+    BuilderA& doAStuff() {
+        return *this;
+    }
+};
+
+template <>
+struct BuilderA<> {
+    BuilderA() = default;
+
+    BuilderA<BuilderA<>> openBuilderA() {
+        return BuilderA<BuilderA<>>(this);
+    }
+    BuilderB<BuilderA<>> openBuilderB() {
+        return BuilderB(this);
+    }
+    BuilderA& doAStuff() {
+        return *this;
+    }
+
+};
+
+TEST_CASE("Recursive builders") {
+    BuilderA builder;
+    builder
+        .doAStuff()
+        .openBuilderA()
+            .openBuilderB()
+                .doBStuff()
+                .close()
+            .doAStuff()
+            .openBuilderA()
+                .doAStuff()
+                .openBuilderA()
+                .close()
+            .close()
+        .close();
+}
+
+
+
+
