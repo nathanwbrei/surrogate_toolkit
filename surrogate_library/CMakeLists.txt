@@ -3,6 +3,7 @@ find_package(Torch REQUIRED)
 
 
 set(SURROGATE_LIBRARY_SOURCES
+        include/fluent.h
         src/surrogate.cpp
         src/model.cpp
         src/feedforward_model.cpp
@@ -28,6 +29,7 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/prism_tests.cpp
         test/optics_tests.cpp
         test/fluent_tests.cpp
+        test/fluent_experiments.cpp
         )
 add_executable("surrogate_library_tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(surrogate_library_tests PRIVATE include)

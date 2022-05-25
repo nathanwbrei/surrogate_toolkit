@@ -25,5 +25,9 @@ inline std::string demangle(std::string mangled) {
     return demangled;
 }
 
+template <typename T>
+inline std::string demangle() {
+    return demangle(typeid(T).name());
+}
 
 #endif //SURROGATE_TOOLKIT_UTILS_HPP
