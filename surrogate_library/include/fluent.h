@@ -30,6 +30,7 @@ struct Cursor {
     Cursor<HeadT, RestTs...> primitive(std::string name) {
         auto child = new Primitive<HeadT>();
         child->name = name;
+        child->is_leaf = true;
         focus->unsafe_attach(child);
         return *this;
     }
@@ -37,6 +38,7 @@ struct Cursor {
     Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape) {
         auto child = new PrimitiveArray<HeadT>(std::move(shape));
         child->name = name;
+        child->is_leaf = true;
         focus->unsafe_attach(child);
         return *this;
     }
@@ -59,6 +61,7 @@ struct Cursor {
     }
 };
 
+
 template <typename HeadT>
 struct Cursor<HeadT> {
     OpticBase* focus = nullptr;
@@ -69,6 +72,7 @@ struct Cursor<HeadT> {
     Cursor<HeadT> primitive(std::string name) {
         auto child = new Primitive<HeadT>();
         child->name = name;
+        child->is_leaf = true;
         focus->unsafe_attach(child);
         return *this;
     }
@@ -76,6 +80,7 @@ struct Cursor<HeadT> {
     Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape) {
         auto child = new PrimitiveArray<HeadT>(std::move(shape));
         child->name = name;
+        child->is_leaf = true;
         focus->unsafe_attach(child);
         return *this;
     }
@@ -109,6 +114,7 @@ struct Cursor<HeadT> {
 struct Builder {
     std::vector<OpticBase*> locals;
     std::vector<OpticBase*> globals;
+    std::map<std::string, OpticBase*> model_vars;
 
     template <typename T>
     Cursor<T> local(std::string name) {
@@ -130,6 +136,7 @@ struct Builder {
         return Cursor<T>(r, this);
     }
 
+private:
     void printOptic(OpticBase* optic, int level) {
         for (int i=0; i<level; ++i) {
             std::cout << "    ";
@@ -151,6 +158,28 @@ struct Builder {
         }
     }
 
+    /// Given a leaf in the optics tree, create a new chain of optics which
+    /// represents the path from the root node to the leaf. This way we can build the
+    /// tensor for a specific model variable instead of building all tensors at once.
+    static inline OpticBase* createOpticPathFromLeafToRoot(OpticBase* leaf) {
+        OpticBase* current = new OpticBase(*leaf);
+        OpticBase* parent = leaf->parent;
+        while (parent != nullptr) {
+            auto* new_parent = new OpticBase(*parent);
+            current->parent = new_parent;
+            new_parent->use(current);
+            new_parent->children.clear();
+            new_parent->children.push_back(current);
+
+            current = new_parent;
+            parent = current->parent;
+        }
+        return current;
+    }
+
+
+
+public:
     void print() {
         for (auto g : globals) {
             printOptic(g, 0);
@@ -159,6 +188,39 @@ struct Builder {
             printOptic(l, 0);
         }
     }
+
+    inline std::map<std::string, OpticBase*> getModelVars() {
+        std::map<std::string, OpticBase*> results;
+        std::queue<OpticBase*> q;
+        for (auto g : globals) {
+            q.push(g);
+        }
+        for (auto l : locals) {
+            q.push(l);
+        }
+        while (!q.empty()) {
+            OpticBase* o = q.front();
+            if (o->is_leaf) {
+                results[o->name] = createOpticPathFromLeafToRoot(o);
+            }
+            else {
+                for (OpticBase* c : o->children) {
+                    q.push(c);
+                }
+            }
+            q.pop();
+        }
+        return results;
+    }
+
+    inline void printModelVars() {
+        auto vars = getModelVars();
+        for (auto p : vars) {
+            std::cout << p.first << ":" << std::endl;
+            printOptic(p.second, 1);
+        }
+    }
+
 };
 
 

@@ -22,11 +22,12 @@ namespace optics {
 /// of optics, particularly for fluent interfaces and for transpositions
 struct OpticBase {
 
-    OpticBase* parent;
+    OpticBase* parent = nullptr;
     std::vector<OpticBase*> children;
     std::string name;
     std::string produces;
     std::string consumes;
+    bool is_leaf = false;
 
     void unsafe_attach(OpticBase* optic) {
         if (optic->consumes != produces) {

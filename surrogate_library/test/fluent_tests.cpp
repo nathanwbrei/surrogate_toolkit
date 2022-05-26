@@ -13,18 +13,16 @@ struct MyStruct {
 };
 
 int my_global;
-TEST_CASE("Actual fluent tests") {
+TEST_CASE("Basic fluent construction") {
 
     Builder builder;
-    int x;
-    MyStruct s;
 
     builder
-    .local<int>("x")
-        .primitive("x")
+    .local<int>("a")
+        .primitive("a")
         .end()
     .global("my_global", &my_global)
-        .primitive("y")
+        .primitive("b")
         .end()
     .local<MyStruct>("s")
         .accessor<int>([](MyStruct* s){return &(s->x);})
@@ -37,7 +35,8 @@ TEST_CASE("Actual fluent tests") {
     REQUIRE(builder.globals.size() == 1);
     REQUIRE(builder.locals.size() == 2);
     builder.print();
-
+    std::cout << "-----------" << std::endl;
+    builder.printModelVars();
 
 }
 
