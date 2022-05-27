@@ -19,10 +19,13 @@ void TorchscriptModel::initialize() {
 void TorchscriptModel::infer(Surrogate &s) {
 
     std::vector<torch::Tensor> input_tensors;
-    for (const std::shared_ptr<CallSiteVariable>& input_binding : s.input_bindings) {
-        input_tensors.push_back(input_binding->get_tensor());
-    }
 
+    for (const std::shared_ptr<CallSiteVariable>& input_binding : s.input_bindings) {
+        input_binding->get_all_inference_data();
+    }
+    for (const auto& input_model_var : inputs) {
+        input_tensors.push_back(input_model_var->inference_capture);
+    }
 
     // This all assumes a single Tensor of floats as input and output
     torch::Tensor input = flatten_and_join(input_tensors);
@@ -33,8 +36,11 @@ void TorchscriptModel::infer(Surrogate &s) {
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
 
     size_t i = 0;
-    for (const std::shared_ptr<CallSiteVariable> &output_binding: s.output_bindings) {
-        output_binding->put_tensor(output_tensors[i++]);
+    for (const auto& output_model_var : outputs) {
+        output_model_var->inference_capture = input_tensors[i++];
+    }
+    for (const auto& output_callsite_var : s.output_bindings) {
+        output_callsite_var->put_all_inference_data();
     }
 }
 

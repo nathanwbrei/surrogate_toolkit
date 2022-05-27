@@ -40,7 +40,8 @@ public:
     void bind_input(std::string param_name, T* slot) {
 	auto input = std::make_shared<CallSiteVariableT<T>>();
 	input->binding_root = slot;
-	input->parameter = model->get_input<T>(param_name);
+        // TODO: NWB: This is completely broken.
+	input->model_vars.push_back(&(*(model->get_input<T>(param_name))));
 	input_bindings.push_back(input);
 	if (input_binding_map.find(param_name) != input_binding_map.end()) {
 	    throw ("Input binding already exists!");
@@ -52,7 +53,7 @@ public:
     void bind_output(std::string param_name, T* slot) {
 	auto output = std::make_shared<CallSiteVariableT<T>>();
 	output->binding_root = slot;
-        output->parameter = model->get_output<T>(param_name);
+        output->model_vars.push_back(&(*(model->get_output<T>(param_name))));
         output_bindings.push_back(output);
         if (output_binding_map.find(param_name) != output_binding_map.end()) {
             throw ("Output binding already exists!");
@@ -121,7 +122,7 @@ public:
     template <typename T>
     T get_captured_input(size_t sample_index, size_t parameter_index) {
         auto param = model->get_input<T>(parameter_index);
-        torch::Tensor result = param->captures[sample_index];
+        torch::Tensor result = param->training_captures[sample_index];
         return *result.data_ptr<T>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
@@ -132,7 +133,7 @@ public:
     template <typename T>
     T get_captured_output(size_t sample_index, size_t parameter_index) {
         auto param = model->get_output<T>(parameter_index);
-        torch::Tensor result = param->captures[sample_index];
+        torch::Tensor result = param->training_captures[sample_index];
         return *result.data_ptr<T>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
@@ -176,11 +177,11 @@ public:
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
         for (auto& input: input_bindings) {
-            input->capture();
+            input->capture_all_training_data();
         }
         original_function();
         for (auto& output: output_bindings) {
-            output->capture();
+            output->capture_all_training_data();
         }
         model->captured_rows++;
     }

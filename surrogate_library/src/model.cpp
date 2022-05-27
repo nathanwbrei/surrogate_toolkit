@@ -63,13 +63,13 @@ void Model::dump_captures_to_csv(std::ostream& os) {
     // print body
     for (size_t i=0; i<captured_rows; ++i) {
         for (size_t j=0; j<inputs.size(); ++j) {
-            auto t = inputs[j]->captures[i].flatten(0,-1);
+            auto t = inputs[j]->training_captures[i].flatten(0, -1);
             for (int k=0; k<t.numel(); ++k) {
                 os << t[k].item().toFloat() << ", ";
             }
         }
         for (size_t j=0; j<outputs.size(); ++j) {
-            auto t = outputs[j]->captures[i].flatten(0,-1);
+            auto t = outputs[j]->training_captures[i].flatten(0, -1);
             for (int k=0; k<t.numel(); ++k) {
                 os << t[k].item().toFloat();
                 bool last_col = (j == outputs.size()-1) && (k==t.numel()-1);

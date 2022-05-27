@@ -11,13 +11,13 @@
 TEST_CASE("Basic GridSampler") {
 
     int x = 100;
-    auto i = std::make_shared<ModelVariableT<int>>();
+    auto i = new ModelVariableT<int>();
     i->range.lower_bound_inclusive = 3;
     i->range.upper_bound_inclusive = 5;
-    CallSiteVariableT<int> b;
-    b.parameter = i;
-    b.binding_root = &x;
-    GridSampler<int> s(b);
+    CallSiteVariableT<int> cs;
+    cs.model_vars.push_back(i);
+    cs.binding_root = &x;
+    GridSampler<int> s(cs, i);
 
     bool result;
     result = s.next();
@@ -40,10 +40,10 @@ TEST_CASE("Basic GridSampler") {
 
 TEST_CASE("Basic FiniteSetSampler") {
     int x = 100;
-    auto i = std::make_shared<ModelVariableT<int>>();
+    auto i = new ModelVariableT<int>();
     i->range.items = {7,8,9};
     CallSiteVariableT<int> b;
-    b.parameter = i;
+    b.model_vars.push_back(i);
     b.binding_root = &x;
     FiniteSetSampler<int> s(b);
 

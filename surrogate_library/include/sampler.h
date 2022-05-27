@@ -28,14 +28,13 @@ struct GridSampler : public Sampler {
     T step_size;
     T* slot;
 
-    GridSampler(CallSiteVariableT<T>& binding, size_t nsteps = 100) {
-        auto param = binding.parameter;
-        initial_sample = param->range.lower_bound_inclusive;
-        final_sample = param->range.upper_bound_inclusive;
+    GridSampler(CallSiteVariableT<T>& cs, ModelVariableT<T>* var, size_t nsteps = 100) {
+        initial_sample = var->range.lower_bound_inclusive;
+        final_sample = var->range.upper_bound_inclusive;
         current_sample = initial_sample;
         step_size = (final_sample - current_sample) / nsteps;
         if (step_size < 1) step_size = 1;
-        slot = binding.binding_root;
+        slot = cs.binding_root;
     }
 
     bool next() override {
@@ -77,7 +76,7 @@ struct FiniteSetSampler : public Sampler {
 
     FiniteSetSampler(CallSiteVariableT<T>& binding) {
         slot = binding.binding_root;
-        auto& s = binding.parameter->range.items;
+        auto& s = binding.model_vars[0]->range.items;
         samples.insert(samples.end(), s.begin(), s.end());
     }
 

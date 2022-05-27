@@ -38,8 +38,12 @@ void FeedForwardModel::initialize() {
 void FeedForwardModel::infer(Surrogate &s) {
 
     std::vector<torch::Tensor> input_tensors;
+
     for (const std::shared_ptr<CallSiteVariable>& input_binding : s.input_bindings) {
-        input_tensors.push_back(input_binding->get_tensor());
+        input_binding->get_all_inference_data();
+    }
+    for (const auto& input_model_var : inputs) {
+        input_tensors.push_back(input_model_var->inference_capture);
     }
 
     torch::Tensor input = flatten_and_join(input_tensors);
@@ -47,8 +51,11 @@ void FeedForwardModel::infer(Surrogate &s) {
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
 
     size_t i = 0;
-    for (const std::shared_ptr<CallSiteVariable> &output_binding: s.output_bindings) {
-        output_binding->put_tensor(output_tensors[i++]);
+    for (const auto& output_model_var : outputs) {
+        output_model_var->inference_capture = input_tensors[i++];
+    }
+    for (const auto& output_callsite_var : s.output_bindings) {
+        output_callsite_var->put_all_inference_data();
     }
 }
 
@@ -63,13 +70,13 @@ void FeedForwardModel::train_from_captures() {
     for (size_t i=0; i<get_capture_count(); ++i) {
         std::vector<torch::Tensor> sample_inputs;
         for (auto input : inputs) {
-            sample_inputs.push_back(input->captures[i]);
+            sample_inputs.push_back(input->training_captures[i]);
         }
         auto sample_input = flatten_and_join(std::move(sample_inputs));
 
         std::vector<torch::Tensor> sample_outputs;
         for (auto output : outputs) {
-            sample_outputs.push_back(output->captures[i]);
+            sample_outputs.push_back(output->training_captures[i]);
         }
         auto sample_output = flatten_and_join(std::move(sample_outputs));
 

@@ -12,10 +12,6 @@
 
 template <typename T> struct ModelVariableT;
 
-enum class ParameterCategory {
-    Continuous, Discrete, Categorical, Text
-};
-
 struct ModelVariableVisitor {
     virtual void visit(ModelVariableT<float>&) {};
     virtual void visit(ModelVariableT<double>&) {};
@@ -29,20 +25,23 @@ struct ModelVariableVisitor {
     virtual void visit(ModelVariableT<uint32_t>&) {};
     virtual void visit(ModelVariableT<uint64_t>&) {};
 };
+// N.B. This won't work either because ModelVariable is
+// parameterized on the root type (which is unconstrained),
+// not on the leaf type (which can only be primitives).
 
 struct ModelVariable {
     std::string name;
-    ParameterCategory category = ParameterCategory::Continuous;
-    std::vector<torch::Tensor> captures;
+    std::vector<torch::Tensor> training_captures;
+    torch::Tensor inference_capture;
     virtual std::vector<int64_t> shape() = 0;
     virtual ~ModelVariable() = default;
     virtual void accept(ModelVariableVisitor& v) = 0;
 };
 
-template <typename T>
+template <typename RootT>
 struct ModelVariableT : public ModelVariable {
-    optics::Optic<T>* accessor = nullptr;
-    T* global = nullptr;
+    optics::Optic<RootT>* accessor = nullptr;
+    RootT* global = nullptr;
     Range<float> range;
     std::vector<int64_t> shape() override {
         if (accessor == nullptr) { throw std::runtime_error("InputT needs an accessor"); }
@@ -51,6 +50,17 @@ struct ModelVariableT : public ModelVariable {
     void accept(ModelVariableVisitor& v) override {
         v.visit(*this);
     }
+    void capture_training_data(RootT* binding) {
+        torch::Tensor data = accessor->to(binding);
+        training_captures.push_back(data);
+    }
+    void get_inference_data(RootT* binding) {
+        inference_capture = accessor->to(binding);
+    }
+    void put_inference_data(RootT* binding) {
+        accessor->from(inference_capture, binding);
+    }
+
 };
 
 

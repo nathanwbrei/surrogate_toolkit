@@ -9,32 +9,38 @@
 #include "optics.h"
 
 struct CallSiteVariable {
+
     std::string name;
-    bool is_input = false;
-    bool is_output = false;
-    virtual torch::Tensor get_tensor() = 0;
-    virtual void put_tensor(torch::Tensor) = 0;
-    virtual void capture() = 0;
+
+    CallSiteVariable() = default;
     virtual ~CallSiteVariable() = default;
+    virtual void capture_all_training_data() = 0;
+    virtual void get_all_inference_data() = 0;
+    virtual void put_all_inference_data() = 0;
 };
 
 template <typename T>
 struct CallSiteVariableT : public CallSiteVariable {
 
-    std::shared_ptr<ModelVariableT<T>> parameter;
-    T* binding_root = nullptr;  // This has to be either a global or a stack variable. Possibly the root of a nested data structure.
+    std::vector<ModelVariableT<T>*> model_vars;
+    T* binding_root = nullptr;
 
-    torch::Tensor get_tensor() override {
-        return parameter->accessor->to(binding_root);
+    void capture_all_training_data() override {
+        for (auto model_var : model_vars) {
+            model_var->capture_training_data(binding_root);
+        }
     }
 
-    void put_tensor(torch::Tensor t) override {
-        parameter->accessor->from(t, binding_root);
+    void get_all_inference_data() override {
+        for (auto model_var : model_vars) {
+            model_var->get_inference_data(binding_root);
+        }
     }
 
-    void capture() override {
-        torch::Tensor data = parameter->accessor->to(binding_root);
-        parameter->captures.push_back(std::move(data));
+    void put_all_inference_data() override {
+        for (auto model_var : model_vars) {
+            model_var->put_inference_data(binding_root);
+        }
     }
 
 };
