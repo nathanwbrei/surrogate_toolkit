@@ -11,12 +11,12 @@
 TEST_CASE("Basic GridSampler") {
 
     int x = 100;
-    auto i = new ModelVariableT<int>();
+    auto i = new ModelVariable();
     i->range.lower_bound_inclusive = 3;
     i->range.upper_bound_inclusive = 5;
-    CallSiteVariableT<int> cs;
+    CallSiteVariable cs;
     cs.model_vars.push_back(i);
-    cs.binding_root = &x;
+    cs.binding = &x;
     GridSampler<int> s(cs, i);
 
     bool result;
@@ -40,11 +40,11 @@ TEST_CASE("Basic GridSampler") {
 
 TEST_CASE("Basic FiniteSetSampler") {
     int x = 100;
-    auto i = new ModelVariableT<int>();
+    auto i = new ModelVariable();
     i->range.items = {7,8,9};
-    CallSiteVariableT<int> b;
+    CallSiteVariable b;
     b.model_vars.push_back(i);
-    b.binding_root = &x;
+    b.binding = &x;
     FiniteSetSampler<int> s(b);
 
     bool result;

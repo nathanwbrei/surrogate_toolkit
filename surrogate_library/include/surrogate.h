@@ -38,25 +38,25 @@ public:
 
     template <typename T>
     void bind_input(std::string param_name, T* slot) {
-	auto input = std::make_shared<CallSiteVariableT<T>>();
-	input->binding_root = slot;
+	auto input = std::make_shared<CallSiteVariable>();
+	input->binding = slot;
         // TODO: NWB: This is completely broken.
-	input->model_vars.push_back(&(*(model->get_input<T>(param_name))));
+	input->model_vars.push_back(&(*(model->get_input(param_name))));
 	input_bindings.push_back(input);
 	if (input_binding_map.find(param_name) != input_binding_map.end()) {
-	    throw ("Input binding already exists!");
+	    throw std::runtime_error("Input binding already exists!");
 	}
 	input_binding_map[param_name] = input;
     }
 
     template<typename T>
     void bind_output(std::string param_name, T* slot) {
-	auto output = std::make_shared<CallSiteVariableT<T>>();
-	output->binding_root = slot;
-        output->model_vars.push_back(&(*(model->get_output<T>(param_name))));
+	auto output = std::make_shared<CallSiteVariable>();
+	output->binding = slot;
+        output->model_vars.push_back(&(*(model->get_output(param_name))));
         output_bindings.push_back(output);
         if (output_binding_map.find(param_name) != output_binding_map.end()) {
-            throw ("Output binding already exists!");
+            throw std::runtime_error("Output binding already exists!");
         }
         output_binding_map[param_name] = output;
     }
@@ -67,61 +67,31 @@ public:
         bind_output<T>(param_name, slot);
     }
 
-    template<typename T>
-    std::shared_ptr<CallSiteVariableT<T>> get_input_binding(size_t index) {
-        if (index >= input_bindings.size()) {
-            throw "Index out of range for input binding";
-        }
-        auto input = input_bindings[index];
-        auto downcasted = std::dynamic_pointer_cast<CallSiteVariableT<T>>(input);
-        if (downcasted == nullptr) {
-            throw "Wrong type for input binding";
-        }
-        return downcasted;
+    std::shared_ptr<CallSiteVariable> get_input_binding(size_t index) {
+        if (index >= input_bindings.size()) { throw std::runtime_error("Index out of range for input binding"); }
+        return input_bindings[index];
     }
 
-    template<typename T>
-    std::shared_ptr<CallSiteVariableT<T>> get_input_binding(std::string name) {
+    std::shared_ptr<CallSiteVariable> get_input_binding(std::string name) {
         auto pair = input_binding_map.find(name);
-        if (pair == input_binding_map.end()) {
-            throw ("Invalid input parameter name");
-        }
-        auto downcasted_input = std::dynamic_pointer_cast<CallSiteVariableT<T>>(pair->second);
-        if (downcasted_input == nullptr) {
-            throw("Wrong type for input parameter");
-        }
-        return downcasted_input;
+        if (pair == input_binding_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
+        return pair->second;
     }
 
-    template<typename T>
-    std::shared_ptr<CallSiteVariableT<T>> get_output_binding(size_t index) {
-        if (index >= output_bindings.size()) {
-            throw "Index out of range for output binding";
-        }
-        auto output = output_bindings[index];
-        auto downcasted = std::dynamic_pointer_cast<CallSiteVariableT<T>>(output);
-        if (downcasted == nullptr) {
-            throw "Wrong type for output binding";
-        }
-        return downcasted;
+    std::shared_ptr<CallSiteVariable> get_output_binding(size_t index) {
+        if (index >= output_bindings.size()) { throw std::runtime_error("Index out of range for output binding"); }
+        return output_bindings[index];
     }
 
-    template<typename T>
-    std::shared_ptr<CallSiteVariableT<T>> get_output_binding(std::string name) {
+    std::shared_ptr<CallSiteVariable> get_output_binding(std::string name) {
         auto pair = output_binding_map.find(name);
-        if (pair == output_binding_map.end()) {
-            throw ("Invalid output parameter name");
-        }
-        auto downcasted_output = std::dynamic_pointer_cast<CallSiteVariableT<T>>(pair->second);
-        if (downcasted_output == nullptr) {
-            throw("Wrong type for input parameter");
-        }
-        return downcasted_output;
+        if (pair == output_binding_map.end()) { throw std::runtime_error("Invalid output parameter name"); }
+        return pair->second;
     }
 
     template <typename T>
     T get_captured_input(size_t sample_index, size_t parameter_index) {
-        auto param = model->get_input<T>(parameter_index);
+        auto param = model->get_input(parameter_index);
         torch::Tensor result = param->training_captures[sample_index];
         return *result.data_ptr<T>();
 
@@ -132,7 +102,7 @@ public:
 
     template <typename T>
     T get_captured_output(size_t sample_index, size_t parameter_index) {
-        auto param = model->get_output<T>(parameter_index);
+        auto param = model->get_output(parameter_index);
         torch::Tensor result = param->training_captures[sample_index];
         return *result.data_ptr<T>();
 

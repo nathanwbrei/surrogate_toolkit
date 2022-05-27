@@ -30,7 +30,7 @@ public:
 
     template <typename T>
     void input(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>()) {
-        auto input = std::make_shared<ModelVariableT<T>>();
+        auto input = std::make_shared<ModelVariable>();
         input->name = param_name;
         input->accessor = accessor;
         input->range = std::move(range);
@@ -43,7 +43,7 @@ public:
 
     template<typename T>
     void output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>()) {
-        auto output = std::make_shared<ModelVariableT<T>>();
+        auto output = std::make_shared<ModelVariable>();
         output->name = param_name;
         output->accessor = accessor;
         outputs.push_back(output);
@@ -59,57 +59,26 @@ public:
         output<T>(param_name, accessor);
     }
 
-    template <typename T>
-    std::shared_ptr<ModelVariableT<T>> get_input(size_t position) {
-        if (position >= inputs.size()) {
-            throw("Parameter index out of bounds");
-        }
-        auto input = inputs[position];
-        auto downcasted_input = std::dynamic_pointer_cast<ModelVariableT<T>>(input);
-        if (downcasted_input == nullptr) {
-            throw("Wrong type for input parameter");
-        }
-        return downcasted_input;
+    std::shared_ptr<ModelVariable> get_input(size_t position) {
+        if (position >= inputs.size()) { throw std::runtime_error("Parameter index out of bounds"); }
+        return inputs[position];
     }
 
-    template <typename T>
-    std::shared_ptr<ModelVariableT<T>> get_input(std::string param_name) {
+    std::shared_ptr<ModelVariable> get_input(std::string param_name) {
         auto pair = input_map.find(param_name);
-        if (pair == input_map.end()) {
-            throw ("Invalid input parameter name");
-        }
-        auto downcasted_input = std::dynamic_pointer_cast<ModelVariableT<T>>(pair->second);
-        if (downcasted_input == nullptr) {
-            throw("Wrong type for input parameter");
-        }
-        return downcasted_input;
+        if (pair == input_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
+        return pair->second;
     }
 
-    template <typename T>
-    std::shared_ptr<ModelVariableT<T>> get_output(size_t position) {
-        if (position >= outputs.size()) {
-            throw("Output parameter index out of bounds");
-        }
-        auto output = outputs[position];
-        auto downcasted_output = std::dynamic_pointer_cast<ModelVariableT<T>>(output);
-        if (downcasted_output == nullptr) {
-            throw("Wrong type for output parameter");
-        }
-        return downcasted_output;
+    std::shared_ptr<ModelVariable> get_output(size_t position) {
+        if (position >= outputs.size()) { throw std::runtime_error("Output parameter index out of bounds"); }
+        return outputs[position];
     }
 
-    template <typename T>
-    std::shared_ptr<ModelVariableT<T>> get_output(std::string param_name) {
-
+    std::shared_ptr<ModelVariable> get_output(std::string param_name) {
         auto pair = output_map.find(param_name);
-        if (pair == output_map.end()) {
-            throw "Invalid output parameter name";
-        }
-        auto downcasted_output = std::dynamic_pointer_cast<ModelVariableT<T>>(pair->second);
-        if (downcasted_output == nullptr) {
-            throw "Wrong type for output parameter";
-        }
-        return downcasted_output;
+        if (pair == output_map.end()) { throw std::runtime_error("Invalid output parameter name"); }
+        return pair->second;
     }
 
     size_t get_capture_count() const { return captured_rows; }

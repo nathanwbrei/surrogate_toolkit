@@ -7,42 +7,32 @@
 
 #include "model_variable.h"
 #include "optics.h"
+#include "any_ptr.hpp"
 
 struct CallSiteVariable {
 
     std::string name;
+    phasm::any_ptr binding;
+    std::vector<ModelVariable*> model_vars;
 
-    CallSiteVariable() = default;
-    virtual ~CallSiteVariable() = default;
-    virtual void capture_all_training_data() = 0;
-    virtual void get_all_inference_data() = 0;
-    virtual void put_all_inference_data() = 0;
-};
 
-template <typename T>
-struct CallSiteVariableT : public CallSiteVariable {
-
-    std::vector<ModelVariableT<T>*> model_vars;
-    T* binding_root = nullptr;
-
-    void capture_all_training_data() override {
+    void capture_all_training_data() {
         for (auto model_var : model_vars) {
-            model_var->capture_training_data(binding_root);
+            model_var->capture_training_data(binding);
         }
     }
 
-    void get_all_inference_data() override {
+    void get_all_inference_data() {
         for (auto model_var : model_vars) {
-            model_var->get_inference_data(binding_root);
+            model_var->get_inference_data(binding);
         }
     }
 
-    void put_all_inference_data() override {
+    void put_all_inference_data() {
         for (auto model_var : model_vars) {
-            model_var->put_inference_data(binding_root);
+            model_var->put_inference_data(binding);
         }
     }
-
 };
 
 

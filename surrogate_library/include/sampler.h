@@ -28,13 +28,13 @@ struct GridSampler : public Sampler {
     T step_size;
     T* slot;
 
-    GridSampler(CallSiteVariableT<T>& cs, ModelVariableT<T>* var, size_t nsteps = 100) {
+    GridSampler(CallSiteVariable& cs, ModelVariable* var, size_t nsteps = 100) {
         initial_sample = var->range.lower_bound_inclusive;
         final_sample = var->range.upper_bound_inclusive;
         current_sample = initial_sample;
         step_size = (final_sample - current_sample) / nsteps;
         if (step_size < 1) step_size = 1;
-        slot = cs.binding_root;
+        slot = cs.binding.get<T>();
     }
 
     bool next() override {
@@ -74,8 +74,8 @@ struct FiniteSetSampler : public Sampler {
     size_t sample_index = 0;
     T* slot;
 
-    FiniteSetSampler(CallSiteVariableT<T>& binding) {
-        slot = binding.binding_root;
+    FiniteSetSampler(CallSiteVariable& binding) {
+        slot = binding.binding.get<T>();
         auto& s = binding.model_vars[0]->range.items;
         samples.insert(samples.end(), s.begin(), s.end());
     }
@@ -90,29 +90,6 @@ struct FiniteSetSampler : public Sampler {
     }
 };
 
-
-
-struct MyVisitor : public ModelVariableVisitor {
-
-    template<typename T> inline void visitReal(ModelVariableT<T>&) {
-        std::cout << "Visiting some kind of real number" << std::endl;
-    }
-
-    template<typename T> inline void visitInt(ModelVariableT<T>&) {
-        std::cout << "Visiting some kind of int" << std::endl;
-    }
-
-    void visit(ModelVariableT<double>& t) override { visitReal<double>(t); }
-    void visit(ModelVariableT<float>& t) override { visitReal<float>(t); }
-    void visit(ModelVariableT<int64_t>& t) override { visitInt<int64_t>(t); }
-    void visit(ModelVariableT<int32_t>& t) override { visitInt<int32_t>(t); }
-    void visit(ModelVariableT<int16_t>& t) override { visitInt<int16_t>(t); }
-    void visit(ModelVariableT<int8_t>& t) override { visitInt<int8_t>(t); }
-    void visit(ModelVariableT<uint64_t>& t) override { visitInt<uint64_t>(t); }
-    void visit(ModelVariableT<uint32_t>& t) override { visitInt<uint32_t>(t); }
-    void visit(ModelVariableT<uint16_t>& t) override { visitInt<uint16_t>(t); }
-    void visit(ModelVariableT<uint8_t>& t) override { visitInt<uint8_t>(t); }
-};
 
 
 

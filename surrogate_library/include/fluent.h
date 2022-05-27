@@ -169,7 +169,7 @@ private:
         while (parent != nullptr) {
             auto* new_parent = new OpticBase(*parent);
             current->parent = new_parent;
-            new_parent->use(current);
+            new_parent->unsafe_use(current);
             new_parent->children.clear();
             new_parent->children.push_back(current);
 

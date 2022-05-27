@@ -8,6 +8,7 @@
 
 #include <torch/torch.h>
 #include "../vacuum_tool/src/utils.hpp"
+#include "any_ptr.hpp"
 // #include <concepts>
 
 // These aren't really optics yet (will they ever be?), but they are operational at least
@@ -29,6 +30,8 @@ struct OpticBase {
     std::string consumes;
     bool is_leaf = false;
 
+    virtual std::vector<int64_t> shape() {return {};}; // Torch uses int64_t instead of size_t for its indices and offsets
+
     void unsafe_attach(OpticBase* optic) {
         if (optic->consumes != produces) {
             std::ostringstream ss;
@@ -39,7 +42,10 @@ struct OpticBase {
         children.push_back(optic);
     }
 
-    virtual void use(OpticBase*) {};
+    virtual torch::Tensor unsafe_to(phasm::any_ptr) {return {};};
+    virtual void unsafe_from(torch::Tensor, phasm::any_ptr) {};
+
+    virtual void unsafe_use(OpticBase*) {};
 };
 
 // This is the abstract base class for an optic.
@@ -50,9 +56,16 @@ struct OpticBase {
 // need to transform to and from tensors.
 template <typename T>
 struct Optic : public OpticBase {
-    virtual std::vector<int64_t> shape() {return {};}; // Torch uses int64_t instead of size_t for its indices and offsets
-    virtual torch::Tensor to(T* source) {return {};};
-    virtual void from(torch::Tensor source, T* dest) {};
+
+    virtual torch::Tensor to(T* /*source*/) {return {};};
+    virtual void from(torch::Tensor /*source*/, T* /*dest*/) {};
+
+    virtual torch::Tensor unsafe_to(phasm::any_ptr source) override {
+        return to(source.get<T>());
+    };
+    virtual void unsafe_from(torch::Tensor source, phasm::any_ptr dest) override {
+        return from(source, dest.get<T>());
+    };
 };
 
 /*
@@ -183,7 +196,7 @@ public:
         OpticBase::unsafe_attach(optic);
         m_optic = optic;
     }
-    void use(OpticBase* optic) override {
+    void unsafe_use(OpticBase* optic) override {
         auto downcasted = dynamic_cast<Optic<FieldT>*>(optic);
         if (downcasted == nullptr) {
             throw std::runtime_error("Incompatible optic!");
@@ -231,7 +244,7 @@ public:
         OpticBase::unsafe_attach(optic);
         m_optic = optic;
     }
-    void use(OpticBase* optic) override {
+    void unsafe_use(OpticBase* optic) override {
         auto downcasted = dynamic_cast<Optic<InnerT>*>(optic);
         if (downcasted == nullptr) {
             throw std::runtime_error("Incompatible optic!");
@@ -281,7 +294,7 @@ public:
         OpticBase::unsafe_attach(optic);
         m_optic = optic;
     }
-    void use(OpticBase* optic) override {
+    void unsafe_use(OpticBase* optic) override {
         auto downcasted = dynamic_cast<Optic<InnerT>*>(optic);
         if (downcasted == nullptr) {
             throw std::runtime_error("Incompatible optic!");
