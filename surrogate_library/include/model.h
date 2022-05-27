@@ -6,7 +6,7 @@
 #ifndef SURROGATE_TOOLKIT_MODEL_H
 #define SURROGATE_TOOLKIT_MODEL_H
 
-#include "parameter.h"
+#include "model_variable.h"
 #include <iosfwd>  // Forward decls for std::ostream
 #include <memory>
 
@@ -19,10 +19,10 @@ class Model { // This is an abstract class
     friend class Surrogate;
 
 protected:
-    std::vector<std::shared_ptr<Input>> inputs;
-    std::vector<std::shared_ptr<Output>> outputs;
-    std::map<std::string, std::shared_ptr<Input>> input_map;
-    std::map<std::string, std::shared_ptr<Output>> output_map;
+    std::vector<std::shared_ptr<ModelVariable>> inputs;
+    std::vector<std::shared_ptr<ModelVariable>> outputs;
+    std::map<std::string, std::shared_ptr<ModelVariable>> input_map;
+    std::map<std::string, std::shared_ptr<ModelVariable>> output_map;
     size_t captured_rows = 0;
 
 public:
@@ -30,7 +30,7 @@ public:
 
     template <typename T>
     void input(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>()) {
-        auto input = std::make_shared<InputT<T>>();
+        auto input = std::make_shared<ModelVariableT<T>>();
         input->name = param_name;
         input->accessor = accessor;
         input->range = std::move(range);
@@ -43,7 +43,7 @@ public:
 
     template<typename T>
     void output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>()) {
-        auto output = std::make_shared<OutputT<T>>();
+        auto output = std::make_shared<ModelVariableT<T>>();
         output->name = param_name;
         output->accessor = accessor;
         outputs.push_back(output);
@@ -60,12 +60,12 @@ public:
     }
 
     template <typename T>
-    std::shared_ptr<InputT<T>> get_input(size_t position) {
+    std::shared_ptr<ModelVariableT<T>> get_input(size_t position) {
         if (position >= inputs.size()) {
             throw("Parameter index out of bounds");
         }
         auto input = inputs[position];
-        auto downcasted_input = std::dynamic_pointer_cast<InputT<T>>(input);
+        auto downcasted_input = std::dynamic_pointer_cast<ModelVariableT<T>>(input);
         if (downcasted_input == nullptr) {
             throw("Wrong type for input parameter");
         }
@@ -73,12 +73,12 @@ public:
     }
 
     template <typename T>
-    std::shared_ptr<InputT<T>> get_input(std::string param_name) {
+    std::shared_ptr<ModelVariableT<T>> get_input(std::string param_name) {
         auto pair = input_map.find(param_name);
         if (pair == input_map.end()) {
             throw ("Invalid input parameter name");
         }
-        auto downcasted_input = std::dynamic_pointer_cast<InputT<T>>(pair->second);
+        auto downcasted_input = std::dynamic_pointer_cast<ModelVariableT<T>>(pair->second);
         if (downcasted_input == nullptr) {
             throw("Wrong type for input parameter");
         }
@@ -86,12 +86,12 @@ public:
     }
 
     template <typename T>
-    std::shared_ptr<OutputT<T>> get_output(size_t position) {
+    std::shared_ptr<ModelVariableT<T>> get_output(size_t position) {
         if (position >= outputs.size()) {
             throw("Output parameter index out of bounds");
         }
         auto output = outputs[position];
-        auto downcasted_output = std::dynamic_pointer_cast<OutputT<T>>(output);
+        auto downcasted_output = std::dynamic_pointer_cast<ModelVariableT<T>>(output);
         if (downcasted_output == nullptr) {
             throw("Wrong type for output parameter");
         }
@@ -99,13 +99,13 @@ public:
     }
 
     template <typename T>
-    std::shared_ptr<OutputT<T>> get_output(std::string param_name) {
+    std::shared_ptr<ModelVariableT<T>> get_output(std::string param_name) {
 
         auto pair = output_map.find(param_name);
         if (pair == output_map.end()) {
             throw "Invalid output parameter name";
         }
-        auto downcasted_output = std::dynamic_pointer_cast<OutputT<T>>(pair->second);
+        auto downcasted_output = std::dynamic_pointer_cast<ModelVariableT<T>>(pair->second);
         if (downcasted_output == nullptr) {
             throw "Wrong type for output parameter";
         }

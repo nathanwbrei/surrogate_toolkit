@@ -14,7 +14,7 @@
 
 #include "range.h"
 #include "model.h"
-#include "binding.h"
+#include "call_site_variable.h"
 
 
 class Surrogate {
@@ -27,10 +27,10 @@ private:
     std::function<void(void)> original_function;
     std::shared_ptr<Model> model;
 public:
-    std::vector<std::shared_ptr<InputBinding>> input_bindings;
-    std::vector<std::shared_ptr<OutputBinding>> output_bindings;
-    std::map<std::string, std::shared_ptr<InputBinding>> input_binding_map;
-    std::map<std::string, std::shared_ptr<OutputBinding>> output_binding_map;
+    std::vector<std::shared_ptr<CallSiteVariable>> input_bindings;
+    std::vector<std::shared_ptr<CallSiteVariable>> output_bindings;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> input_binding_map;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> output_binding_map;
 
 public:
     explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
@@ -38,7 +38,7 @@ public:
 
     template <typename T>
     void bind_input(std::string param_name, T* slot) {
-	auto input = std::make_shared<InputBindingT<T>>();
+	auto input = std::make_shared<CallSiteVariableT<T>>();
 	input->binding_root = slot;
 	input->parameter = model->get_input<T>(param_name);
 	input_bindings.push_back(input);
@@ -50,7 +50,7 @@ public:
 
     template<typename T>
     void bind_output(std::string param_name, T* slot) {
-	auto output = std::make_shared<OutputBindingT<T>>();
+	auto output = std::make_shared<CallSiteVariableT<T>>();
 	output->binding_root = slot;
         output->parameter = model->get_output<T>(param_name);
         output_bindings.push_back(output);
@@ -67,12 +67,12 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<InputBindingT<T>> get_input_binding(size_t index) {
+    std::shared_ptr<CallSiteVariableT<T>> get_input_binding(size_t index) {
         if (index >= input_bindings.size()) {
             throw "Index out of range for input binding";
         }
         auto input = input_bindings[index];
-        auto downcasted = std::dynamic_pointer_cast<InputBindingT<T>>(input);
+        auto downcasted = std::dynamic_pointer_cast<CallSiteVariableT<T>>(input);
         if (downcasted == nullptr) {
             throw "Wrong type for input binding";
         }
@@ -80,12 +80,12 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<InputBindingT<T>> get_input_binding(std::string name) {
+    std::shared_ptr<CallSiteVariableT<T>> get_input_binding(std::string name) {
         auto pair = input_binding_map.find(name);
         if (pair == input_binding_map.end()) {
             throw ("Invalid input parameter name");
         }
-        auto downcasted_input = std::dynamic_pointer_cast<InputBindingT<T>>(pair->second);
+        auto downcasted_input = std::dynamic_pointer_cast<CallSiteVariableT<T>>(pair->second);
         if (downcasted_input == nullptr) {
             throw("Wrong type for input parameter");
         }
@@ -93,12 +93,12 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<OutputBindingT<T>> get_output_binding(size_t index) {
+    std::shared_ptr<CallSiteVariableT<T>> get_output_binding(size_t index) {
         if (index >= output_bindings.size()) {
             throw "Index out of range for output binding";
         }
         auto output = output_bindings[index];
-        auto downcasted = std::dynamic_pointer_cast<OutputBindingT<T>>(output);
+        auto downcasted = std::dynamic_pointer_cast<CallSiteVariableT<T>>(output);
         if (downcasted == nullptr) {
             throw "Wrong type for output binding";
         }
@@ -106,12 +106,12 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<OutputBindingT<T>> get_output_binding(std::string name) {
+    std::shared_ptr<CallSiteVariableT<T>> get_output_binding(std::string name) {
         auto pair = output_binding_map.find(name);
         if (pair == output_binding_map.end()) {
             throw ("Invalid output parameter name");
         }
-        auto downcasted_output = std::dynamic_pointer_cast<OutputBindingT<T>>(pair->second);
+        auto downcasted_output = std::dynamic_pointer_cast<CallSiteVariableT<T>>(pair->second);
         if (downcasted_output == nullptr) {
             throw("Wrong type for input parameter");
         }

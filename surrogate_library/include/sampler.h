@@ -6,7 +6,7 @@
 #ifndef SURROGATE_TOOLKIT_SAMPLER_H
 #define SURROGATE_TOOLKIT_SAMPLER_H
 
-#include <binding.h>
+#include <call_site_variable.h>
 
 struct Sampler {
 
@@ -28,7 +28,7 @@ struct GridSampler : public Sampler {
     T step_size;
     T* slot;
 
-    GridSampler(InputBindingT<T>& binding, size_t nsteps = 100) {
+    GridSampler(CallSiteVariableT<T>& binding, size_t nsteps = 100) {
         auto param = binding.parameter;
         initial_sample = param->range.lower_bound_inclusive;
         final_sample = param->range.upper_bound_inclusive;
@@ -75,7 +75,7 @@ struct FiniteSetSampler : public Sampler {
     size_t sample_index = 0;
     T* slot;
 
-    FiniteSetSampler(InputBindingT<T>& binding) {
+    FiniteSetSampler(CallSiteVariableT<T>& binding) {
         slot = binding.binding_root;
         auto& s = binding.parameter->range.items;
         samples.insert(samples.end(), s.begin(), s.end());
@@ -93,26 +93,26 @@ struct FiniteSetSampler : public Sampler {
 
 
 
-struct InputBindingVisitorChild : public InputBindingVisitor {
+struct MyVisitor : public ModelVariableVisitor {
 
-    template<typename T> inline void visitReal(InputBindingT<T>&) {
+    template<typename T> inline void visitReal(ModelVariableT<T>&) {
         std::cout << "Visiting some kind of real number" << std::endl;
     }
 
-    template<typename T> inline void visitInt(InputBindingT<T>&) {
+    template<typename T> inline void visitInt(ModelVariableT<T>&) {
         std::cout << "Visiting some kind of int" << std::endl;
     }
 
-    void visit(InputBindingT<double>& t) override { visitReal<double>(t); }
-    void visit(InputBindingT<float>& t) override { visitReal<float>(t); }
-    void visit(InputBindingT<int64_t>& t) override { visitInt<int64_t>(t); }
-    void visit(InputBindingT<int32_t>& t) override { visitInt<int32_t>(t); }
-    void visit(InputBindingT<int16_t>& t) override { visitInt<int16_t>(t); }
-    void visit(InputBindingT<int8_t>& t) override { visitInt<int8_t>(t); }
-    void visit(InputBindingT<uint64_t>& t) override { visitInt<uint64_t>(t); }
-    void visit(InputBindingT<uint32_t>& t) override { visitInt<uint32_t>(t); }
-    void visit(InputBindingT<uint16_t>& t) override { visitInt<uint16_t>(t); }
-    void visit(InputBindingT<uint8_t>& t) override { visitInt<uint8_t>(t); }
+    void visit(ModelVariableT<double>& t) override { visitReal<double>(t); }
+    void visit(ModelVariableT<float>& t) override { visitReal<float>(t); }
+    void visit(ModelVariableT<int64_t>& t) override { visitInt<int64_t>(t); }
+    void visit(ModelVariableT<int32_t>& t) override { visitInt<int32_t>(t); }
+    void visit(ModelVariableT<int16_t>& t) override { visitInt<int16_t>(t); }
+    void visit(ModelVariableT<int8_t>& t) override { visitInt<int8_t>(t); }
+    void visit(ModelVariableT<uint64_t>& t) override { visitInt<uint64_t>(t); }
+    void visit(ModelVariableT<uint32_t>& t) override { visitInt<uint32_t>(t); }
+    void visit(ModelVariableT<uint16_t>& t) override { visitInt<uint16_t>(t); }
+    void visit(ModelVariableT<uint8_t>& t) override { visitInt<uint8_t>(t); }
 };
 
 

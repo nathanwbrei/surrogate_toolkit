@@ -6,58 +6,58 @@
 #include <iostream>
 
 template <typename T>
-struct InputBinding;
+struct CallSiteVariable;
 
-struct InputBindingVisitor {
+struct CallSiteVariableVisitor {
 
-    virtual void visit(InputBinding<float>&) {};
-    virtual void visit(InputBinding<double>&) {};
-    virtual void visit(InputBinding<bool>&) {};
-    virtual void visit(InputBinding<int8_t>&) {};
-    virtual void visit(InputBinding<int16_t>&) {};
-    virtual void visit(InputBinding<int32_t>&) {};
-    virtual void visit(InputBinding<int64_t>&) {};
-    virtual void visit(InputBinding<uint8_t>&) {};
-    virtual void visit(InputBinding<uint16_t>&) {};
-    virtual void visit(InputBinding<uint32_t>&) {};
-    virtual void visit(InputBinding<uint64_t>&) {};
+    virtual void visit(CallSiteVariable<float>&) {};
+    virtual void visit(CallSiteVariable<double>&) {};
+    virtual void visit(CallSiteVariable<bool>&) {};
+    virtual void visit(CallSiteVariable<int8_t>&) {};
+    virtual void visit(CallSiteVariable<int16_t>&) {};
+    virtual void visit(CallSiteVariable<int32_t>&) {};
+    virtual void visit(CallSiteVariable<int64_t>&) {};
+    virtual void visit(CallSiteVariable<uint8_t>&) {};
+    virtual void visit(CallSiteVariable<uint16_t>&) {};
+    virtual void visit(CallSiteVariable<uint32_t>&) {};
+    virtual void visit(CallSiteVariable<uint64_t>&) {};
 };
 
 template <typename T>
-struct InputBinding {
+struct CallSiteVariable {
     T t;
-    void accept(InputBindingVisitor& v) {
+    void accept(CallSiteVariableVisitor& v) {
         v.visit(*this);
     }
 };
 
-struct InputBindingVisitorChild : public InputBindingVisitor {
+struct MyVisitor : public CallSiteVariableVisitor {
 
-    template<typename T> inline void visitReal(InputBinding<T>& t) {
+    template<typename T> inline void visitReal(CallSiteVariable<T>& t) {
         std::cout << "Visiting some kind of real number" << std::endl;
     }
 
-    template<typename T> inline void visitInt(InputBinding<T>& t) {
+    template<typename T> inline void visitInt(CallSiteVariable<T>& t) {
         std::cout << "Visiting some kind of int" << std::endl;
     }
 
-    void visit(InputBinding<double>& t) override { visitReal<double>(t); }
-    void visit(InputBinding<float>& t) override { visitReal<float>(t); }
-    void visit(InputBinding<int64_t>& t) override { visitInt<int64_t>(t); }
-    void visit(InputBinding<int32_t>& t) override { visitInt<int32_t>(t); }
-    void visit(InputBinding<int16_t>& t) override { visitInt<int16_t>(t); }
-    void visit(InputBinding<int8_t>& t) override { visitInt<int8_t>(t); }
-    void visit(InputBinding<uint64_t>& t) override { visitInt<uint64_t>(t); }
-    void visit(InputBinding<uint32_t>& t) override { visitInt<uint32_t>(t); }
-    void visit(InputBinding<uint16_t>& t) override { visitInt<uint16_t>(t); }
-    void visit(InputBinding<uint8_t>& t) override { visitInt<uint8_t>(t); }
+    void visit(CallSiteVariable<double>& t) override { visitReal<double>(t); }
+    void visit(CallSiteVariable<float>& t) override { visitReal<float>(t); }
+    void visit(CallSiteVariable<int64_t>& t) override { visitInt<int64_t>(t); }
+    void visit(CallSiteVariable<int32_t>& t) override { visitInt<int32_t>(t); }
+    void visit(CallSiteVariable<int16_t>& t) override { visitInt<int16_t>(t); }
+    void visit(CallSiteVariable<int8_t>& t) override { visitInt<int8_t>(t); }
+    void visit(CallSiteVariable<uint64_t>& t) override { visitInt<uint64_t>(t); }
+    void visit(CallSiteVariable<uint32_t>& t) override { visitInt<uint32_t>(t); }
+    void visit(CallSiteVariable<uint16_t>& t) override { visitInt<uint16_t>(t); }
+    void visit(CallSiteVariable<uint8_t>& t) override { visitInt<uint8_t>(t); }
 };
 
 
 TEST_CASE("VisitorTests") {
-    InputBinding<int> b;
-    InputBinding<double> d;
-    InputBindingVisitorChild vc;
+    CallSiteVariable<int> b;
+    CallSiteVariable<double> d;
+    MyVisitor vc;
     // auto lambda = []<typename T>(InputBinding<T>& ib) {return ib.t;};
     b.accept(vc);
     d.accept(vc);

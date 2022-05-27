@@ -19,7 +19,7 @@ void TorchscriptModel::initialize() {
 void TorchscriptModel::infer(Surrogate &s) {
 
     std::vector<torch::Tensor> input_tensors;
-    for (const std::shared_ptr<InputBinding>& input_binding : s.input_bindings) {
+    for (const std::shared_ptr<CallSiteVariable>& input_binding : s.input_bindings) {
         input_tensors.push_back(input_binding->get_tensor());
     }
 
@@ -33,7 +33,7 @@ void TorchscriptModel::infer(Surrogate &s) {
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
 
     size_t i = 0;
-    for (const std::shared_ptr<OutputBinding> &output_binding: s.output_bindings) {
+    for (const std::shared_ptr<CallSiteVariable> &output_binding: s.output_bindings) {
         output_binding->put_tensor(output_tensors[i++]);
     }
 }

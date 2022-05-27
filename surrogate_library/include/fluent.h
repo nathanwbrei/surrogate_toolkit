@@ -13,8 +13,12 @@ using namespace optics;
 
 template <typename T>
 struct Root : Optic<T> {
-    std::string binding_name;
     Optic<T>* optic;
+    T* global = nullptr;
+    Root() {
+        OpticBase::consumes = "nothing";
+        OpticBase::produces = demangle<T>();
+    }
 };
 
 struct Builder;
@@ -120,7 +124,6 @@ struct Builder {
     Cursor<T> local(std::string name) {
         auto r = new Root<T>;
         r->name = name;
-        r->binding_name = name;
         r->produces = demangle<T>();
         locals.push_back(r);
         return Cursor<T>(r, this);
@@ -130,7 +133,6 @@ struct Builder {
     Cursor<T> global(std::string name, T* var) {
         auto r = new Root<T>;
         r->name = name;
-        r->binding_name = name;
         r->produces = demangle<T>();
         globals.push_back(r);
         return Cursor<T>(r, this);
