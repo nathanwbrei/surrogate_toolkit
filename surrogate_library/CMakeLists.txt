@@ -3,11 +3,11 @@ find_package(Torch REQUIRED)
 
 
 set(SURROGATE_LIBRARY_SOURCES
-        include/fluent.h
         src/surrogate.cpp
         src/model.cpp
         src/feedforward_model.cpp
         src/torchscript_model.cpp
+        src/fluent.cpp
         )
 
 add_library(surrogate_library STATIC ${SURROGATE_LIBRARY_SOURCES})

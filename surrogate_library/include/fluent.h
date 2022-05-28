@@ -11,6 +11,62 @@
 namespace phasm::fluent {
 using namespace optics;
 
+
+template <typename HeadT, typename ...RestTs>
+struct Cursor;
+
+struct Builder {
+    std::vector<OpticBase*> locals;
+    std::vector<OpticBase*> globals;
+    std::map<std::string, OpticBase*> model_vars;
+    std::map<std::string, OpticBase*> getModelVars();
+    void print();
+    void printModelVars();
+
+    template <typename T>
+    Cursor<T> local(std::string name);
+
+    template <typename T>
+    Cursor<T> global(std::string name, T*);
+
+private:
+    void printOptic(OpticBase* optic, int level);
+    static OpticBase* createOpticPathFromLeafToRoot(OpticBase* leaf);
+};
+
+
+template <typename HeadT>
+struct Cursor<HeadT> {
+    OpticBase* focus = nullptr;
+    Builder* builder = nullptr;
+
+    Cursor(OpticBase* focus, Builder* builder);
+    Cursor<HeadT> primitive(std::string name);
+    Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape);
+    Cursor<HeadT> array(size_t size);
+    Builder& end();
+
+    template <typename T>
+    Cursor<T, HeadT> accessor(std::function<T*(HeadT*)> lambda);
+};
+
+
+template <typename HeadT, typename... RestTs>
+struct Cursor {
+    OpticBase* focus = nullptr;
+    Builder* builder = nullptr;
+
+    Cursor(OpticBase* focus, Builder* builder);
+    Cursor<HeadT, RestTs...> primitive(std::string name);
+    Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape);
+    Cursor<HeadT, RestTs...> array(size_t size);
+    Cursor<RestTs...> end();
+
+    template <typename T>
+    Cursor<T, HeadT, RestTs...> accessor(std::function<T*(HeadT*)> lambda);
+};
+
+
 template <typename T>
 struct Root : Optic<T> {
     Optic<T>* optic;
@@ -21,208 +77,119 @@ struct Root : Optic<T> {
     }
 };
 
-struct Builder;
+
+// ------------------------------------------------------
+// Template member function definitions for Builder
+// ------------------------------------------------------
+
+template <typename T>
+Cursor<T> Builder::local(std::string name) {
+    auto r = new Root<T>;
+    r->name = name;
+    r->produces = demangle<T>();
+    locals.push_back(r);
+    return Cursor<T>(r, this);
+}
+
+template <typename T>
+Cursor<T> Builder::global(std::string name, T*) {
+    auto r = new Root<T>;
+    r->name = name;
+    r->produces = demangle<T>();
+    globals.push_back(r);
+    return Cursor<T>(r, this);
+}
+
+
+// ------------------------------------------------------
+// Template member function definitions for Cursor<HeadT>
+// ------------------------------------------------------
+
+template<typename HeadT>
+Cursor<HeadT>::Cursor(OpticBase *focus, Builder *builder) : focus(focus), builder(builder) {}
+
+template<typename HeadT>
+Cursor<HeadT> Cursor<HeadT>::primitive(std::string name) {
+    auto child = new Primitive<HeadT>();
+    child->name = name;
+    child->is_leaf = true;
+    focus->unsafe_attach(child);
+    return *this;
+}
+
+template<typename HeadT>
+Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &&shape) {
+    auto child = new PrimitiveArray<HeadT>(std::move(shape));
+    child->name = name;
+    child->is_leaf = true;
+    focus->unsafe_attach(child);
+    return *this;
+}
+
+template<typename HeadT>
+template<typename T>
+Cursor<T, HeadT> Cursor<HeadT>::accessor(std::function<T *(HeadT *)> lambda) {
+    auto child = new Field<HeadT, T>(nullptr, lambda);
+    focus->unsafe_attach(child);
+    return Cursor<T, HeadT>(child, builder);
+}
+
+template<typename HeadT>
+Cursor<HeadT> Cursor<HeadT>::array(size_t size) {
+    auto child = new Array<HeadT>(nullptr, size);
+    focus->unsafe_attach(child);
+    return Cursor<HeadT>(child, builder);
+}
+
+template<typename HeadT>
+Builder &Cursor<HeadT>::end() {
+    return *builder;
+}
+
+
+// -----------------------------------------------------------------
+// Template member function definitions for Cursor<HeadT, RestTs...>
+// -----------------------------------------------------------------
 
 template <typename HeadT, typename... RestTs>
-struct Cursor {
-    OpticBase* focus = nullptr;
-    Builder* builder = nullptr;
+Cursor<HeadT, RestTs...>::Cursor(OpticBase* focus, Builder* builder) : focus(focus), builder(builder) {}
 
-    Cursor(OpticBase* focus, Builder* builder) : focus(focus), builder(builder) {}
+template <typename HeadT, typename... RestTs>
+Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitive(std::string name) {
+    auto child = new Primitive<HeadT>();
+    child->name = name;
+    child->is_leaf = true;
+    focus->unsafe_attach(child);
+    return *this;
+}
 
+template <typename HeadT, typename... RestTs>
+Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitives(std::string name, std::vector<int64_t>&& shape) {
+    auto child = new PrimitiveArray<HeadT>(std::move(shape));
+    child->name = name;
+    child->is_leaf = true;
+    focus->unsafe_attach(child);
+    return *this;
+}
 
-    Cursor<HeadT, RestTs...> primitive(std::string name) {
-        auto child = new Primitive<HeadT>();
-        child->name = name;
-        child->is_leaf = true;
-        focus->unsafe_attach(child);
-        return *this;
-    }
+template <typename HeadT, typename... RestTs>
+template <typename T>
+Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T*(HeadT*)> lambda) {
+    auto child = new Field<HeadT, T>(nullptr, lambda);
+    focus->unsafe_attach(child);
+    return Cursor<T, HeadT, RestTs...>(child, builder);
+}
 
-    Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape) {
-        auto child = new PrimitiveArray<HeadT>(std::move(shape));
-        child->name = name;
-        child->is_leaf = true;
-        focus->unsafe_attach(child);
-        return *this;
-    }
+template <typename HeadT, typename... RestTs>
+Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::array(size_t size) {
+    auto child = new Array<HeadT>(nullptr, size);
+    focus->unsafe_attach(child);
+    return Cursor<HeadT, RestTs...>(child, builder);
+}
 
-    template <typename T>
-    Cursor<T, HeadT, RestTs...> accessor(std::function<T*(HeadT*)> lambda) {
-        auto child = new Field<HeadT, T>(nullptr, lambda);
-        focus->unsafe_attach(child);
-        return Cursor<T, HeadT, RestTs...>(child, builder);
-    }
-
-    Cursor<HeadT, RestTs...> array(size_t size) {
-        auto child = new Array<HeadT>(nullptr, size);
-        focus->unsafe_attach(child);
-        return Cursor<HeadT, RestTs...>(child, builder);
-    }
-
-    Cursor<RestTs...> end() {
-        return Cursor<RestTs...>(focus->parent, builder);
-    }
-};
-
-
-template <typename HeadT>
-struct Cursor<HeadT> {
-    OpticBase* focus = nullptr;
-    Builder* builder = nullptr;
-
-    Cursor(OpticBase* focus, Builder* builder) : focus(focus), builder(builder) {}
-
-    Cursor<HeadT> primitive(std::string name) {
-        auto child = new Primitive<HeadT>();
-        child->name = name;
-        child->is_leaf = true;
-        focus->unsafe_attach(child);
-        return *this;
-    }
-
-    Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape) {
-        auto child = new PrimitiveArray<HeadT>(std::move(shape));
-        child->name = name;
-        child->is_leaf = true;
-        focus->unsafe_attach(child);
-        return *this;
-    }
-
-    template <typename T>
-    Cursor<T, HeadT> accessor(std::function<T*(HeadT*)> lambda) {
-        auto child = new Field<HeadT, T>(nullptr, lambda);
-        focus->unsafe_attach(child);
-        return Cursor<T, HeadT>(child, builder);
-    }
-
-    Cursor<HeadT> array(size_t size) {
-        auto child = new Array<HeadT>(nullptr, size);
-        focus->unsafe_attach(child);
-        return Cursor<HeadT>(child, builder);
-    }
-
-    template <typename T>
-    Cursor<T, HeadT> custom(OpticBase* child) {
-        focus->unsafe_attach(child);
-        return Cursor<T, HeadT>(child, builder);
-    }
-
-    Builder& end() {
-        return *builder;
-    }
-};
-
-
-
-struct Builder {
-    std::vector<OpticBase*> locals;
-    std::vector<OpticBase*> globals;
-    std::map<std::string, OpticBase*> model_vars;
-
-    template <typename T>
-    Cursor<T> local(std::string name) {
-        auto r = new Root<T>;
-        r->name = name;
-        r->produces = demangle<T>();
-        locals.push_back(r);
-        return Cursor<T>(r, this);
-    }
-
-    template <typename T>
-    Cursor<T> global(std::string name, T* var) {
-        auto r = new Root<T>;
-        r->name = name;
-        r->produces = demangle<T>();
-        globals.push_back(r);
-        return Cursor<T>(r, this);
-    }
-
-private:
-    void printOptic(OpticBase* optic, int level) {
-        for (int i=0; i<level; ++i) {
-            std::cout << "    ";
-        }
-        if (!optic->name.empty()) {
-            std::cout << optic->name << ": ";
-        }
-        if (optic->consumes.empty()) {
-            std::cout << optic->produces << std::endl;
-        }
-        else if (optic->produces.empty()) {
-            std::cout << optic->consumes << std::endl;
-        }
-        else {
-            std::cout << optic->consumes << "->" << optic->produces << std::endl;
-        }
-        for (auto child : optic->children) {
-            printOptic(child, level+1);
-        }
-    }
-
-    /// Given a leaf in the optics tree, create a new chain of optics which
-    /// represents the path from the root node to the leaf. This way we can build the
-    /// tensor for a specific model variable instead of building all tensors at once.
-    static inline OpticBase* createOpticPathFromLeafToRoot(OpticBase* leaf) {
-        OpticBase* current = new OpticBase(*leaf);
-        OpticBase* parent = leaf->parent;
-        while (parent != nullptr) {
-            auto* new_parent = new OpticBase(*parent);
-            current->parent = new_parent;
-            new_parent->unsafe_use(current);
-            new_parent->children.clear();
-            new_parent->children.push_back(current);
-
-            current = new_parent;
-            parent = current->parent;
-        }
-        return current;
-    }
-
-
-
-public:
-    void print() {
-        for (auto g : globals) {
-            printOptic(g, 0);
-        }
-        for (auto l : locals) {
-            printOptic(l, 0);
-        }
-    }
-
-    inline std::map<std::string, OpticBase*> getModelVars() {
-        std::map<std::string, OpticBase*> results;
-        std::queue<OpticBase*> q;
-        for (auto g : globals) {
-            q.push(g);
-        }
-        for (auto l : locals) {
-            q.push(l);
-        }
-        while (!q.empty()) {
-            OpticBase* o = q.front();
-            if (o->is_leaf) {
-                results[o->name] = createOpticPathFromLeafToRoot(o);
-            }
-            else {
-                for (OpticBase* c : o->children) {
-                    q.push(c);
-                }
-            }
-            q.pop();
-        }
-        return results;
-    }
-
-    inline void printModelVars() {
-        auto vars = getModelVars();
-        for (auto p : vars) {
-            std::cout << p.first << ":" << std::endl;
-            printOptic(p.second, 1);
-        }
-    }
-
+template <typename HeadT, typename... RestTs>
+Cursor<RestTs...> Cursor<HeadT, RestTs...>::end() {
+    return Cursor<RestTs...>(focus->parent, builder);
 };
 
 

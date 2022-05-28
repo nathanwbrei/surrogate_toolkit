@@ -41,10 +41,10 @@ public:
     size_t get_capture_count() const;
 
     // Train takes all of the captures associated with each parameter
-    virtual void train_from_captures() = 0;
+    virtual void train_from_captures() {};
 
     // Infer takes the sample associated with each parameter
-    virtual void infer(Surrogate&) = 0;
+    virtual void infer(Surrogate&) {};
 
     void dump_captures_to_csv(std::ostream&);
 
@@ -98,7 +98,7 @@ void Model::output(std::string param_name, optics::Optic<T>* accessor) {
 }
 
 template<typename T>
-void Model::input_output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>()) {
+void Model::input_output(std::string param_name, optics::Optic<T>* accessor, Range<float> range) {
     input<T>(param_name, accessor, range);
     output<T>(param_name, accessor);
 }
