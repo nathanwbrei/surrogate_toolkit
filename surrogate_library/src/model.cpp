@@ -7,6 +7,30 @@
 #include <iostream>
 
 
+size_t Model::get_capture_count() const { return captured_rows; }
+
+std::shared_ptr<ModelVariable> Model::get_input(size_t position) {
+    if (position >= inputs.size()) { throw std::runtime_error("Parameter index out of bounds"); }
+    return inputs[position];
+}
+
+std::shared_ptr<ModelVariable> Model::get_input(std::string param_name) {
+    auto pair = input_map.find(param_name);
+    if (pair == input_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
+    return pair->second;
+}
+
+std::shared_ptr<ModelVariable> Model::get_output(size_t position) {
+    if (position >= outputs.size()) { throw std::runtime_error("Output parameter index out of bounds"); }
+    return outputs[position];
+}
+
+std::shared_ptr<ModelVariable> Model::get_output(std::string param_name) {
+    auto pair = output_map.find(param_name);
+    if (pair == output_map.end()) { throw std::runtime_error("Invalid output parameter name"); }
+    return pair->second;
+}
+
 /// finalize() performs additional work we are supposed to do before the program exits but while we still have a complete Model.
 /// This work is specified by Surrogate::s_callmode, and most notably includes
 /// training the model on all data captured during the program's run. Anyone subclassing Model should call
