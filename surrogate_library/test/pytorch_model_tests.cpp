@@ -12,13 +12,13 @@ double square(double x);
 TEST_CASE("Can we build against pytorch at all?") {
 
     auto m = std::make_shared<FeedForwardModel>();
-    m->input<double>("x", new optics::Primitive<double>(), {-3,3});
-    m->output<double>("y");
+    m->add_input<double>("x", new optics::Primitive<double>(), "x");
+    m->add_output<double>("y");
 
     double x, y;
     auto s = Surrogate([&](){y = square(x);}, m);
-    s.bind_input("x", &x);
-    s.bind_output("y", &y);
+    s.bind("x", &x);
+    s.bind("y", &y);
 
     for (int i = -3; i<3; ++i) {
         // x =

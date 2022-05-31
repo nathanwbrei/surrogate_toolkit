@@ -21,6 +21,7 @@ class Model {
 
 protected:
     std::vector<std::shared_ptr<CallSiteVariable>> callsite_vars;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> callsite_var_map;
     std::vector<std::shared_ptr<ModelVariable>> inputs;
     std::vector<std::shared_ptr<ModelVariable>> outputs;
     std::map<std::string, std::shared_ptr<ModelVariable>> input_map;
@@ -53,13 +54,23 @@ public:
     virtual void save();
 
     template <typename T>
-    void input(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>());
+    void add_input(std::string param_name);
 
     template<typename T>
-    void output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>());
+    void add_output(std::string param_name);
 
     template<typename T>
-    void input_output(std::string param_name, optics::Optic<T>* accessor=new optics::Primitive<T>(), Range<float> range = Range<float>());
+    void add_input_output(std::string param_name);
+
+    template <typename T>
+    void add_input(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name);
+
+    template <typename T>
+    void add_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name);
+
+    template <typename T>
+    void add_input_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name);
+
 
     std::shared_ptr<ModelVariable> get_input(size_t position);
 
@@ -70,37 +81,79 @@ public:
     std::shared_ptr<ModelVariable> get_output(std::string param_name);
 };
 
-
+template<typename T>
+void Model::add_input(std::string call_site_var_name) {
+    add_input(call_site_var_name, new optics::Primitive<T>, call_site_var_name);
+}
 
 template<typename T>
-void Model::input(std::string param_name, optics::Optic<T> *accessor, Range<float> range) {
+void Model::add_output(std::string call_site_var_name) {
+    add_output(call_site_var_name, new optics::Primitive<T>, call_site_var_name);
+}
+
+template<typename T>
+void Model::add_input_output(std::string call_site_var_name) {
+    add_input_output(call_site_var_name, new optics::Primitive<T>, call_site_var_name);
+}
+
+template<typename T>
+void Model::add_input(std::string call_site_var_name, optics::Optic<T> *accessor, std::string model_var_name) {
     auto input = std::make_shared<ModelVariable>();
-    input->name = param_name;
+    input->name = model_var_name;
+    input->is_input = true;
     input->accessor = accessor;
-    input->range = std::move(range);
     inputs.push_back(input);
-    if (input_map.find(param_name) != input_map.end()) {
+    if (input_map.find(model_var_name) != input_map.end()) {
         throw std::runtime_error("Input parameter already exists!");
     }
-    input_map[param_name] = input;
+    input_map[model_var_name] = input;
+
+    std::shared_ptr<CallSiteVariable> csv = nullptr;
+    auto pair = callsite_var_map.find(call_site_var_name);
+    if (pair == callsite_var_map.end()) {
+        csv = std::make_shared<CallSiteVariable>();
+        csv->name = call_site_var_name;
+        csv->binding = phasm::any_ptr((T*)nullptr);
+        callsite_var_map[call_site_var_name] = csv;
+        callsite_vars.push_back(csv);
+    }
+    else {
+        csv = pair->second;
+    }
+    csv->model_vars.push_back(input);
 }
 
 template<typename T>
-void Model::output(std::string param_name, optics::Optic<T>* accessor) {
+void Model::add_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name) {
     auto output = std::make_shared<ModelVariable>();
-    output->name = param_name;
+    output->name = model_var_name;
+    output->is_output = true;
     output->accessor = accessor;
     outputs.push_back(output);
-    if (output_map.find(param_name) != output_map.end()) {
+    if (output_map.find(model_var_name) != output_map.end()) {
         throw std::runtime_error("Output parameter already exists!");
     }
-    output_map[param_name] = output;
+    output_map[model_var_name] = output;
+
+    std::shared_ptr<CallSiteVariable> csv = nullptr;
+    auto pair = callsite_var_map.find(call_site_var_name);
+    if (pair == callsite_var_map.end()) {
+        csv = std::make_shared<CallSiteVariable>();
+        csv->name = call_site_var_name;
+        csv->binding = phasm::any_ptr((T*)nullptr);
+        callsite_var_map[call_site_var_name] = csv;
+        callsite_vars.push_back(csv);
+    }
+    else {
+        csv = pair->second;
+    }
+    csv->model_vars.push_back(output);
 }
 
 template<typename T>
-void Model::input_output(std::string param_name, optics::Optic<T>* accessor, Range<float> range) {
-    input<T>(param_name, accessor, range);
-    output<T>(param_name, accessor);
+void Model::add_input_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name) {
+    add_input<T>(call_site_var_name, accessor, model_var_name);
+    add_output<T>(call_site_var_name, accessor, model_var_name);
 }
 
 #endif //SURROGATE_TOOLKIT_MODEL_H

@@ -15,13 +15,15 @@
 
 struct ModelVariable {
     std::string name;
+    bool is_input = false;
+    bool is_output = false;
     optics::OpticBase* accessor = nullptr;
     phasm::any_ptr global;
     std::vector<torch::Tensor> training_captures;
     torch::Tensor inference_capture;
     Range<float> range;
 
-    std::vector<int64_t> shape() {
+    std::vector<int64_t> shape() const {
         if (accessor == nullptr) {
             std::ostringstream oss;
             oss << "ModelVariable '" << name << "' doesn't have an accessor";
@@ -30,14 +32,14 @@ struct ModelVariable {
         return accessor->shape();
     }
 
-    void capture_training_data(phasm::any_ptr binding) {
+    void capture_training_data(const phasm::any_ptr& binding) {
         torch::Tensor data = accessor->unsafe_to(binding);
         training_captures.push_back(data);
     }
-    void get_inference_data(phasm::any_ptr binding) {
+    void get_inference_data(const phasm::any_ptr& binding) {
         inference_capture = accessor->unsafe_to(binding);
     }
-    void put_inference_data(phasm::any_ptr binding) {
+    void put_inference_data(const phasm::any_ptr& binding) const {
         accessor->unsafe_from(inference_capture, binding);
     }
 };

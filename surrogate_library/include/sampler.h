@@ -28,7 +28,7 @@ struct GridSampler : public Sampler {
     T step_size;
     T* slot;
 
-    GridSampler(CallSiteVariable& cs, ModelVariable* var, size_t nsteps = 100) {
+    GridSampler(CallSiteVariable& cs, std::shared_ptr<ModelVariable> var, size_t nsteps = 100) {
         initial_sample = var->range.lower_bound_inclusive;
         final_sample = var->range.upper_bound_inclusive;
         current_sample = initial_sample;

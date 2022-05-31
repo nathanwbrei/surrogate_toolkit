@@ -35,11 +35,15 @@ void print_help_screen() {
 }
 
 Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
-    : original_function(std::move(f)), model(std::move(model)) {
+    : original_function(std::move(f)), model(model) {
 
     if (s_callmode == CallMode::NotSet) {
         s_callmode = get_call_mode_from_envvar();
     }
+
+    // Copy over expected callsite vars from model so that we can validate the bindings
+    callsite_vars = model->callsite_vars;
+    callsite_var_map = model->callsite_var_map;
 };
 
 void Surrogate::call() {

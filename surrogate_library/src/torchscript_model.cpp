@@ -20,8 +20,8 @@ void TorchscriptModel::infer(Surrogate &s) {
 
     std::vector<torch::Tensor> input_tensors;
 
-    for (const std::shared_ptr<CallSiteVariable>& input_binding : s.input_bindings) {
-        input_binding->get_all_inference_data();
+    for (const std::shared_ptr<CallSiteVariable>& csv : s.callsite_vars) {
+        csv->get_all_inference_inputs();
     }
     for (const auto& input_model_var : inputs) {
         input_tensors.push_back(input_model_var->inference_capture);
@@ -39,8 +39,8 @@ void TorchscriptModel::infer(Surrogate &s) {
     for (const auto& output_model_var : outputs) {
         output_model_var->inference_capture = input_tensors[i++];
     }
-    for (const auto& output_callsite_var : s.output_bindings) {
-        output_callsite_var->put_all_inference_data();
+    for (const auto& output_callsite_var : s.callsite_vars) {
+        output_callsite_var->put_all_inference_outputs();
     }
 }
 

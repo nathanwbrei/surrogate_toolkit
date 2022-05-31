@@ -27,65 +27,33 @@ private:
     std::function<void(void)> original_function;
     std::shared_ptr<Model> model;
 public:
-    std::vector<std::shared_ptr<CallSiteVariable>> input_bindings;
-    std::vector<std::shared_ptr<CallSiteVariable>> output_bindings;
-    std::map<std::string, std::shared_ptr<CallSiteVariable>> input_binding_map;
-    std::map<std::string, std::shared_ptr<CallSiteVariable>> output_binding_map;
+    std::vector<std::shared_ptr<CallSiteVariable>> callsite_vars;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> callsite_var_map;
 
 public:
     explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
     static void set_call_mode(CallMode callmode) {s_callmode = callmode;}
 
     template <typename T>
-    void bind_input(std::string param_name, T* slot) {
-	auto input = std::make_shared<CallSiteVariable>();
-	input->binding = slot;
-        // TODO: NWB: This is completely broken.
-	input->model_vars.push_back(&(*(model->get_input(param_name))));
-	input_bindings.push_back(input);
-	if (input_binding_map.find(param_name) != input_binding_map.end()) {
-	    throw std::runtime_error("Input binding already exists!");
-	}
-	input_binding_map[param_name] = input;
-    }
-
-    template<typename T>
-    void bind_output(std::string param_name, T* slot) {
-	auto output = std::make_shared<CallSiteVariable>();
-	output->binding = slot;
-        output->model_vars.push_back(&(*(model->get_output(param_name))));
-        output_bindings.push_back(output);
-        if (output_binding_map.find(param_name) != output_binding_map.end()) {
-            throw std::runtime_error("Output binding already exists!");
+    void bind(std::string param_name, T* slot) {
+        auto csv = callsite_var_map.find(param_name);
+        if (csv == callsite_var_map.end()) {
+            throw std::runtime_error("No such callsite variable specified in model");
         }
-        output_binding_map[param_name] = output;
+        if (csv->second->binding.get<T>() != nullptr) {
+            throw std::runtime_error("Callsite variable already set! Possibly a global var");
+        }
+        csv->second->binding = slot;
     }
 
-    template<typename T>
-    void bind_input_output(std::string param_name, T* slot) {
-        bind_input<T>(param_name, slot);
-        bind_output<T>(param_name, slot);
+    std::shared_ptr<CallSiteVariable> get_binding(size_t index) {
+        if (index >= callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }
+        return callsite_vars[index];
     }
 
-    std::shared_ptr<CallSiteVariable> get_input_binding(size_t index) {
-        if (index >= input_bindings.size()) { throw std::runtime_error("Index out of range for input binding"); }
-        return input_bindings[index];
-    }
-
-    std::shared_ptr<CallSiteVariable> get_input_binding(std::string name) {
-        auto pair = input_binding_map.find(name);
-        if (pair == input_binding_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
-        return pair->second;
-    }
-
-    std::shared_ptr<CallSiteVariable> get_output_binding(size_t index) {
-        if (index >= output_bindings.size()) { throw std::runtime_error("Index out of range for output binding"); }
-        return output_bindings[index];
-    }
-
-    std::shared_ptr<CallSiteVariable> get_output_binding(std::string name) {
-        auto pair = output_binding_map.find(name);
-        if (pair == output_binding_map.end()) { throw std::runtime_error("Invalid output parameter name"); }
+    std::shared_ptr<CallSiteVariable> get_binding(std::string name) {
+        auto pair = callsite_var_map.find(name);
+        if (pair == callsite_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
         return pair->second;
     }
 
@@ -146,12 +114,12 @@ public:
 
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
-        for (auto& input: input_bindings) {
-            input->capture_all_training_data();
+        for (auto& input: callsite_vars) {
+            input->capture_all_training_inputs();
         }
         original_function();
-        for (auto& output: output_bindings) {
-            output->capture_all_training_data();
+        for (auto& output: callsite_vars) {
+            output->capture_all_training_outputs();
         }
         model->captured_rows++;
     }

@@ -13,8 +13,8 @@ class MemorizingModel : public Model {
 public:
 
     MemorizingModel() {
-        input<double>("x");
-        output<double>("y");
+        add_input<double>("x");
+        add_output<double>("y");
     }
 
     void train_from_captures() override {
@@ -29,15 +29,15 @@ public:
     }
 
     void infer(Surrogate& surrogate) override {
-        auto x = surrogate.get_input_binding("x");
-        x->get_all_inference_data();
+        auto x = surrogate.get_binding("x");
+        x->get_all_inference_inputs();
 
         torch::Tensor x_val = x->model_vars[0]->accessor->unsafe_to(x->binding);
         double xx = *x_val.data_ptr<double>();
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {
-            auto y = surrogate.get_output_binding("y");
+            auto y = surrogate.get_binding("y");
             y->model_vars[0]->accessor->unsafe_from(pair->second, y->binding);
         }
     }
@@ -48,8 +48,8 @@ TEST_CASE("Memorizing model memorizes!") {
     auto m = std::make_shared<MemorizingModel>();
     double x, y;
     auto s = Surrogate([&](){y=x*x;}, m);
-    s.bind_input<double>("x", &x);
-    s.bind_output<double>("y", &y);
+    s.bind<double>("x", &x);
+    s.bind<double>("y", &y);
 
     x = 2.0;
     y = 7.0;

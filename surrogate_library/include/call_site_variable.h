@@ -13,24 +13,38 @@ struct CallSiteVariable {
 
     std::string name;
     phasm::any_ptr binding;
-    std::vector<ModelVariable*> model_vars;
+    std::vector<std::shared_ptr<ModelVariable>> model_vars;
 
 
-    void capture_all_training_data() {
+    inline void capture_all_training_inputs() {
         for (auto model_var : model_vars) {
-            model_var->capture_training_data(binding);
+            if (model_var->is_input) {
+                model_var->capture_training_data(binding);
+            }
         }
     }
 
-    void get_all_inference_data() {
+    inline void capture_all_training_outputs() {
         for (auto model_var : model_vars) {
-            model_var->get_inference_data(binding);
+            if (model_var->is_output) {
+                model_var->capture_training_data(binding);
+            }
         }
     }
 
-    void put_all_inference_data() {
+    inline void get_all_inference_inputs() {
         for (auto model_var : model_vars) {
-            model_var->put_inference_data(binding);
+            if (model_var->is_input) {
+                model_var->get_inference_data(binding);
+            }
+        }
+    }
+
+    inline void put_all_inference_outputs() {
+        for (auto model_var : model_vars) {
+            if (model_var->is_output) {
+                model_var->put_inference_data(binding);
+            }
         }
     }
 };

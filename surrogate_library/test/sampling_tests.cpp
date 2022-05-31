@@ -11,7 +11,7 @@
 TEST_CASE("Basic GridSampler") {
 
     int x = 100;
-    auto i = new ModelVariable();
+    auto i = std::make_shared<ModelVariable>();
     i->range.lower_bound_inclusive = 3;
     i->range.upper_bound_inclusive = 5;
     CallSiteVariable cs;
@@ -40,7 +40,7 @@ TEST_CASE("Basic GridSampler") {
 
 TEST_CASE("Basic FiniteSetSampler") {
     int x = 100;
-    auto i = new ModelVariable();
+    auto i = std::make_shared<ModelVariable>();
     i->range.items = {7,8,9};
     CallSiteVariable b;
     b.model_vars.push_back(i);

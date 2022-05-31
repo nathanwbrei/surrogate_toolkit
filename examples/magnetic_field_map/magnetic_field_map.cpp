@@ -16,12 +16,12 @@ int main() {
 
 
     auto model = std::make_shared<TorchscriptModel>("model.pt");
-    model->input("x", new optics::Primitive<double>());
-    model->input("y", new optics::Primitive<double>());
-    model->input("z", new optics::Primitive<double>());
-    model->output("Bx", new optics::Primitive<double>());
-    model->output("By", new optics::Primitive<double>());
-    model->output("Bz", new optics::Primitive<double>());
+    model->add_input<double>("x");
+    model->add_input<double>("y");
+    model->add_input<double>("z");
+    model->add_output<double>("Bx");
+    model->add_output<double>("By");
+    model->add_output<double>("Bz");
     model->initialize();
 
     Surrogate::set_call_mode(Surrogate::CallMode::CaptureAndDump);
@@ -39,12 +39,12 @@ int main() {
     double x, y, z, bx, by, bz;
 
     Surrogate surrogate([&](){ mfmfm.GetField(x,y,z,bx,by,bz); }, model);
-    surrogate.bind_input("x", &x);
-    surrogate.bind_input("y", &y);
-    surrogate.bind_input("z", &z);
-    surrogate.bind_output("Bx", &bx);
-    surrogate.bind_output("By", &by);
-    surrogate.bind_output("Bz", &bz);
+    surrogate.bind("x", &x);
+    surrogate.bind("y", &y);
+    surrogate.bind("z", &z);
+    surrogate.bind("Bx", &bx);
+    surrogate.bind("By", &by);
+    surrogate.bind("Bz", &bz);
 
     for (x = 0.0; x < 3.0; x+=.5) {
         for (y = 0.0; y < 3.0; y+=0.5) {

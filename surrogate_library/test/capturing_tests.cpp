@@ -15,14 +15,14 @@ TEST_CASE("Capture int(int,int)") {
 
     int x,y,z;
     auto model = std::make_shared<Model>();
-    model->input<int>("x");
-    model->input<int>("y");
-    model->output<int>("z");
+    model->add_input<int>("x");
+    model->add_input<int>("y");
+    model->add_output<int>("z");
 
     auto surrogate = Surrogate([&](){z = mult(x,y);}, model);
-    surrogate.bind_input("x", &x);
-    surrogate.bind_input("y", &y);
-    surrogate.bind_output("z", &z);
+    surrogate.bind("x", &x);
+    surrogate.bind("y", &y);
+    surrogate.bind("z", &z);
 
     x = 3; y = 5;
     surrogate.call_original_and_capture();
@@ -40,14 +40,14 @@ TEST_CASE("Capture int(const int, const int)") {
 
     int x = 3,y = 5,z = 0;
     auto m = std::make_shared<Model>();
-    m->input<int>("x");
-    m->input<int>("y");
-    m->output<int>("z");
+    m->add_input<int>("x");
+    m->add_input<int>("y");
+    m->add_output<int>("z");
 
     auto surrogate = Surrogate([&](){z = mult(x,y);}, m);
-    surrogate.bind_input<int>("x", &x);
-    surrogate.bind_input<int>("y", &y);
-    surrogate.bind_output<int>("z", &z);
+    surrogate.bind<int>("x", &x);
+    surrogate.bind<int>("y", &y);
+    surrogate.bind<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
@@ -63,15 +63,15 @@ int mult_with_ref(int& x, int&& y) {
 TEST_CASE("Capture int(int&,int&&)") {
 
     auto m = std::make_shared<Model>();
-    m->input<int>("x");
-    m->input<int>("y");
-    m->output<int>("z");
+    m->add_input<int>("x");
+    m->add_input<int>("y");
+    m->add_output<int>("z");
 
     int x = 3, y = 5, z = 0;
     auto surrogate = Surrogate([&](){z = mult_with_ref(x,std::move(y));}, m);
-    surrogate.bind_input<int>("x", &x);
-    surrogate.bind_input<int>("y", &y);
-    surrogate.bind_output<int>("z", &z);
+    surrogate.bind<int>("x", &x);
+    surrogate.bind<int>("y", &y);
+    surrogate.bind<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
@@ -90,14 +90,14 @@ TEST_CASE("Capture int(int&,int) [input and output]") {
 
     int x=3, y=5, z=0;
     auto m = std::make_shared<Model>();
-    m->input_output<int>("x");
-    m->input<int>("y");
-    m->output<int>("z");
+    m->add_input_output<int>("x");
+    m->add_input<int>("y");
+    m->add_output<int>("z");
 
     auto surrogate = Surrogate([&](){z = mult_with_out_param(x,y);}, m);
-    surrogate.bind_input_output<int>("x", &x);
-    surrogate.bind_input<int>("y", &y);
-    surrogate.bind_output<int>("z", &z);
+    surrogate.bind<int>("x", &x);
+    surrogate.bind<int>("y", &y);
+    surrogate.bind<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
@@ -119,14 +119,14 @@ TEST_CASE("Capture int(int) [with global]") {
 
     int x = 5, z = 0;
     auto m = std::make_shared<Model>();
-    m->input<int>("x");
-    m->input<int>("g");
-    m->output<int>("z");
+    m->add_input<int>("x");
+    m->add_input<int>("g");
+    m->add_output<int>("z");
 
     auto surrogate = Surrogate([&](){z = mult_with_global(x);}, m);
-    surrogate.bind_input<int>("x", &x);
-    surrogate.bind_input<int>("g", &g);
-    surrogate.bind_output<int>("z", &z);
+    surrogate.bind<int>("x", &x);
+    surrogate.bind<int>("g", &g);
+    surrogate.bind<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 110);
@@ -143,10 +143,10 @@ TEST_CASE("Capture int() [with no args]") {
 
     int z = 22;
     auto m = std::make_shared<Model>();
-    m->output<int>("z");
+    m->add_output<int>("z");
 
     auto surrogate = Surrogate([&](){z = no_args();}, m);
-    surrogate.bind_output<int>("z", &z);
+    surrogate.bind<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 0);
@@ -162,10 +162,10 @@ TEST_CASE("Capture void(int)") {
 
     int x = 3;
     auto m = std::make_shared<Model>();
-    m->input<int>("x");
+    m->add_input<int>("x");
 
     auto surrogate = Surrogate([&](){return_void(x);}, m);
-    surrogate.bind_input<int>("x", &x);
+    surrogate.bind<int>("x", &x);
 
     surrogate.call_original_and_capture();
     REQUIRE(surrogate.get_captured_input<int>(0, 0) == 3);
