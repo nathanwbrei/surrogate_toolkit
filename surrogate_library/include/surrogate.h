@@ -38,58 +38,45 @@ public:
 public:
     explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
 
-    static void set_call_mode(CallMode callmode) { s_callmode = callmode; }
-
     template<typename T>
-    void bind(std::string param_name, T *slot) {
-        auto csv = callsite_var_map.find(param_name);
-        if (csv == callsite_var_map.end()) {
-            throw std::runtime_error("No such callsite variable specified in model");
-        }
-        if (csv->second->binding.get<T>() != nullptr) {
-            throw std::runtime_error("Callsite variable already set! Possibly a global var");
-        }
-        csv->second->binding = slot;
-    }
+    void bind(std::string param_name, T *slot);
 
-    std::shared_ptr<CallSiteVariable> get_binding(size_t index) {
-        if (index >= callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }
-        return callsite_vars[index];
-    }
+    std::shared_ptr<CallSiteVariable> get_binding(size_t index);
+    std::shared_ptr<CallSiteVariable> get_binding(std::string name);
 
-    std::shared_ptr<CallSiteVariable> get_binding(std::string name) {
-        auto pair = callsite_var_map.find(name);
-        if (pair == callsite_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
-        return pair->second;
-    }
+    static void set_call_mode(CallMode callmode);
 
-    /// call() looks at PHASM_CALL_MODE env var to decide what to do
     void call();
-
-    void call_original() {
-        original_function();
-    };
-
-    void call_model() {
-        model->infer(*this);
-    };
-
-    void capture_input_distribution() {
-    }
-
-    /// Capturing only needs rvalues. This won't train, but merely update the samples associated
-    void call_original_and_capture() {
-        for (auto &input: callsite_vars) {
-            input->captureAllTrainingInputs();
-        }
-        original_function();
-        for (auto &output: callsite_vars) {
-            output->captureAllTrainingOutputs();
-        }
-        model->captured_rows++;
-    }
-
+    void call_original();
+    void call_original_and_capture();
+    void capture_input_distribution();
+    void call_model();
 };
+
+
+// --------------------------
+// Free function declarations
+// --------------------------
+
+Surrogate::CallMode get_call_mode_from_envvar();
+void print_help_screen();
+
+
+// --------------------
+// Template definitions
+// --------------------
+
+template<typename T>
+void Surrogate::bind(std::string param_name, T *slot) {
+    auto csv = callsite_var_map.find(param_name);
+    if (csv == callsite_var_map.end()) {
+        throw std::runtime_error("No such callsite variable specified in model");
+    }
+    if (csv->second->binding.get<T>() != nullptr) {
+        throw std::runtime_error("Callsite variable already set! Possibly a global var");
+    }
+    csv->second->binding = slot;
+}
 
 } // namespace phasm
 
