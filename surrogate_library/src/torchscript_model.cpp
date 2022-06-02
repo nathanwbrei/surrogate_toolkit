@@ -23,10 +23,10 @@ void TorchscriptModel::infer(Surrogate &s) {
     std::vector<torch::Tensor> input_tensors;
 
     for (const std::shared_ptr<CallSiteVariable> &csv: s.callsite_vars) {
-        csv->get_all_inference_inputs();
+        csv->captureAllInferenceInputs();
     }
     for (const auto &input_model_var: inputs) {
-        input_tensors.push_back(input_model_var->inference_capture);
+        input_tensors.push_back(input_model_var->inference_input);
     }
 
     // This all assumes a single Tensor of floats as input and output
@@ -39,10 +39,10 @@ void TorchscriptModel::infer(Surrogate &s) {
 
     size_t i = 0;
     for (const auto &output_model_var: outputs) {
-        output_model_var->inference_capture = input_tensors[i++];
+        output_model_var->inference_output = input_tensors[i++];
     }
     for (const auto &output_callsite_var: s.callsite_vars) {
-        output_callsite_var->put_all_inference_outputs();
+        output_callsite_var->publishAllInferenceOutputs();
     }
 }
 

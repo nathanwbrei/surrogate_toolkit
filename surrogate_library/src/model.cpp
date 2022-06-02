@@ -16,9 +16,7 @@ Model::Model(const OpticBuilder &b) {
     }
 
     for (std::shared_ptr<ModelVariable> &mv: b.get_model_vars()) {
-        // Note: this (and everything hereafter) assumes that model vars are duplicated when they are used as
-        // both an input and an output. If you set both is_input=true and is_output=true on one ModelVariable,
-        // everything will break. This is likely to change, though.
+        // ModelVariables may show up under inputs, outputs, or both
         if (mv->is_input) {
             inputs.push_back(mv);
             input_map[mv->name] = mv;
@@ -108,13 +106,13 @@ void Model::dump_captures_to_csv(std::ostream &os) {
     // print body
     for (size_t i = 0; i < captured_rows; ++i) {
         for (size_t j = 0; j < inputs.size(); ++j) {
-            auto t = inputs[j]->training_captures[i].flatten(0, -1);
+            auto t = inputs[j]->training_inputs[i].flatten(0, -1);
             for (int k = 0; k < t.numel(); ++k) {
                 os << t[k].item().toFloat() << ", ";
             }
         }
         for (size_t j = 0; j < outputs.size(); ++j) {
-            auto t = outputs[j]->training_captures[i].flatten(0, -1);
+            auto t = outputs[j]->training_outputs[i].flatten(0, -1);
             for (int k = 0; k < t.numel(); ++k) {
                 os << t[k].item().toFloat();
                 bool last_col = (j == outputs.size() - 1) && (k == t.numel() - 1);

@@ -19,34 +19,34 @@ struct CallSiteVariable {
     std::vector<std::shared_ptr<ModelVariable>> model_vars;
 
 
-    inline void capture_all_training_inputs() {
+    inline void captureAllTrainingInputs() {
         for (const auto& model_var : model_vars) {
             if (model_var->is_input) {
-                model_var->capture_training_data(binding);
+                model_var->captureTrainingInput(binding);
             }
         }
     }
 
-    inline void capture_all_training_outputs() {
+    inline void captureAllTrainingOutputs() {
         for (const auto& model_var : model_vars) {
             if (model_var->is_output) {
-                model_var->capture_training_data(binding);
+                model_var->captureTrainingOutput(binding);
             }
         }
     }
 
-    inline void get_all_inference_inputs() {
+    inline void captureAllInferenceInputs() {
         for (const auto& model_var : model_vars) {
             if (model_var->is_input) {
-                model_var->get_inference_data(binding);
+                model_var->captureInferenceInput(binding);
             }
         }
     }
 
-    inline void put_all_inference_outputs() {
+    inline void publishAllInferenceOutputs() {
         for (const auto& model_var : model_vars) {
             if (model_var->is_output) {
-                model_var->put_inference_data(binding);
+                model_var->publishInferenceOutput(binding);
             }
         }
     }

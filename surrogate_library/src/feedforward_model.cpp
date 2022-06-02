@@ -40,10 +40,10 @@ void phasm::FeedForwardModel::infer(Surrogate &s) {
     std::vector<torch::Tensor> input_tensors;
 
     for (const std::shared_ptr<CallSiteVariable>& csv : s.callsite_vars) {
-        csv->get_all_inference_inputs();
+        csv->captureAllInferenceInputs();
     }
     for (const auto& input_model_var : inputs) {
-        input_tensors.push_back(input_model_var->inference_capture);
+        input_tensors.push_back(input_model_var->inference_input);
     }
 
     torch::Tensor input = flatten_and_join(input_tensors);
@@ -52,10 +52,10 @@ void phasm::FeedForwardModel::infer(Surrogate &s) {
 
     size_t i = 0;
     for (const auto& output_model_var : outputs) {
-        output_model_var->inference_capture = input_tensors[i++];
+        output_model_var->inference_output = input_tensors[i++];
     }
     for (const auto& csv : s.callsite_vars) {
-        csv->put_all_inference_outputs();
+        csv->publishAllInferenceOutputs();
     }
 }
 
@@ -70,13 +70,13 @@ void phasm::FeedForwardModel::train_from_captures() {
     for (size_t i=0; i<get_capture_count(); ++i) {
         std::vector<torch::Tensor> sample_inputs;
         for (auto input : inputs) {
-            sample_inputs.push_back(input->training_captures[i]);
+            sample_inputs.push_back(input->training_inputs[i]);
         }
         auto sample_input = flatten_and_join(std::move(sample_inputs));
 
         std::vector<torch::Tensor> sample_outputs;
         for (auto output : outputs) {
-            sample_outputs.push_back(output->training_captures[i]);
+            sample_outputs.push_back(output->training_outputs[i]);
         }
         auto sample_output = flatten_and_join(std::move(sample_outputs));
 

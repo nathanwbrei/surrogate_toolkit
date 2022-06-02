@@ -66,7 +66,7 @@ public:
     template<typename T>
     T get_captured_input(size_t sample_index, size_t parameter_index) {
         auto param = model->get_input(parameter_index);
-        torch::Tensor result = param->training_captures[sample_index];
+        torch::Tensor result = param->training_inputs[sample_index];
         return *result.data_ptr<T>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
@@ -77,7 +77,7 @@ public:
     template<typename T>
     T get_captured_output(size_t sample_index, size_t parameter_index) {
         auto param = model->get_output(parameter_index);
-        torch::Tensor result = param->training_captures[sample_index];
+        torch::Tensor result = param->training_outputs[sample_index];
         return *result.data_ptr<T>();
 
         // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
@@ -121,11 +121,11 @@ public:
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
         for (auto &input: callsite_vars) {
-            input->capture_all_training_inputs();
+            input->captureAllTrainingInputs();
         }
         original_function();
         for (auto &output: callsite_vars) {
-            output->capture_all_training_outputs();
+            output->captureAllTrainingOutputs();
         }
         model->captured_rows++;
     }

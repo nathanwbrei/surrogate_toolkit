@@ -21,8 +21,8 @@ public:
     }
 
     void train_from_captures() override {
-        auto& xs = get_input("x")->training_captures;
-        auto& ys = get_output("y")->training_captures;
+        auto& xs = get_input("x")->training_inputs;
+        auto& ys = get_output("y")->training_outputs;
         for (size_t i = 0; i<get_capture_count(); ++i) {
             torch::Tensor x = xs[i];
             torch::Tensor y = ys[i];
@@ -33,7 +33,7 @@ public:
 
     void infer(Surrogate& surrogate) override {
         auto x = surrogate.get_binding("x");
-        x->get_all_inference_inputs();
+        x->captureAllInferenceInputs();
 
         torch::Tensor x_val = x->model_vars[0]->accessor->unsafe_to(x->binding);
         double xx = *x_val.data_ptr<double>();
