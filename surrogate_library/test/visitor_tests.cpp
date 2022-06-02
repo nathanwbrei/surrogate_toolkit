@@ -5,6 +5,9 @@
 #include <catch.hpp>
 #include <iostream>
 
+namespace phasm::tests::visitor_tests {
+
+
 template <typename T>
 struct CallSiteVariable;
 
@@ -63,3 +66,4 @@ TEST_CASE("VisitorTests") {
     d.accept(vc);
 }
 
+} // namespace phasm::tests::visitor_tests

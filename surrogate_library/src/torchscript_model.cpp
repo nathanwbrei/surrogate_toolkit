@@ -4,6 +4,8 @@
 
 #include "torchscript_model.h"
 
+namespace phasm {
+
 TorchscriptModel::TorchscriptModel(std::string filename) {
     m_module = torch::jit::load(filename);
 }
@@ -20,10 +22,10 @@ void TorchscriptModel::infer(Surrogate &s) {
 
     std::vector<torch::Tensor> input_tensors;
 
-    for (const std::shared_ptr<CallSiteVariable>& csv : s.callsite_vars) {
+    for (const std::shared_ptr<CallSiteVariable> &csv: s.callsite_vars) {
         csv->get_all_inference_inputs();
     }
-    for (const auto& input_model_var : inputs) {
+    for (const auto &input_model_var: inputs) {
         input_tensors.push_back(input_model_var->inference_capture);
     }
 
@@ -36,17 +38,19 @@ void TorchscriptModel::infer(Surrogate &s) {
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
 
     size_t i = 0;
-    for (const auto& output_model_var : outputs) {
+    for (const auto &output_model_var: outputs) {
         output_model_var->inference_capture = input_tensors[i++];
     }
-    for (const auto& output_callsite_var : s.callsite_vars) {
+    for (const auto &output_callsite_var: s.callsite_vars) {
         output_callsite_var->put_all_inference_outputs();
     }
 }
 
 void TorchscriptModel::train_from_captures() {
 
-    std::cout << "Training a TorchScript model from within C++ is temporarily disabled. Please train from Python for now" << std::endl;
+    std::cout
+            << "Training a TorchScript model from within C++ is temporarily disabled. Please train from Python for now"
+            << std::endl;
     // Temporarily disable training the torchscript module
     /*
     Instantiate an SGD optimization algorithm to update our Net's parameters.
@@ -102,7 +106,7 @@ void TorchscriptModel::train_from_captures() {
 }
 
 torch::Tensor TorchscriptModel::flatten_and_join(std::vector<torch::Tensor> inputs) {
-    for (auto& input : inputs) {
+    for (auto &input: inputs) {
         input = input.flatten(0, -1).toType(c10::ScalarType::Float);
     }
     auto result = torch::cat(inputs);
@@ -112,12 +116,12 @@ torch::Tensor TorchscriptModel::flatten_and_join(std::vector<torch::Tensor> inpu
 std::vector<torch::Tensor> TorchscriptModel::split_and_unflatten_outputs(torch::Tensor output) const {
     std::vector<torch::Tensor> outputs;
     int64_t start = 0;
-    for (size_t i=0; i<m_output_lengths.size(); ++i) {
-        torch::Tensor o = output.slice(0, start, start+m_output_lengths[i]).reshape(m_output_shapes[i]);
+    for (size_t i = 0; i < m_output_lengths.size(); ++i) {
+        torch::Tensor o = output.slice(0, start, start + m_output_lengths[i]).reshape(m_output_shapes[i]);
         outputs.push_back(o);
         start += m_output_lengths[i];
     }
     return outputs;
 }
 
-
+} // namespace phasm

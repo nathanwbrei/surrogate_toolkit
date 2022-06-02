@@ -5,6 +5,9 @@
 #include <catch.hpp>
 #include "surrogate.h"
 
+using namespace phasm;
+namespace phasm::test::memorizing_tests {
+
 class MemorizingModel : public Model {
 
     std::unordered_map<int, torch::Tensor> memorized_data;
@@ -66,6 +69,7 @@ TEST_CASE("Memorizing model memorizes!") {
     REQUIRE(y == 4.0);  // Correct value comes from cache
 }
 
+} // namespace phasm::test::memorizing_tests
 
 
 

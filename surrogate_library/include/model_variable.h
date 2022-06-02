@@ -12,12 +12,13 @@
 #include <torch/torch.h>
 
 
+namespace phasm {
 
 struct ModelVariable {
     std::string name;
     bool is_input = false;
     bool is_output = false;
-    optics::OpticBase* accessor = nullptr;
+    OpticBase *accessor = nullptr;
     phasm::any_ptr global;
     std::vector<torch::Tensor> training_captures;
     torch::Tensor inference_capture;
@@ -32,17 +33,19 @@ struct ModelVariable {
         return accessor->shape();
     }
 
-    void capture_training_data(const phasm::any_ptr& binding) {
+    void capture_training_data(const phasm::any_ptr &binding) {
         torch::Tensor data = accessor->unsafe_to(binding);
         training_captures.push_back(data);
     }
-    void get_inference_data(const phasm::any_ptr& binding) {
+
+    void get_inference_data(const phasm::any_ptr &binding) {
         inference_capture = accessor->unsafe_to(binding);
     }
-    void put_inference_data(const phasm::any_ptr& binding) const {
+
+    void put_inference_data(const phasm::any_ptr &binding) const {
         accessor->unsafe_from(inference_capture, binding);
     }
 };
 
-
+} // namespace phasm
 #endif //SURROGATE_TOOLKIT_MODEL_VARIABLE_H

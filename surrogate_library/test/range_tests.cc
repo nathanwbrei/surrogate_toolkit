@@ -7,6 +7,9 @@
 #include <catch.hpp>
 #include <iostream>
 
+using namespace phasm;
+namespace phasm::test::range_tests {
+
 TEST_CASE("Interval range") {
     auto x = Range<int>(-5, 5);
     REQUIRE(x.contains(-5));
@@ -18,15 +21,15 @@ TEST_CASE("Interval range") {
 }
 
 TEST_CASE("FiniteSet range") {
-    auto x = Range<int>({1,2,3,4});
+    auto x = Range<int>({1, 2, 3, 4});
     REQUIRE(x.contains(1));
     REQUIRE(!x.contains(10));
 }
 
 TEST_CASE("Range capturing") {
-    Range<int> rf(100,0);
-    std::vector<int> samples = {7,0,3,7,9,144,7,0};
-    for (int x : samples) {
+    Range<int> rf(100, 0);
+    std::vector<int> samples = {7, 0, 3, 7, 9, 144, 7, 0};
+    for (int x: samples) {
         rf.capture(x);
     }
     REQUIRE(rf.lower_bound_inclusive == 0);
@@ -35,3 +38,4 @@ TEST_CASE("Range capturing") {
     rf.report(std::cout);
 
 }
+} // namespace phasm::test::range_tests

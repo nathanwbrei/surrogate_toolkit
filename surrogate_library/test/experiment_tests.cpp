@@ -7,28 +7,30 @@
 #include <cstdarg>
 
 #include "experiments.h"
-using namespace experiments;
+namespace phasm::test::experiments {
 
 double f(double x, int y, std::string) {
     return x + y;
 }
 
 double square(double x) {
-    return x*x;
+    return x * x;
 }
 
 double csquare(const double x) {
-    return x*x;
+    return x * x;
 }
 
-double ref(double& x) {
-    return x*x;
+double ref(double &x) {
+    return x * x;
 }
-double cref(const double& x) {
-    return x*x;
+
+double cref(const double &x) {
+    return x * x;
 }
-double rref(double&& x) {
-    return x*x;
+
+double rref(double &&x) {
+    return x * x;
 }
 
 TEST_CASE("Wrapping") {
@@ -36,13 +38,13 @@ TEST_CASE("Wrapping") {
     REQUIRE(wf(3.0) == 9.0);
 
     double d = 3.0;
-    WrappedFunction<double, double&> wf2(ref);
+    WrappedFunction<double, double &> wf2(ref);
     REQUIRE(wf2(d) == 9.0);
 
-    WrappedFunction<double, const double&> wf3(cref);
+    WrappedFunction<double, const double &> wf3(cref);
     REQUIRE(wf3(d) == 9.0);
 
-    WrappedFunction<double, double&&> wf4(rref);
+    WrappedFunction<double, double &&> wf4(rref);
     REQUIRE(wf4(3.0) == 9.0);
 
     WrappedFunction<double, const double> wf5(csquare);
@@ -74,16 +76,16 @@ TEST_CASE("Currying") {
     REQUIRE(cf2() == 5.0);
 }
 
-template <typename T>
+template<typename T>
 void registerParam(T t) {
     std::cout << "Registering " << t << std::endl;
 }
 
 TEST_CASE("Iterating over items in a tuple") {
     using TT = std::tuple<double, int, std::string>;
-    TT t {3.3, 7, "Hello"};
+    TT t{3.3, 7, "Hello"};
     // For each argument, register a parameter
-    std::apply([&](auto ... x){ (registerParam(x), ...); }, t);
+    std::apply([&](auto ... x) { (registerParam(x), ...); }, t);
 }
 
 TEST_CASE("Capturing inputs into a Parameters vector, single input") {
@@ -116,7 +118,7 @@ TEST_CASE("Using a free function to avoid redundant template params ala std::mak
 TEST_CASE("Simplest possible reference-capturer") {
     double a = 22;
     double b = 44;
-    double& c = std::ref(a);
+    double &c = std::ref(a);
 
     std::cout << "a before = " << a << std::endl;
     c = 33;
@@ -126,14 +128,14 @@ TEST_CASE("Simplest possible reference-capturer") {
     c = 55;
     std::cout << "b after = " << c << std::endl;
 
-    std::tuple<double> t {4.0};
-    double& d = std::get<0>(t);
+    std::tuple<double> t{4.0};
+    double &d = std::get<0>(t);
     d = 33;
     REQUIRE(std::get<0>(t) == 33);
 
     rcf::ReferenceCapturingFunction<double, double> refcapfn(square);
     // Eventually use the capture mechanism from CapturingFunction instead of this nonsense
-    auto p = static_cast<experiments::rcf::ParameterT<double>*>(refcapfn.m_parameters[0]);
+    auto p = static_cast<experiments::rcf::ParameterT<double> *>(refcapfn.m_parameters[0]);
     p->samples.push_back(6.0);
     REQUIRE(refcapfn() == 36.0);
 
@@ -143,15 +145,15 @@ TEST_CASE("Reference-capturer with different datatypes") {
 
     auto refcapfn = rcf::make_ref_capturing_function(f);
     // Eventually use the capture mechanism from CapturingFunction instead of this nonsense
-    dynamic_cast<experiments::rcf::ParameterT<double>*>(refcapfn.m_parameters[0])->samples.push_back(6.0);
-    dynamic_cast<experiments::rcf::ParameterT<int>*>(refcapfn.m_parameters[1])->samples.push_back(3);
-    dynamic_cast<experiments::rcf::ParameterT<std::string>*>(refcapfn.m_parameters[2])->samples.push_back("Hello");
+    dynamic_cast<experiments::rcf::ParameterT<double> *>(refcapfn.m_parameters[0])->samples.push_back(6.0);
+    dynamic_cast<experiments::rcf::ParameterT<int> *>(refcapfn.m_parameters[1])->samples.push_back(3);
+    dynamic_cast<experiments::rcf::ParameterT<std::string> *>(refcapfn.m_parameters[2])->samples.push_back("Hello");
     REQUIRE(refcapfn() == 9.0);
 }
 
 TEST_CASE("Reference-capturer with uglier datatypes") {
 
-    std::tuple<double> t {2.0};
+    std::tuple<double> t{2.0};
     REQUIRE(std::apply(ref, t) == 4.0);
 
     // auto sut1 = rcf::make_ref_capturing_function(ref);
@@ -167,7 +169,7 @@ TEST_CASE("Reference-capturer with uglier datatypes") {
     // REQUIRE(sut3() == 36.0);
 
     auto sut3 = rcf::make_ref_capturing_function(csquare);
-    dynamic_cast<experiments::rcf::ParameterT<double>*>(sut3.m_parameters[0])->samples.push_back(6.0);
+    dynamic_cast<experiments::rcf::ParameterT<double> *>(sut3.m_parameters[0])->samples.push_back(6.0);
     REQUIRE(sut3() == 36.0);
 
 
@@ -195,6 +197,7 @@ TEST_CASE("Something else") {
 
 struct Silly {
     int x;
+
     Silly(int x) : x(x) {}
 };
 
@@ -209,14 +212,14 @@ TEST_CASE("Perfect forwarding with lvalues") {
 }
 
 struct SM {
-    int call(int count,...) {
+    int call(int count, ...) {
         int acc = 0;
-	std::va_list args;
-	va_start(args, count);
-	for (int i=0; i<count; ++i) {
-	    acc += va_arg(args, int);
-	}
-	va_end(args);
+        std::va_list args;
+        va_start(args, count);
+        for (int i = 0; i < count; ++i) {
+            acc += va_arg(args, int);
+        }
+        va_end(args);
         return acc;
     }
 };
@@ -224,5 +227,6 @@ struct SM {
 TEST_CASE("Varargs") {
     SM sm;
     REQUIRE (sm.call(0) == 0);
-    REQUIRE (sm.call(3,1,2,3) == 6);
+    REQUIRE (sm.call(3, 1, 2, 3) == 6);
 }
+} // namespace phasm::test::experiments

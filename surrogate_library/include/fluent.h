@@ -11,8 +11,7 @@
 #include <model_variable.h>
 
 
-namespace phasm::fluent {
-using namespace optics;
+namespace phasm {
 
 
 enum class Direction {Input, Output, InputOutput};
@@ -228,6 +227,6 @@ Cursor<RestTs...> Cursor<HeadT, RestTs...>::end() {
 };
 
 
-} // namespace phasm::fluent
+} // namespace phasm
 
 #endif //SURROGATE_TOOLKIT_FLUENT_H

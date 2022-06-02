@@ -5,11 +5,11 @@
 #include "feedforward_model.h"
 
 
-FeedForwardModel::~FeedForwardModel() {
+phasm::FeedForwardModel::~FeedForwardModel() {
     finalize();
 }
 
-void FeedForwardModel::initialize() {
+void phasm::FeedForwardModel::initialize() {
     // Compute flattened input and output dimensions from shapes
     int64_t all_inputs_dim = 0;
     int64_t all_outputs_dim = 0;
@@ -35,7 +35,7 @@ void FeedForwardModel::initialize() {
 }
 
 
-void FeedForwardModel::infer(Surrogate &s) {
+void phasm::FeedForwardModel::infer(Surrogate &s) {
 
     std::vector<torch::Tensor> input_tensors;
 
@@ -59,7 +59,7 @@ void FeedForwardModel::infer(Surrogate &s) {
     }
 }
 
-void FeedForwardModel::train_from_captures() {
+void phasm::FeedForwardModel::train_from_captures() {
 
     // Instantiate an SGD optimization algorithm to update our Net's parameters.
     torch::optim::SGD optimizer(m_network->parameters(), /*lr=*/0.01);
@@ -113,7 +113,7 @@ void FeedForwardModel::train_from_captures() {
 }
 
 
-torch::Tensor FeedForwardModel::FeedForwardNetwork::forward(torch::Tensor x) {
+torch::Tensor phasm::FeedForwardModel::FeedForwardNetwork::forward(torch::Tensor x) {
     x = torch::relu(m_input_layer->forward(x));
     // x = torch::dropout(x, /*p=*/0.5, /*train=*/is_training());
     x = torch::relu(m_middle_layer->forward(x));
@@ -121,7 +121,7 @@ torch::Tensor FeedForwardModel::FeedForwardNetwork::forward(torch::Tensor x) {
     return x;
 }
 
-torch::Tensor FeedForwardModel::flatten_and_join(std::vector<torch::Tensor> inputs) {
+torch::Tensor phasm::FeedForwardModel::flatten_and_join(std::vector<torch::Tensor> inputs) {
     for (auto& input : inputs) {
         input = input.flatten(0, -1).toType(c10::ScalarType::Float);
     }
@@ -129,7 +129,7 @@ torch::Tensor FeedForwardModel::flatten_and_join(std::vector<torch::Tensor> inpu
     return result;
 }
 
-std::vector<torch::Tensor> FeedForwardModel::split_and_unflatten_outputs(torch::Tensor output) const {
+std::vector<torch::Tensor> phasm::FeedForwardModel::split_and_unflatten_outputs(torch::Tensor output) const {
     std::vector<torch::Tensor> outputs;
     int64_t start = 0;
     for (size_t i=0; i<m_output_lengths.size(); ++i) {

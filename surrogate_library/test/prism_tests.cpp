@@ -13,6 +13,8 @@ Functor<B> fmap(std::function<B(A)> f, Functor<A> ma);
 
 #include <variant>
 
+namespace phasm::test::prism_tests {
+
 template<typename ... Ts>
 struct Overload : Ts ... {
     using Ts::operator() ...;
@@ -49,7 +51,7 @@ template<typename A, typename B>
 struct Functor<Maybe, A, B> {
 
     static Maybe<B> fmap(std::function<B(A)> fab, Maybe<A> ma) {
-        return ::fmap(fab, ma);
+        return phasm::test::prism_tests::fmap(fab, ma);
     }
 };
 
@@ -140,3 +142,4 @@ TEST_CASE("Composing functions via templates") {
 
 }
 
+} // namespace phasm::test::prism_tests

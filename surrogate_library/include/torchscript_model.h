@@ -11,6 +11,8 @@
 #include <torch/torch.h>
 #include <torch/script.h>
 
+namespace phasm {
+
 struct TorchscriptModel : public Model {
 private:
     std::string m_filename;
@@ -20,6 +22,7 @@ private:
 
 public:
     TorchscriptModel(std::string filename);
+
     ~TorchscriptModel();
 
     void initialize() override;
@@ -33,4 +36,6 @@ public:
     std::vector<torch::Tensor> split_and_unflatten_outputs(torch::Tensor output) const;
 
 };
+
+} // namespace phasm
 #endif //SURROGATE_TOOLKIT_FEEDFORWARD_MODEL_H

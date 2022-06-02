@@ -15,7 +15,7 @@
 int main() {
 
 
-    auto model = std::make_shared<TorchscriptModel>("model.pt");
+    auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
     model->add_input<double>("x");
     model->add_input<double>("y");
     model->add_input<double>("z");
@@ -24,7 +24,7 @@ int main() {
     model->add_output<double>("Bz");
     model->initialize();
 
-    Surrogate::set_call_mode(Surrogate::CallMode::CaptureAndDump);
+    phasm::Surrogate::set_call_mode(phasm::Surrogate::CallMode::CaptureAndDump);
 
     japp = new JApplication;
     auto calib_man = std::make_shared<JCalibrationManager>();
@@ -38,7 +38,7 @@ int main() {
 
     double x, y, z, bx, by, bz;
 
-    Surrogate surrogate([&](){ mfmfm.GetField(x,y,z,bx,by,bz); }, model);
+    phasm::Surrogate surrogate([&](){ mfmfm.GetField(x,y,z,bx,by,bz); }, model);
     surrogate.bind("x", &x);
     surrogate.bind("y", &y);
     surrogate.bind("z", &z);

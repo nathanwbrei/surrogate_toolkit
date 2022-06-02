@@ -6,12 +6,14 @@
 #include "surrogate.h"
 #include <cstdlib>
 
+namespace phasm {
+
 void hello_from_surrogate_library() {
     std::cout << "Hello from surrogate library" << std::endl;
 }
 
 Surrogate::CallMode get_call_mode_from_envvar() {
-    char* callmode_str = std::getenv("PHASM_CALL_MODE");
+    char *callmode_str = std::getenv("PHASM_CALL_MODE");
     if (callmode_str == nullptr) return Surrogate::CallMode::NotSet;
     if (strcmp(callmode_str, "UseModel") == 0) return Surrogate::CallMode::UseModel;
     if (strcmp(callmode_str, "UseOriginal") == 0) return Surrogate::CallMode::UseOriginal;
@@ -28,14 +30,20 @@ void print_help_screen() {
     std::cout << "Valid options are:  " << std::endl;
     std::cout << "    UseModel             Use the surrogate model with its current training parameters" << std::endl;
     std::cout << "    UseOriginal          Do NOT use the surrogate model" << std::endl;
-    std::cout << "    CaptureAndTrain      Call the original function, capture all inputs and outputs, and use them to train the model" << std::endl;
-    std::cout << "    CaptureAndDump       Call the original function, capture all inputs and outputs, and dump them to CSV" << std::endl;
-    std::cout << "    CaptureAndSummarize  Call the original function, track the ranges of all inputs and outputs, and dump them to file" << std::endl;
+    std::cout
+            << "    CaptureAndTrain      Call the original function, capture all inputs and outputs, and use them to train the model"
+            << std::endl;
+    std::cout
+            << "    CaptureAndDump       Call the original function, capture all inputs and outputs, and dump them to CSV"
+            << std::endl;
+    std::cout
+            << "    CaptureAndSummarize  Call the original function, track the ranges of all inputs and outputs, and dump them to file"
+            << std::endl;
     std::cout << std::endl;
 }
 
 Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
-    : original_function(std::move(f)), model(model) {
+        : original_function(std::move(f)), model(model) {
 
     if (s_callmode == CallMode::NotSet) {
         s_callmode = get_call_mode_from_envvar();
@@ -48,11 +56,19 @@ Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
 
 void Surrogate::call() {
     switch (s_callmode) {
-        case CallMode::UseModel: call_model(); break;
-        case CallMode::UseOriginal: call_original(); break;
+        case CallMode::UseModel:
+            call_model();
+            break;
+        case CallMode::UseOriginal:
+            call_original();
+            break;
         case CallMode::CaptureAndTrain:
-        case CallMode::CaptureAndDump: call_original_and_capture(); break;
-        case CallMode::CaptureAndSummarize: capture_input_distribution(); break;
+        case CallMode::CaptureAndDump:
+            call_original_and_capture();
+            break;
+        case CallMode::CaptureAndSummarize:
+            capture_input_distribution();
+            break;
         case CallMode::NotSet:
         default:
             print_help_screen();
@@ -62,3 +78,5 @@ void Surrogate::call() {
         call_model();
     }
 }
+
+} // namespace phasm

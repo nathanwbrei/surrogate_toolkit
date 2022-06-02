@@ -13,7 +13,7 @@
 #include <any>
 #include <tuple>
 
-namespace experiments {
+namespace phasm::test::experiments {
 
 template <typename ReturnT, typename ...ArgsT>
 class WrappedFunction {
@@ -195,7 +195,6 @@ ReferenceCapturingFunction<ReturnT, Args...> make_ref_capturing_function(Signatu
 }
 
 } // namespace rcf
-} // namespace experiments
-
+} // namespace phasm::test::experiments
 
 #endif //SURROGATE_TOOLKIT_EXPERIMENTS_H

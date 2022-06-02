@@ -17,10 +17,15 @@
 #include "call_site_variable.h"
 
 
+namespace phasm {
+
 class Surrogate {
 public:
     friend class Model;
-    enum class CallMode { NotSet, UseOriginal, UseModel, CaptureAndTrain, CaptureAndDump, CaptureAndSummarize };
+
+    enum class CallMode {
+        NotSet, UseOriginal, UseModel, CaptureAndTrain, CaptureAndDump, CaptureAndSummarize
+    };
 
 private:
     static inline CallMode s_callmode = CallMode::NotSet;
@@ -32,10 +37,11 @@ public:
 
 public:
     explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
-    static void set_call_mode(CallMode callmode) {s_callmode = callmode;}
 
-    template <typename T>
-    void bind(std::string param_name, T* slot) {
+    static void set_call_mode(CallMode callmode) { s_callmode = callmode; }
+
+    template<typename T>
+    void bind(std::string param_name, T *slot) {
         auto csv = callsite_var_map.find(param_name);
         if (csv == callsite_var_map.end()) {
             throw std::runtime_error("No such callsite variable specified in model");
@@ -57,7 +63,7 @@ public:
         return pair->second;
     }
 
-    template <typename T>
+    template<typename T>
     T get_captured_input(size_t sample_index, size_t parameter_index) {
         auto param = model->get_input(parameter_index);
         torch::Tensor result = param->training_captures[sample_index];
@@ -68,7 +74,7 @@ public:
         // TODO: Remove get_captured_output completely
     }
 
-    template <typename T>
+    template<typename T>
     T get_captured_output(size_t sample_index, size_t parameter_index) {
         auto param = model->get_output(parameter_index);
         torch::Tensor result = param->training_captures[sample_index];
@@ -114,17 +120,19 @@ public:
 
     /// Capturing only needs rvalues. This won't train, but merely update the samples associated
     void call_original_and_capture() {
-        for (auto& input: callsite_vars) {
+        for (auto &input: callsite_vars) {
             input->capture_all_training_inputs();
         }
         original_function();
-        for (auto& output: callsite_vars) {
+        for (auto &output: callsite_vars) {
             output->capture_all_training_outputs();
         }
         model->captured_rows++;
     }
 
 };
+
+} // namespace phasm
 
 
 #endif //SURROGATE_TOOLKIT_SURROGATE_H

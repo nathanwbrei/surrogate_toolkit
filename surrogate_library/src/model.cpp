@@ -7,13 +7,15 @@
 #include <iostream>
 #include "fluent.h"
 
-Model::Model(const phasm::fluent::OpticBuilder &b) {
-    for (std::shared_ptr<CallSiteVariable>& csv : b.get_callsite_vars()) {
+namespace phasm {
+
+Model::Model(const OpticBuilder &b) {
+    for (std::shared_ptr<CallSiteVariable> &csv: b.get_callsite_vars()) {
         callsite_vars.push_back(csv);
         callsite_var_map[csv->name] = csv;
     }
 
-    for (std::shared_ptr<ModelVariable>& mv : b.get_model_vars()) {
+    for (std::shared_ptr<ModelVariable> &mv: b.get_model_vars()) {
         // Note: this (and everything hereafter) assumes that model vars are duplicated when they are used as
         // both an input and an output. If you set both is_input=true and is_output=true on one ModelVariable,
         // everything will break. This is likely to change, though.
@@ -74,31 +76,29 @@ void Model::finalize() {
 }
 
 
-void Model::dump_captures_to_csv(std::ostream& os) {
+void Model::dump_captures_to_csv(std::ostream &os) {
     // print column header
-    for (auto input : inputs) {
+    for (auto input: inputs) {
         int length = 1;
-        for (int dim : input->shape()) length *= dim;
+        for (int dim: input->shape()) length *= dim;
         if (length == 1) {
             os << input->name << ", ";
-        }
-        else {
-            for (int i=0; i<length; ++i) {
+        } else {
+            for (int i = 0; i < length; ++i) {
                 os << input->name << "[" << i << "], ";
             }
         }
     }
-    for (size_t i=0; i<outputs.size(); ++i) {
+    for (size_t i = 0; i < outputs.size(); ++i) {
         int length = 1;
-        for (int dim : outputs[i]->shape()) length *= dim;
+        for (int dim: outputs[i]->shape()) length *= dim;
         if (length == 1) {
             os << outputs[i]->name;
-            if (i < (outputs.size()-1)) os << ", ";
-        }
-        else {
-            for (int j=0; j<length; ++j) {
+            if (i < (outputs.size() - 1)) os << ", ";
+        } else {
+            for (int j = 0; j < length; ++j) {
                 os << outputs[i]->name << "[" << j << "]";
-                bool last_col = (i == outputs.size()-1) && (j==length-1);
+                bool last_col = (i == outputs.size() - 1) && (j == length - 1);
                 if (!last_col) os << ", ";
             }
         }
@@ -106,18 +106,18 @@ void Model::dump_captures_to_csv(std::ostream& os) {
     os << std::endl;
 
     // print body
-    for (size_t i=0; i<captured_rows; ++i) {
-        for (size_t j=0; j<inputs.size(); ++j) {
+    for (size_t i = 0; i < captured_rows; ++i) {
+        for (size_t j = 0; j < inputs.size(); ++j) {
             auto t = inputs[j]->training_captures[i].flatten(0, -1);
-            for (int k=0; k<t.numel(); ++k) {
+            for (int k = 0; k < t.numel(); ++k) {
                 os << t[k].item().toFloat() << ", ";
             }
         }
-        for (size_t j=0; j<outputs.size(); ++j) {
+        for (size_t j = 0; j < outputs.size(); ++j) {
             auto t = outputs[j]->training_captures[i].flatten(0, -1);
-            for (int k=0; k<t.numel(); ++k) {
+            for (int k = 0; k < t.numel(); ++k) {
                 os << t[k].item().toFloat();
-                bool last_col = (j == outputs.size()-1) && (k==t.numel()-1);
+                bool last_col = (j == outputs.size() - 1) && (k == t.numel() - 1);
                 if (!last_col) os << ", ";
             }
         }
@@ -132,7 +132,10 @@ void Model::save() {
     outfile.close();
 }
 
-void Model::dump_ranges(std::ostream&) {
+void Model::dump_ranges(std::ostream &) {
     // for (auto i : inputs) {
     // }
 }
+
+
+} // namespace phasm

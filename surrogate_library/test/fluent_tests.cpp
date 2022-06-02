@@ -5,7 +5,10 @@
 
 #include <catch.hpp>
 #include "fluent.h"
-using namespace phasm::fluent;
+using namespace phasm;
+
+namespace phasm::test::fluent_tests {
+
 
 struct MyStruct {
     int x = 22;
@@ -13,22 +16,23 @@ struct MyStruct {
 };
 
 int my_global;
+
 TEST_CASE("Basic fluent construction") {
 
     OpticBuilder builder;
 
     builder
-    .local<int>("a")
-        .primitive("a", Direction::Output)
-        .end()
-    .global("my_global", &my_global)
-        .primitive("b")
-        .end()
-    .local<MyStruct>("s")
-        .accessor<int>([](MyStruct* s){return &(s->x);})
+            .local<int>("a")
+            .primitive("a", Direction::Output)
+            .end()
+            .global("my_global", &my_global)
+            .primitive("b")
+            .end()
+            .local<MyStruct>("s")
+            .accessor<int>([](MyStruct *s) { return &(s->x); })
             .primitive("x")
             .end()
-        .accessor<double>([](MyStruct* s){return s->y;})
+            .accessor<double>([](MyStruct *s) { return s->y; })
             .primitives("y", {3}, Direction::InputOutput)
             .end();
 
@@ -40,7 +44,7 @@ TEST_CASE("Basic fluent construction") {
     builder.printModelVars();
 
 }
-
+} // namespace phasm::test::fluent_tests
 
 
 

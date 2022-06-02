@@ -9,7 +9,8 @@
 #include "optics.h"
 #include "any_ptr.hpp"
 
-using namespace optics;
+namespace phasm {
+
 struct CallSiteVariable {
 
     std::string name;
@@ -51,6 +52,7 @@ struct CallSiteVariable {
     }
 };
 
+} // namespace phasm
 
 
 #endif //SURROGATE_TOOLKIT_BINDINGS_H

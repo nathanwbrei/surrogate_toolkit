@@ -10,6 +10,8 @@
 #include "model.h"
 #include <torch/torch.h>
 
+namespace phasm {
+
 struct FeedForwardModel : public Model {
 private:
 
@@ -39,6 +41,7 @@ private:
 
 public:
     FeedForwardModel() = default;
+
     ~FeedForwardModel();
 
     void initialize() override;
@@ -52,4 +55,7 @@ public:
     std::vector<torch::Tensor> split_and_unflatten_outputs(torch::Tensor output) const;
 
 };
+
+} // namespace phasm
+
 #endif //SURROGATE_TOOLKIT_FEEDFORWARD_MODEL_H

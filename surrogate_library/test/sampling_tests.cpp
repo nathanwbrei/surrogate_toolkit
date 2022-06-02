@@ -7,6 +7,10 @@
 #include "surrogate.h"
 #include "sampler.h"
 
+using namespace phasm;
+
+namespace phasm::tests::sampling_tests {
+
 
 TEST_CASE("Basic GridSampler") {
 
@@ -64,3 +68,5 @@ TEST_CASE("Basic FiniteSetSampler") {
     REQUIRE(result == true); // Wraps around
     REQUIRE(x == 7);
 }
+
+} // namespace phasm::test::sampling_tests

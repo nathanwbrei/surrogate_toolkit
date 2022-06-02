@@ -7,6 +7,8 @@
 #include <catch.hpp>
 #include <iostream>
 
+using namespace phasm;
+
 TEST_CASE("Interval range") {
     auto x = Range<int>(-5, 5);
     REQUIRE(x.contains(-5));

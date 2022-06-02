@@ -6,6 +6,9 @@
 #include <optics.h>
 #include <torch/torch.h>
 
+using namespace phasm;
+namespace phasm::tests::pytorch_tests {
+
 TEST_CASE("Getting a multidimensional array into a Torch tensor") {
 
     double mat[2][3] = {{1,2,3},{4,5,6}};
@@ -56,7 +59,7 @@ TEST_CASE("Getting a multidimensional array out of a Torch tensor with arbitrary
 
 TEST_CASE("Using tensors with optics") {
     double mat[2][3] = {{1,2,3},{4,5,6}};
-    auto p = optics::PrimitiveArray<double>({2,3});
+    auto p = PrimitiveArray<double>({2,3});
     auto t = p.to(mat[0]);
 
     auto firstitem = t[0][0].item<double>();
@@ -65,3 +68,4 @@ TEST_CASE("Using tensors with optics") {
     REQUIRE(t.size(1) == 3);
 }
 
+}

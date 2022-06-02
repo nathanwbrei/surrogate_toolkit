@@ -7,6 +7,8 @@
 #include "../vacuum_tool/src/utils.hpp"
 #include <iostream>
 
+namespace phasm::test::fluent_experiments {
+
 
 struct Node {
     Node* parent = nullptr;
@@ -245,7 +247,6 @@ TEST_CASE("Recursive builders") {
         .close();
 };
 
-
-
+} // namespace phasm::test::fluent_experiments
 
 

@@ -17,7 +17,7 @@
 // have structures of arrays of arrays of structures or whatever, and you need to turn that
 // into a Tensor sanely.
 
-namespace optics {
+namespace phasm {
 
 /// Untyped base class for all optics. We need this so that we can traverse the full tree
 /// of optics, particularly for fluent interfaces and for transpositions
@@ -326,7 +326,7 @@ public:
 };
 
 
-} // namespace optics
+} // namespace phasm
 
 
 

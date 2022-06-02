@@ -11,10 +11,11 @@
 #include <iosfwd>  // Forward decls for std::ostream
 #include <memory>
 
-class Surrogate;
-namespace phasm::fluent {
+namespace phasm {
+
 class OpticBuilder;
-}
+
+class Surrogate;
 
 /// There should be exactly one Model in your codebase for each unique function that you wish to surrogate.
 /// Contrast this with Surrogate. There should be one Surrogate for each call site of that function,
@@ -33,7 +34,8 @@ protected:
 
 public:
     Model() = default;
-    Model(const phasm::fluent::OpticBuilder& b);
+
+    Model(const OpticBuilder &b);
 
     virtual ~Model() = default; // We want to be able to inherit from this
 
@@ -49,15 +51,15 @@ public:
     virtual void train_from_captures() {};
 
     // Infer takes the sample associated with each parameter
-    virtual void infer(Surrogate&) {};
+    virtual void infer(Surrogate &) {};
 
-    void dump_captures_to_csv(std::ostream&);
+    void dump_captures_to_csv(std::ostream &);
 
-    void dump_ranges(std::ostream&);
+    void dump_ranges(std::ostream &);
 
     virtual void save();
 
-    template <typename T>
+    template<typename T>
     void add_input(std::string param_name);
 
     template<typename T>
@@ -66,14 +68,14 @@ public:
     template<typename T>
     void add_input_output(std::string param_name);
 
-    template <typename T>
-    void add_input(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name);
+    template<typename T>
+    void add_input(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name);
 
-    template <typename T>
-    void add_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name);
+    template<typename T>
+    void add_output(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name);
 
-    template <typename T>
-    void add_input_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name);
+    template<typename T>
+    void add_input_output(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name);
 
 
     std::shared_ptr<ModelVariable> get_input(size_t position);
@@ -87,21 +89,21 @@ public:
 
 template<typename T>
 void Model::add_input(std::string call_site_var_name) {
-    add_input(call_site_var_name, new optics::Primitive<T>, call_site_var_name);
+    add_input(call_site_var_name, new Primitive<T>, call_site_var_name);
 }
 
 template<typename T>
 void Model::add_output(std::string call_site_var_name) {
-    add_output(call_site_var_name, new optics::Primitive<T>, call_site_var_name);
+    add_output(call_site_var_name, new Primitive<T>, call_site_var_name);
 }
 
 template<typename T>
 void Model::add_input_output(std::string call_site_var_name) {
-    add_input_output(call_site_var_name, new optics::Primitive<T>, call_site_var_name);
+    add_input_output(call_site_var_name, new Primitive<T>, call_site_var_name);
 }
 
 template<typename T>
-void Model::add_input(std::string call_site_var_name, optics::Optic<T> *accessor, std::string model_var_name) {
+void Model::add_input(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name) {
     auto input = std::make_shared<ModelVariable>();
     input->name = model_var_name;
     input->is_input = true;
@@ -117,18 +119,17 @@ void Model::add_input(std::string call_site_var_name, optics::Optic<T> *accessor
     if (pair == callsite_var_map.end()) {
         csv = std::make_shared<CallSiteVariable>();
         csv->name = call_site_var_name;
-        csv->binding = phasm::any_ptr((T*)nullptr);
+        csv->binding = phasm::any_ptr((T *) nullptr);
         callsite_var_map[call_site_var_name] = csv;
         callsite_vars.push_back(csv);
-    }
-    else {
+    } else {
         csv = pair->second;
     }
     csv->model_vars.push_back(input);
 }
 
 template<typename T>
-void Model::add_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name) {
+void Model::add_output(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name) {
     auto output = std::make_shared<ModelVariable>();
     output->name = model_var_name;
     output->is_output = true;
@@ -144,20 +145,20 @@ void Model::add_output(std::string call_site_var_name, optics::Optic<T>* accesso
     if (pair == callsite_var_map.end()) {
         csv = std::make_shared<CallSiteVariable>();
         csv->name = call_site_var_name;
-        csv->binding = phasm::any_ptr((T*)nullptr);
+        csv->binding = phasm::any_ptr((T *) nullptr);
         callsite_var_map[call_site_var_name] = csv;
         callsite_vars.push_back(csv);
-    }
-    else {
+    } else {
         csv = pair->second;
     }
     csv->model_vars.push_back(output);
 }
 
 template<typename T>
-void Model::add_input_output(std::string call_site_var_name, optics::Optic<T>* accessor, std::string model_var_name) {
+void Model::add_input_output(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name) {
     add_input<T>(call_site_var_name, accessor, model_var_name);
     add_output<T>(call_site_var_name, accessor, model_var_name);
 }
 
+} // namespace phasm
 #endif //SURROGATE_TOOLKIT_MODEL_H
