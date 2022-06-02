@@ -35,12 +35,12 @@ void phasm::FeedForwardModel::initialize() {
 }
 
 
-void phasm::FeedForwardModel::infer(Surrogate &s) {
+void phasm::FeedForwardModel::infer(std::vector<std::shared_ptr<CallSiteVariable>>& vars) {
 
     std::vector<torch::Tensor> input_tensors;
 
-    for (const std::shared_ptr<CallSiteVariable>& csv : s.callsite_vars) {
-        csv->captureAllInferenceInputs();
+    for (const std::shared_ptr<CallSiteVariable>& v : vars) {
+        v->captureAllInferenceInputs();
     }
     for (const auto& input_model_var : inputs) {
         input_tensors.push_back(input_model_var->inference_input);
@@ -54,8 +54,8 @@ void phasm::FeedForwardModel::infer(Surrogate &s) {
     for (const auto& output_model_var : outputs) {
         output_model_var->inference_output = input_tensors[i++];
     }
-    for (const auto& csv : s.callsite_vars) {
-        csv->publishAllInferenceOutputs();
+    for (const auto& v : vars) {
+        v->publishAllInferenceOutputs();
     }
 }
 

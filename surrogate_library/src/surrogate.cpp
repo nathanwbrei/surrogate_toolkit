@@ -10,27 +10,27 @@ namespace phasm {
 
 
 Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
-        : original_function(std::move(f)), model(model) {
+        : m_original_function(std::move(f)), m_model(model) {
 
     if (s_callmode == CallMode::NotSet) {
         s_callmode = get_call_mode_from_envvar();
     }
 
     // Copy over expected callsite vars from model so that we can validate the bindings
-    callsite_vars = model->callsite_vars;
-    callsite_var_map = model->callsite_var_map;
+    m_bound_callsite_vars = model->callsite_vars;
+    m_bound_callsite_var_map = model->callsite_var_map;
 };
 
 
 std::shared_ptr<CallSiteVariable> Surrogate::get_binding(size_t index) {
-    if (index >= callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }
-    return callsite_vars[index];
+    if (index >= m_bound_callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }
+    return m_bound_callsite_vars[index];
 }
 
 
 std::shared_ptr<CallSiteVariable> Surrogate::get_binding(std::string name) {
-    auto pair = callsite_var_map.find(name);
-    if (pair == callsite_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
+    auto pair = m_bound_callsite_var_map.find(name);
+    if (pair == m_bound_callsite_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
     return pair->second;
 }
 
@@ -68,19 +68,19 @@ void Surrogate::call() {
 
 
 void Surrogate::call_original() {
-    original_function();
+    m_original_function();
 }
 
 
 void Surrogate::call_original_and_capture() {
-    for (auto &input: callsite_vars) {
+    for (auto &input: m_bound_callsite_vars) {
         input->captureAllTrainingInputs();
     }
-    original_function();
-    for (auto &output: callsite_vars) {
+    m_original_function();
+    for (auto &output: m_bound_callsite_vars) {
         output->captureAllTrainingOutputs();
     }
-    model->captured_rows++;
+    m_model->captured_rows++;
 }
 
 
@@ -90,7 +90,7 @@ void Surrogate::capture_input_distribution() {
 
 
 void Surrogate::call_model() {
-    model->infer(*this);
+    m_model->infer(m_bound_callsite_vars);
 }
 
 

@@ -36,9 +36,7 @@ protected:
 
 public:
     Model() = default;
-
-    Model(const OpticBuilder &b);
-
+    explicit Model(const OpticBuilder &b);
     virtual ~Model() = default; // We want to be able to inherit from this
 
     // Initialize the underlying neural net once all the inputs and outputs are known
@@ -47,19 +45,16 @@ public:
     // Performs tasks such as training or writing to CSV, right before the model gets destroyed
     void finalize();
 
+    // The total number of training samples we have accumulated so far
     size_t get_capture_count() const;
 
-    // Retrieve a model variable by position
     std::shared_ptr<ModelVariable> get_model_var(size_t position);
 
-    // Retrieve a model variable by name
     std::shared_ptr<ModelVariable> get_model_var(std::string param_name);
 
-    // Train takes all of the captures associated with each parameter
     virtual void train_from_captures() {};
 
-    // Infer takes the sample associated with each parameter
-    virtual void infer(Surrogate &) {};
+    virtual void infer(std::vector<std::shared_ptr<CallSiteVariable>>&) {};
 
     void dump_captures_to_csv(std::ostream &);
 
@@ -73,12 +68,16 @@ public:
     template<typename T>
     void add_var(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name, Direction dir);
 
-
 };
 
+
+// --------------------
+// Template definitions
+// --------------------
+
 template<typename T>
-void Model::add_var(std::string call_site_var_name, Direction dir) {
-    add_var(call_site_var_name, new Primitive<T>, call_site_var_name, dir);
+void Model::add_var(std::string param_name, Direction dir) {
+    add_var(param_name, new Primitive<T>, param_name, dir);
 }
 
 

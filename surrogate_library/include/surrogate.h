@@ -6,13 +6,8 @@
 #ifndef SURROGATE_TOOLKIT_SURROGATE_H
 #define SURROGATE_TOOLKIT_SURROGATE_H
 
-#include <set>
-#include <utility>
-#include <variant>
 #include <vector>
-#include <functional>
 
-#include "range.h"
 #include "model.h"
 #include "call_site_variable.h"
 
@@ -29,11 +24,10 @@ public:
 
 private:
     static inline CallMode s_callmode = CallMode::NotSet;
-    std::function<void(void)> original_function;
-    std::shared_ptr<Model> model;
-public:
-    std::vector<std::shared_ptr<CallSiteVariable>> callsite_vars;
-    std::map<std::string, std::shared_ptr<CallSiteVariable>> callsite_var_map;
+    std::function<void(void)> m_original_function;
+    std::shared_ptr<Model> m_model;
+    std::vector<std::shared_ptr<CallSiteVariable>> m_bound_callsite_vars;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> m_bound_callsite_var_map;
 
 public:
     explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
@@ -68,8 +62,8 @@ void print_help_screen();
 
 template<typename T>
 void Surrogate::bind(std::string param_name, T *slot) {
-    auto csv = callsite_var_map.find(param_name);
-    if (csv == callsite_var_map.end()) {
+    auto csv = m_bound_callsite_var_map.find(param_name);
+    if (csv == m_bound_callsite_var_map.end()) {
         throw std::runtime_error("No such callsite variable specified in model");
     }
     if (csv->second->binding.get<T>() != nullptr) {

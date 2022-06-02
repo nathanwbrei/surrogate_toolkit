@@ -31,8 +31,8 @@ public:
         }
     }
 
-    void infer(Surrogate& surrogate) override {
-        auto x = surrogate.get_binding("x");
+    void infer(std::vector<std::shared_ptr<CallSiteVariable>>& callsite_vars) override {
+        auto x = callsite_vars[0];
         x->captureAllInferenceInputs();
 
         torch::Tensor x_val = x->model_vars[0]->accessor->unsafe_to(x->binding);
@@ -40,7 +40,7 @@ public:
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {
-            auto y = surrogate.get_binding("y");
+            auto y = callsite_vars[1];
             y->model_vars[0]->accessor->unsafe_from(pair->second, y->binding);
         }
     }

@@ -29,7 +29,7 @@ public:
 
     void train_from_captures() override;
 
-    void infer(Surrogate &s) override;
+    void infer(std::vector<std::shared_ptr<CallSiteVariable>>& vars) override;
 
     torch::Tensor flatten_and_join(std::vector<torch::Tensor> inputs);
 
