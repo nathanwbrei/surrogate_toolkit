@@ -14,6 +14,8 @@
 
 namespace phasm {
 
+enum class Direction {Input, Output, InputOutput};
+
 struct ModelVariable {
     std::string name;
     bool is_input = false;

@@ -17,8 +17,8 @@ double square(double x) {
 TEST_CASE("Can we build against pytorch at all?") {
 
     auto m = std::make_shared<FeedForwardModel>();
-    m->add_input<double>("x", new Primitive<double>(), "x");
-    m->add_output<double>("y");
+    m->add_var<double>("x", new Primitive<double>(), "x", Direction::Input);
+    m->add_var<double>("y", Direction::Output);
 
     double x, y;
     auto s = Surrogate([&]() { y = square(x); }, m);

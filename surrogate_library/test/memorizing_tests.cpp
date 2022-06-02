@@ -16,13 +16,13 @@ class MemorizingModel : public Model {
 public:
 
     MemorizingModel() {
-        add_input<double>("x");
-        add_output<double>("y");
+        add_var<double>("x", Direction::Input);
+        add_var<double>("y", Direction::Output);
     }
 
     void train_from_captures() override {
-        auto& xs = get_input("x")->training_inputs;
-        auto& ys = get_output("y")->training_outputs;
+        auto& xs = get_model_var("x")->training_inputs;
+        auto& ys = get_model_var("y")->training_outputs;
         for (size_t i = 0; i<get_capture_count(); ++i) {
             torch::Tensor x = xs[i];
             torch::Tensor y = ys[i];

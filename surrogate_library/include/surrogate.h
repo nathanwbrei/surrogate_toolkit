@@ -63,47 +63,6 @@ public:
         return pair->second;
     }
 
-    template<typename T>
-    T get_captured_input(size_t sample_index, size_t parameter_index) {
-        auto param = model->get_input(parameter_index);
-        torch::Tensor result = param->training_inputs[sample_index];
-        return *result.data_ptr<T>();
-
-        // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
-        // but this is only used for test cases anyhow and should be removed pretty soon.
-        // TODO: Remove get_captured_output completely
-    }
-
-    template<typename T>
-    T get_captured_output(size_t sample_index, size_t parameter_index) {
-        auto param = model->get_output(parameter_index);
-        torch::Tensor result = param->training_outputs[sample_index];
-        return *result.data_ptr<T>();
-
-        // Unpack as single T. This isn't valid when captures is a non zero-dimensional tensor,
-        // but this is only used for test cases anyhow and should be removed pretty soon.
-        // TODO: Remove get_captured_output completely
-    }
-
-/*
-    void bind(const std::vector<void*>& input_pointers, const std::vector<void*>& output_pointers) {
-        size_t inputs_size = model->inputs.size();
-        size_t outputs_size = model->outputs.size();
-        if (inputs_size != input_pointers.size()) {
-            throw std::range_error("Wrong size: input_pointers");
-        }
-	if (outputs_size != output_pointers.size()) {
-	    throw std::range_error("Wrong size: output_pointers");
-	}
-	for (size_t i = 0; i<inputs_size; ++i) {
-	    model->inputs[i]->bind(input_pointers[i]);
-	}
-	for (size_t i = 0; i<outputs_size; ++i) {
-	    model->outputs[i]->bind(output_pointers[i]);
-	}
-    }
-*/
-
     /// call() looks at PHASM_CALL_MODE env var to decide what to do
     void call();
 

@@ -26,10 +26,12 @@ class Model {
 protected:
     std::vector<std::shared_ptr<CallSiteVariable>> callsite_vars;
     std::map<std::string, std::shared_ptr<CallSiteVariable>> callsite_var_map;
+    std::vector<std::shared_ptr<ModelVariable>> model_vars;
+    std::map<std::string, std::shared_ptr<ModelVariable>> model_var_map;
+
+    // The following two are just for convenience
     std::vector<std::shared_ptr<ModelVariable>> inputs;
     std::vector<std::shared_ptr<ModelVariable>> outputs;
-    std::map<std::string, std::shared_ptr<ModelVariable>> input_map;
-    std::map<std::string, std::shared_ptr<ModelVariable>> output_map;
     size_t captured_rows = 0;
 
 public:
@@ -47,6 +49,12 @@ public:
 
     size_t get_capture_count() const;
 
+    // Retrieve a model variable by position
+    std::shared_ptr<ModelVariable> get_model_var(size_t position);
+
+    // Retrieve a model variable by name
+    std::shared_ptr<ModelVariable> get_model_var(std::string param_name);
+
     // Train takes all of the captures associated with each parameter
     virtual void train_from_captures() {};
 
@@ -60,59 +68,34 @@ public:
     virtual void save();
 
     template<typename T>
-    void add_input(std::string param_name);
+    void add_var(std::string param_name, Direction dir);
 
     template<typename T>
-    void add_output(std::string param_name);
-
-    template<typename T>
-    void add_input_output(std::string param_name);
-
-    template<typename T>
-    void add_input(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name);
-
-    template<typename T>
-    void add_output(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name);
-
-    template<typename T>
-    void add_input_output(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name);
+    void add_var(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name, Direction dir);
 
 
-    std::shared_ptr<ModelVariable> get_input(size_t position);
-
-    std::shared_ptr<ModelVariable> get_input(std::string param_name);
-
-    std::shared_ptr<ModelVariable> get_output(size_t position);
-
-    std::shared_ptr<ModelVariable> get_output(std::string param_name);
 };
 
 template<typename T>
-void Model::add_input(std::string call_site_var_name) {
-    add_input(call_site_var_name, new Primitive<T>, call_site_var_name);
+void Model::add_var(std::string call_site_var_name, Direction dir) {
+    add_var(call_site_var_name, new Primitive<T>, call_site_var_name, dir);
 }
 
-template<typename T>
-void Model::add_output(std::string call_site_var_name) {
-    add_output(call_site_var_name, new Primitive<T>, call_site_var_name);
-}
 
 template<typename T>
-void Model::add_input_output(std::string call_site_var_name) {
-    add_input_output(call_site_var_name, new Primitive<T>, call_site_var_name);
-}
-
-template<typename T>
-void Model::add_input(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name) {
-    auto input = std::make_shared<ModelVariable>();
-    input->name = model_var_name;
-    input->is_input = true;
-    input->accessor = accessor;
-    inputs.push_back(input);
-    if (input_map.find(model_var_name) != input_map.end()) {
-        throw std::runtime_error("Input parameter already exists!");
+void Model::add_var(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name, Direction dir) {
+    auto mv = std::make_shared<ModelVariable>();
+    mv->name = model_var_name;
+    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
+    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
+    mv->accessor = accessor;
+    if (model_var_map.find(model_var_name) != model_var_map.end()) {
+        throw std::runtime_error("Model variable already exists!");
     }
-    input_map[model_var_name] = input;
+    model_vars.push_back(mv);
+    model_var_map[model_var_name] = mv;
+    if (mv->is_input) inputs.push_back(mv);
+    if (mv->is_output) outputs.push_back(mv);
 
     std::shared_ptr<CallSiteVariable> csv = nullptr;
     auto pair = callsite_var_map.find(call_site_var_name);
@@ -125,40 +108,9 @@ void Model::add_input(std::string call_site_var_name, Optic<T> *accessor, std::s
     } else {
         csv = pair->second;
     }
-    csv->model_vars.push_back(input);
+    csv->model_vars.push_back(mv);
 }
 
-template<typename T>
-void Model::add_output(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name) {
-    auto output = std::make_shared<ModelVariable>();
-    output->name = model_var_name;
-    output->is_output = true;
-    output->accessor = accessor;
-    outputs.push_back(output);
-    if (output_map.find(model_var_name) != output_map.end()) {
-        throw std::runtime_error("Output parameter already exists!");
-    }
-    output_map[model_var_name] = output;
-
-    std::shared_ptr<CallSiteVariable> csv = nullptr;
-    auto pair = callsite_var_map.find(call_site_var_name);
-    if (pair == callsite_var_map.end()) {
-        csv = std::make_shared<CallSiteVariable>();
-        csv->name = call_site_var_name;
-        csv->binding = phasm::any_ptr((T *) nullptr);
-        callsite_var_map[call_site_var_name] = csv;
-        callsite_vars.push_back(csv);
-    } else {
-        csv = pair->second;
-    }
-    csv->model_vars.push_back(output);
-}
-
-template<typename T>
-void Model::add_input_output(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name) {
-    add_input<T>(call_site_var_name, accessor, model_var_name);
-    add_output<T>(call_site_var_name, accessor, model_var_name);
-}
 
 } // namespace phasm
 #endif //SURROGATE_TOOLKIT_MODEL_H

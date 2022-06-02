@@ -11,6 +11,21 @@ using namespace phasm;
 
 namespace phasm::tests::capturing_tests {
 
+// Helper functions for validating our results
+template<typename T>
+T get_captured_input(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
+    auto param = model->get_model_var(param_name);
+    torch::Tensor result = param->training_inputs[sample_index];
+    return *result.data_ptr<T>();
+}
+
+template<typename T>
+T get_captured_output(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
+    auto param = model->get_model_var(param_name);
+    torch::Tensor result = param->training_outputs[sample_index];
+    return *result.data_ptr<T>();
+}
+
 int mult(int x, int y) {
     return x * y;
 }
@@ -19,9 +34,9 @@ TEST_CASE("Capture int(int,int)") {
 
     int x, y, z;
     auto model = std::make_shared<Model>();
-    model->add_input<int>("x");
-    model->add_input<int>("y");
-    model->add_output<int>("z");
+    model->add_var<int>("x", Direction::Input);
+    model->add_var<int>("y", Direction::Input);
+    model->add_var<int>("z", Direction::Output);
 
     auto surrogate = Surrogate([&]() { z = mult(x, y); }, model);
     surrogate.bind("x", &x);
@@ -32,9 +47,10 @@ TEST_CASE("Capture int(int,int)") {
     y = 5;
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
-    REQUIRE(surrogate.get_captured_input<int>(0, 0) == 3);
-    REQUIRE(surrogate.get_captured_input<int>(0, 1) == 5);
-    REQUIRE(surrogate.get_captured_output<int>(0, 0) == 15);
+
+    REQUIRE(get_captured_input<int>(model, "x", 0) == 3);
+    REQUIRE(get_captured_input<int>(model, "y", 0) == 5);
+    REQUIRE(get_captured_output<int>(model, "z", 0) == 15);
 }
 
 int mult_const(const int x, const int y) {
@@ -45,9 +61,9 @@ TEST_CASE("Capture int(const int, const int)") {
 
     int x = 3, y = 5, z = 0;
     auto m = std::make_shared<Model>();
-    m->add_input<int>("x");
-    m->add_input<int>("y");
-    m->add_output<int>("z");
+    m->add_var<int>("x", Direction::Input);
+    m->add_var<int>("y", Direction::Input);
+    m->add_var<int>("z", Direction::Output);
 
     auto surrogate = Surrogate([&]() { z = mult(x, y); }, m);
     surrogate.bind<int>("x", &x);
@@ -56,9 +72,9 @@ TEST_CASE("Capture int(const int, const int)") {
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
-    REQUIRE(surrogate.get_captured_input<int>(0, 0) == 3);
-    REQUIRE(surrogate.get_captured_input<int>(0, 1) == 5);
-    REQUIRE(surrogate.get_captured_output<int>(0, 0) == 15);
+    REQUIRE(get_captured_input<int>(m, "x", 0) == 3);
+    REQUIRE(get_captured_input<int>(m, "y", 0) == 5);
+    REQUIRE(get_captured_output<int>(m, "z", 0) == 15);
 }
 
 int mult_with_ref(int &x, int &&y) {
@@ -68,9 +84,9 @@ int mult_with_ref(int &x, int &&y) {
 TEST_CASE("Capture int(int&,int&&)") {
 
     auto m = std::make_shared<Model>();
-    m->add_input<int>("x");
-    m->add_input<int>("y");
-    m->add_output<int>("z");
+    m->add_var<int>("x", Direction::Input);
+    m->add_var<int>("y", Direction::Input);
+    m->add_var<int>("z", Direction::Output);
 
     int x = 3, y = 5, z = 0;
     auto surrogate = Surrogate([&]() { z = mult_with_ref(x, std::move(y)); }, m);
@@ -80,9 +96,9 @@ TEST_CASE("Capture int(int&,int&&)") {
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
-    REQUIRE(surrogate.get_captured_input<int>(0, 0) == 3);
-    REQUIRE(surrogate.get_captured_input<int>(0, 1) == 5);
-    REQUIRE(surrogate.get_captured_output<int>(0, 0) == 15);
+    REQUIRE(get_captured_input<int>(m, "x", 0) == 3);
+    REQUIRE(get_captured_input<int>(m, "y", 0) == 5);
+    REQUIRE(get_captured_output<int>(m, "z", 0) == 15);
 }
 
 int mult_with_out_param(int &x, int y) {
@@ -95,9 +111,9 @@ TEST_CASE("Capture int(int&,int) [input and output]") {
 
     int x = 3, y = 5, z = 0;
     auto m = std::make_shared<Model>();
-    m->add_input_output<int>("x");
-    m->add_input<int>("y");
-    m->add_output<int>("z");
+    m->add_var<int>("x", Direction::InputOutput);
+    m->add_var<int>("y", Direction::Input);
+    m->add_var<int>("z", Direction::Output);
 
     auto surrogate = Surrogate([&]() { z = mult_with_out_param(x, y); }, m);
     surrogate.bind<int>("x", &x);
@@ -107,10 +123,10 @@ TEST_CASE("Capture int(int&,int) [input and output]") {
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
     REQUIRE(x == 22);
-    REQUIRE(surrogate.get_captured_input<int>(0, 0) == 3);
-    REQUIRE(surrogate.get_captured_input<int>(0, 1) == 5);
-    REQUIRE(surrogate.get_captured_output<int>(0, 0) == 22);
-    REQUIRE(surrogate.get_captured_output<int>(0, 1) == 15);
+    REQUIRE(get_captured_input<int>(m, "x", 0) == 3);
+    REQUIRE(get_captured_input<int>(m, "y", 0) == 5);
+    REQUIRE(get_captured_output<int>(m, "x", 0) == 22);
+    REQUIRE(get_captured_output<int>(m, "z", 0) == 15);
 
     m->dump_captures_to_csv(std::cout);
 }
@@ -125,9 +141,9 @@ TEST_CASE("Capture int(int) [with global]") {
 
     int x = 5, z = 0;
     auto m = std::make_shared<Model>();
-    m->add_input<int>("x");
-    m->add_input<int>("g");
-    m->add_output<int>("z");
+    m->add_var<int>("x", Direction::Input);
+    m->add_var<int>("g", Direction::Input);
+    m->add_var<int>("z", Direction::Output);
 
     auto surrogate = Surrogate([&]() { z = mult_with_global(x); }, m);
     surrogate.bind<int>("x", &x);
@@ -136,9 +152,9 @@ TEST_CASE("Capture int(int) [with global]") {
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 110);
-    REQUIRE(surrogate.get_captured_input<int>(0, 0) == 5);
-    REQUIRE(surrogate.get_captured_input<int>(0, 1) == 22);
-    REQUIRE(surrogate.get_captured_output<int>(0, 0) == 110);
+    REQUIRE(get_captured_input<int>(m, "x", 0) == 5);
+    REQUIRE(get_captured_input<int>(m, "g", 0) == 22);
+    REQUIRE(get_captured_output<int>(m, "z", 0) == 110);
 }
 
 int no_args(void) {
@@ -149,7 +165,7 @@ TEST_CASE("Capture int() [with no args]") {
 
     int z = 22;
     auto m = std::make_shared<Model>();
-    m->add_output<int>("z");
+    m->add_var<int>("z", Direction::Output);
 
     auto surrogate = Surrogate([&]() { z = no_args(); }, m);
     surrogate.bind<int>("z", &z);
@@ -157,7 +173,7 @@ TEST_CASE("Capture int() [with no args]") {
     surrogate.call_original_and_capture();
     REQUIRE(z == 0);
 
-    REQUIRE(surrogate.get_captured_output<int>(0, 0) == 0);
+    REQUIRE(get_captured_output<int>(m, "z", 0) == 0);
 }
 
 void return_void(int x) {
@@ -168,13 +184,13 @@ TEST_CASE("Capture void(int)") {
 
     int x = 3;
     auto m = std::make_shared<Model>();
-    m->add_input<int>("x");
+    m->add_var<int>("x", Direction::Input);
 
     auto surrogate = Surrogate([&]() { return_void(x); }, m);
     surrogate.bind<int>("x", &x);
 
     surrogate.call_original_and_capture();
-    REQUIRE(surrogate.get_captured_input<int>(0, 0) == 3);
+    REQUIRE(get_captured_input<int>(m, "x", 0) == 3);
 }
 } // namespace phasm::tests::capturing_tests
 

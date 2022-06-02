@@ -12,16 +12,18 @@
 #include "surrogate.h"
 #include "torchscript_model.h"
 
+using phasm::Model, phasm::Direction;
+
 int main() {
 
 
     auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
-    model->add_input<double>("x");
-    model->add_input<double>("y");
-    model->add_input<double>("z");
-    model->add_output<double>("Bx");
-    model->add_output<double>("By");
-    model->add_output<double>("Bz");
+    model->add_var<double>("x", Direction::Input);
+    model->add_var<double>("y", Direction::Input);
+    model->add_var<double>("z", Direction::Input);
+    model->add_var<double>("Bx", Direction::Output);
+    model->add_var<double>("By", Direction::Output);
+    model->add_var<double>("Bz", Direction::Output);
     model->initialize();
 
     phasm::Surrogate::set_call_mode(phasm::Surrogate::CallMode::CaptureAndDump);

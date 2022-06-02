@@ -14,7 +14,6 @@
 namespace phasm {
 
 
-enum class Direction {Input, Output, InputOutput};
 
 template <typename HeadT, typename ...RestTs>
 struct Cursor;
