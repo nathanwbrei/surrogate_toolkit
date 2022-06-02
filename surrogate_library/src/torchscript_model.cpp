@@ -25,7 +25,7 @@ void TorchscriptModel::infer(std::vector<std::shared_ptr<CallSiteVariable>>& var
     for (const std::shared_ptr<CallSiteVariable> &v: vars) {
         v->captureAllInferenceInputs();
     }
-    for (const auto &input_model_var: inputs) {
+    for (const auto &input_model_var: m_inputs) {
         input_tensors.push_back(input_model_var->inference_input);
     }
 
@@ -38,7 +38,7 @@ void TorchscriptModel::infer(std::vector<std::shared_ptr<CallSiteVariable>>& var
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
 
     size_t i = 0;
-    for (const auto &output_model_var: outputs) {
+    for (const auto &output_model_var: m_outputs) {
         output_model_var->inference_output = input_tensors[i++];
     }
     for (const auto &v: vars) {

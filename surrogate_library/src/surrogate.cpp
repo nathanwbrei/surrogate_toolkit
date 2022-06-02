@@ -17,8 +17,8 @@ Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
     }
 
     // Copy over expected callsite vars from model so that we can validate the bindings
-    m_bound_callsite_vars = model->callsite_vars;
-    m_bound_callsite_var_map = model->callsite_var_map;
+    m_bound_callsite_vars = model->m_unbound_callsite_vars;
+    m_bound_callsite_var_map = model->m_unbound_callsite_var_map;
 };
 
 
@@ -80,7 +80,7 @@ void Surrogate::call_original_and_capture() {
     for (auto &output: m_bound_callsite_vars) {
         output->captureAllTrainingOutputs();
     }
-    m_model->captured_rows++;
+    m_model->m_captured_rows++;
 }
 
 

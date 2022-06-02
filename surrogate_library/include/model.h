@@ -24,15 +24,15 @@ class Model {
     friend class Surrogate;
 
 protected:
-    std::vector<std::shared_ptr<CallSiteVariable>> callsite_vars;
-    std::map<std::string, std::shared_ptr<CallSiteVariable>> callsite_var_map;
-    std::vector<std::shared_ptr<ModelVariable>> model_vars;
-    std::map<std::string, std::shared_ptr<ModelVariable>> model_var_map;
+    std::vector<std::shared_ptr<CallSiteVariable>> m_unbound_callsite_vars;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> m_unbound_callsite_var_map;
+    std::vector<std::shared_ptr<ModelVariable>> m_model_vars;
+    std::map<std::string, std::shared_ptr<ModelVariable>> m_model_var_map;
 
     // The following two are just for convenience
-    std::vector<std::shared_ptr<ModelVariable>> inputs;
-    std::vector<std::shared_ptr<ModelVariable>> outputs;
-    size_t captured_rows = 0;
+    std::vector<std::shared_ptr<ModelVariable>> m_inputs;
+    std::vector<std::shared_ptr<ModelVariable>> m_outputs;
+    size_t m_captured_rows = 0;
 
 public:
     Model() = default;
@@ -88,22 +88,22 @@ void Model::add_var(std::string call_site_var_name, Optic<T> *accessor, std::str
     mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
     mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
     mv->accessor = accessor;
-    if (model_var_map.find(model_var_name) != model_var_map.end()) {
+    if (m_model_var_map.find(model_var_name) != m_model_var_map.end()) {
         throw std::runtime_error("Model variable already exists!");
     }
-    model_vars.push_back(mv);
-    model_var_map[model_var_name] = mv;
-    if (mv->is_input) inputs.push_back(mv);
-    if (mv->is_output) outputs.push_back(mv);
+    m_model_vars.push_back(mv);
+    m_model_var_map[model_var_name] = mv;
+    if (mv->is_input) m_inputs.push_back(mv);
+    if (mv->is_output) m_outputs.push_back(mv);
 
     std::shared_ptr<CallSiteVariable> csv = nullptr;
-    auto pair = callsite_var_map.find(call_site_var_name);
-    if (pair == callsite_var_map.end()) {
+    auto pair = m_unbound_callsite_var_map.find(call_site_var_name);
+    if (pair == m_unbound_callsite_var_map.end()) {
         csv = std::make_shared<CallSiteVariable>();
         csv->name = call_site_var_name;
         csv->binding = phasm::any_ptr((T *) nullptr);
-        callsite_var_map[call_site_var_name] = csv;
-        callsite_vars.push_back(csv);
+        m_unbound_callsite_var_map[call_site_var_name] = csv;
+        m_unbound_callsite_vars.push_back(csv);
     } else {
         csv = pair->second;
     }

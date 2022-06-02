@@ -11,33 +11,33 @@ namespace phasm {
 
 Model::Model(const OpticBuilder &b) {
     for (std::shared_ptr<CallSiteVariable> &csv: b.get_callsite_vars()) {
-        callsite_vars.push_back(csv);
-        callsite_var_map[csv->name] = csv;
+        m_unbound_callsite_vars.push_back(csv);
+        m_unbound_callsite_var_map[csv->name] = csv;
     }
 
     for (std::shared_ptr<ModelVariable> &mv: b.get_model_vars()) {
         // ModelVariables may show up under inputs, outputs, or both
-        model_vars.push_back(mv);
-        model_var_map[mv->name] = mv;
+        m_model_vars.push_back(mv);
+        m_model_var_map[mv->name] = mv;
         if (mv->is_input) {
-            inputs.push_back(mv);
+            m_inputs.push_back(mv);
         }
         if (mv->is_output) {
-            outputs.push_back(mv);
+            m_outputs.push_back(mv);
         }
     }
 }
 
-size_t Model::get_capture_count() const { return captured_rows; }
+size_t Model::get_capture_count() const { return m_captured_rows; }
 
 std::shared_ptr<ModelVariable> Model::get_model_var(size_t position) {
-    if (position >= model_vars.size()) { throw std::runtime_error("Parameter index out of bounds"); }
-    return inputs[position];
+    if (position >= m_model_vars.size()) { throw std::runtime_error("Parameter index out of bounds"); }
+    return m_inputs[position];
 }
 
 std::shared_ptr<ModelVariable> Model::get_model_var(std::string param_name) {
-    auto pair = model_var_map.find(param_name);
-    if (pair == model_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
+    auto pair = m_model_var_map.find(param_name);
+    if (pair == m_model_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
     return pair->second;
 }
 
@@ -66,7 +66,7 @@ void Model::finalize() {
 
 void Model::dump_captures_to_csv(std::ostream &os) {
     // print column header
-    for (auto input: inputs) {
+    for (auto input: m_inputs) {
         int length = 1;
         for (int dim: input->shape()) length *= dim;
         if (length == 1) {
@@ -77,16 +77,16 @@ void Model::dump_captures_to_csv(std::ostream &os) {
             }
         }
     }
-    for (size_t i = 0; i < outputs.size(); ++i) {
+    for (size_t i = 0; i < m_outputs.size(); ++i) {
         int length = 1;
-        for (int dim: outputs[i]->shape()) length *= dim;
+        for (int dim: m_outputs[i]->shape()) length *= dim;
         if (length == 1) {
-            os << outputs[i]->name;
-            if (i < (outputs.size() - 1)) os << ", ";
+            os << m_outputs[i]->name;
+            if (i < (m_outputs.size() - 1)) os << ", ";
         } else {
             for (int j = 0; j < length; ++j) {
-                os << outputs[i]->name << "[" << j << "]";
-                bool last_col = (i == outputs.size() - 1) && (j == length - 1);
+                os << m_outputs[i]->name << "[" << j << "]";
+                bool last_col = (i == m_outputs.size() - 1) && (j == length - 1);
                 if (!last_col) os << ", ";
             }
         }
@@ -94,18 +94,18 @@ void Model::dump_captures_to_csv(std::ostream &os) {
     os << std::endl;
 
     // print body
-    for (size_t i = 0; i < captured_rows; ++i) {
-        for (size_t j = 0; j < inputs.size(); ++j) {
-            auto t = inputs[j]->training_inputs[i].flatten(0, -1);
+    for (size_t i = 0; i < m_captured_rows; ++i) {
+        for (size_t j = 0; j < m_inputs.size(); ++j) {
+            auto t = m_inputs[j]->training_inputs[i].flatten(0, -1);
             for (int k = 0; k < t.numel(); ++k) {
                 os << t[k].item().toFloat() << ", ";
             }
         }
-        for (size_t j = 0; j < outputs.size(); ++j) {
-            auto t = outputs[j]->training_outputs[i].flatten(0, -1);
+        for (size_t j = 0; j < m_outputs.size(); ++j) {
+            auto t = m_outputs[j]->training_outputs[i].flatten(0, -1);
             for (int k = 0; k < t.numel(); ++k) {
                 os << t[k].item().toFloat();
-                bool last_col = (j == outputs.size() - 1) && (k == t.numel() - 1);
+                bool last_col = (j == m_outputs.size() - 1) && (k == t.numel() - 1);
                 if (!last_col) os << ", ";
             }
         }

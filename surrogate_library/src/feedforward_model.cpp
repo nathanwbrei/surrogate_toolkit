@@ -13,14 +13,14 @@ void phasm::FeedForwardModel::initialize() {
     // Compute flattened input and output dimensions from shapes
     int64_t all_inputs_dim = 0;
     int64_t all_outputs_dim = 0;
-    for (auto input: this->inputs) {
+    for (auto input: this->m_inputs) {
         int64_t n_elems = 1;
         for (int64_t len : input->shape()) {
             n_elems *= len;
         }
         all_inputs_dim += n_elems;
     }
-    for (auto output: this->outputs) {
+    for (auto output: this->m_outputs) {
         int64_t n_elems = 1;
         std::vector<int64_t> shape = output->shape();
         m_output_shapes.push_back(shape);
@@ -42,7 +42,7 @@ void phasm::FeedForwardModel::infer(std::vector<std::shared_ptr<CallSiteVariable
     for (const std::shared_ptr<CallSiteVariable>& v : vars) {
         v->captureAllInferenceInputs();
     }
-    for (const auto& input_model_var : inputs) {
+    for (const auto& input_model_var : m_inputs) {
         input_tensors.push_back(input_model_var->inference_input);
     }
 
@@ -51,7 +51,7 @@ void phasm::FeedForwardModel::infer(std::vector<std::shared_ptr<CallSiteVariable
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
 
     size_t i = 0;
-    for (const auto& output_model_var : outputs) {
+    for (const auto& output_model_var : m_outputs) {
         output_model_var->inference_output = input_tensors[i++];
     }
     for (const auto& v : vars) {
@@ -69,13 +69,13 @@ void phasm::FeedForwardModel::train_from_captures() {
 
     for (size_t i=0; i<get_capture_count(); ++i) {
         std::vector<torch::Tensor> sample_inputs;
-        for (auto input : inputs) {
+        for (auto input : m_inputs) {
             sample_inputs.push_back(input->training_inputs[i]);
         }
         auto sample_input = flatten_and_join(std::move(sample_inputs));
 
         std::vector<torch::Tensor> sample_outputs;
-        for (auto output : outputs) {
+        for (auto output : m_outputs) {
             sample_outputs.push_back(output->training_outputs[i]);
         }
         auto sample_output = flatten_and_join(std::move(sample_outputs));
