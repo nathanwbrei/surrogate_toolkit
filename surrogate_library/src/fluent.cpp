@@ -6,8 +6,42 @@
 
 using namespace phasm::fluent;
 
+std::vector<std::shared_ptr<CallSiteVariable>> OpticBuilder::get_callsite_vars() const {
+    return m_csvs;
+}
 
-void Builder::printOptic(OpticBase* optic, int level) {
+std::vector<std::shared_ptr<ModelVariable>> OpticBuilder::get_model_vars() const {
+    std::vector<std::shared_ptr<ModelVariable>> results;
+    for (const auto& csv : m_csvs) {
+        for (const auto& mv : csv->model_vars) {
+            results.push_back(mv);
+        }
+    }
+    return results;
+}
+
+
+/// Given a leaf in the optics tree, create a new chain of optics which
+/// represents the path from the root node to the leaf. This way we can build the
+/// tensor for a specific model variable instead of building all tensors at once.
+OpticBase* phasm::fluent::cloneOpticsFromLeafToRoot(OpticBase* leaf) {
+    OpticBase* current = new OpticBase(*leaf);
+    OpticBase* parent = leaf->parent;
+    while (parent != nullptr) {
+        auto* new_parent = new OpticBase(*parent);
+        current->parent = new_parent;
+        new_parent->unsafe_use(current);
+        new_parent->children.clear();
+        new_parent->children.push_back(current);
+        current = new_parent;
+        parent = current->parent;
+    }
+    return current;
+}
+
+
+
+void OpticBuilder::printOptic(OpticBase* optic, int level) {
 
     for (int i=0; i<level; ++i) {
         std::cout << "    ";
@@ -29,62 +63,18 @@ void Builder::printOptic(OpticBase* optic, int level) {
     }
 }
 
-/// Given a leaf in the optics tree, create a new chain of optics which
-/// represents the path from the root node to the leaf. This way we can build the
-/// tensor for a specific model variable instead of building all tensors at once.
-optics::OpticBase* Builder::createOpticPathFromLeafToRoot(OpticBase* leaf) {
-    OpticBase* current = new OpticBase(*leaf);
-    OpticBase* parent = leaf->parent;
-    while (parent != nullptr) {
-        auto* new_parent = new OpticBase(*parent);
-        current->parent = new_parent;
-        new_parent->unsafe_use(current);
-        new_parent->children.clear();
-        new_parent->children.push_back(current);
-
-        current = new_parent;
-        parent = current->parent;
-    }
-    return current;
-}
-
-void Builder::print() {
-    for (auto g : globals) {
-        printOptic(g, 0);
-    }
-    for (auto l : locals) {
-        printOptic(l, 0);
-    }
-}
-
-std::map<std::string, OpticBase*> Builder::getModelVars() {
-    std::map<std::string, OpticBase*> results;
-    std::queue<OpticBase*> q;
-    for (auto g : globals) {
-        q.push(g);
-    }
-    for (auto l : locals) {
-        q.push(l);
-    }
-    while (!q.empty()) {
-        OpticBase* o = q.front();
-        if (o->is_leaf) {
-            results[o->name] = createOpticPathFromLeafToRoot(o);
+void OpticBuilder::printOpticsTree() {
+    for (const auto& csv : m_csvs) {
+        for (auto o : csv->optics_tree) {
+            printOptic(o, 0);
         }
-        else {
-            for (OpticBase* c : o->children) {
-                q.push(c);
-            }
-        }
-        q.pop();
     }
-    return results;
 }
 
-void Builder::printModelVars() {
-    auto vars = getModelVars();
-    for (auto p : vars) {
-        std::cout << p.first << ":" << std::endl;
-        printOptic(p.second, 1);
+void OpticBuilder::printModelVars() {
+    auto vars = get_model_vars();
+    for (const auto& p : vars) {
+        std::cout << p->name << ":" << std::endl;
+        printOptic(p->accessor, 1);
     }
 }

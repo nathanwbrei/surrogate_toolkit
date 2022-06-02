@@ -15,7 +15,7 @@ struct MyStruct {
 int my_global;
 TEST_CASE("Basic fluent construction") {
 
-    Builder builder;
+    OpticBuilder builder;
 
     builder
     .local<int>("a")
@@ -32,9 +32,10 @@ TEST_CASE("Basic fluent construction") {
             .primitives("y", {3})
             .end();
 
-    REQUIRE(builder.globals.size() == 1);
-    REQUIRE(builder.locals.size() == 2);
-    builder.print();
+    REQUIRE(builder.get_callsite_vars().size() == 3);
+    REQUIRE(builder.get_model_vars().size() == 4);
+
+    builder.printOpticsTree();
     std::cout << "-----------" << std::endl;
     builder.printModelVars();
 

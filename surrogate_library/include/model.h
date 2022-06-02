@@ -12,6 +12,9 @@
 #include <memory>
 
 class Surrogate;
+namespace phasm::fluent {
+class OpticBuilder;
+}
 
 /// There should be exactly one Model in your codebase for each unique function that you wish to surrogate.
 /// Contrast this with Surrogate. There should be one Surrogate for each call site of that function,
@@ -30,6 +33,7 @@ protected:
 
 public:
     Model() = default;
+    Model(const phasm::fluent::OpticBuilder& b);
 
     virtual ~Model() = default; // We want to be able to inherit from this
 

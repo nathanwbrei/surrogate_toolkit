@@ -9,15 +9,17 @@
 #include "optics.h"
 #include "any_ptr.hpp"
 
+using namespace optics;
 struct CallSiteVariable {
 
     std::string name;
     phasm::any_ptr binding;
+    std::vector<OpticBase*> optics_tree;
     std::vector<std::shared_ptr<ModelVariable>> model_vars;
 
 
     inline void capture_all_training_inputs() {
-        for (auto model_var : model_vars) {
+        for (const auto& model_var : model_vars) {
             if (model_var->is_input) {
                 model_var->capture_training_data(binding);
             }
@@ -25,7 +27,7 @@ struct CallSiteVariable {
     }
 
     inline void capture_all_training_outputs() {
-        for (auto model_var : model_vars) {
+        for (const auto& model_var : model_vars) {
             if (model_var->is_output) {
                 model_var->capture_training_data(binding);
             }
@@ -33,7 +35,7 @@ struct CallSiteVariable {
     }
 
     inline void get_all_inference_inputs() {
-        for (auto model_var : model_vars) {
+        for (const auto& model_var : model_vars) {
             if (model_var->is_input) {
                 model_var->get_inference_data(binding);
             }
@@ -41,7 +43,7 @@ struct CallSiteVariable {
     }
 
     inline void put_all_inference_outputs() {
-        for (auto model_var : model_vars) {
+        for (const auto& model_var : model_vars) {
             if (model_var->is_output) {
                 model_var->put_inference_data(binding);
             }

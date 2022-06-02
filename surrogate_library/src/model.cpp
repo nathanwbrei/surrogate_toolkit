@@ -5,7 +5,28 @@
 #include "model.h"
 #include "surrogate.h"
 #include <iostream>
+#include "fluent.h"
 
+Model::Model(const phasm::fluent::OpticBuilder &b) {
+    for (std::shared_ptr<CallSiteVariable>& csv : b.get_callsite_vars()) {
+        callsite_vars.push_back(csv);
+        callsite_var_map[csv->name] = csv;
+    }
+
+    for (std::shared_ptr<ModelVariable>& mv : b.get_model_vars()) {
+        // Note: this (and everything hereafter) assumes that model vars are duplicated when they are used as
+        // both an input and an output. If you set both is_input=true and is_output=true on one ModelVariable,
+        // everything will break. This is likely to change, though.
+        if (mv->is_input) {
+            inputs.push_back(mv);
+            input_map[mv->name] = mv;
+        }
+        if (mv->is_output) {
+            outputs.push_back(mv);
+            output_map[mv->name] = mv;
+        }
+    }
+}
 
 size_t Model::get_capture_count() const { return captured_rows; }
 
