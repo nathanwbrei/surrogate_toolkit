@@ -4,6 +4,7 @@
 
 #include <catch.hpp>
 #include "surrogate.h"
+#include "model.h"
 
 using namespace phasm;
 namespace phasm::test::memorizing_tests {

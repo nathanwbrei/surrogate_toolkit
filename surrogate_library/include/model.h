@@ -8,8 +8,6 @@
 
 #include "model_variable.h"
 #include "call_site_variable.h"
-#include <iosfwd>  // Forward decls for std::ostream
-#include <memory>
 
 namespace phasm {
 

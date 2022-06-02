@@ -3,7 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include "surrogate.h"
-
+#include "model.h"
 #include <catch.hpp>
 #include <iostream>
 

@@ -2,9 +2,9 @@
 // Copyright 2021, Jefferson Science Associates, LLC.
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
-#include <iostream>
 #include "surrogate.h"
-#include <cstdlib>
+#include <iostream>
+#include "model.h"
 
 namespace phasm {
 

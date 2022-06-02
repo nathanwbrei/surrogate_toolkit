@@ -7,12 +7,12 @@
 #define SURROGATE_TOOLKIT_SURROGATE_H
 
 #include <vector>
-
-#include "model.h"
 #include "call_site_variable.h"
 
 
 namespace phasm {
+
+class Model;
 
 class Surrogate {
 public:
