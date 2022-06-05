@@ -9,7 +9,7 @@
 #include "range.h"
 #include "optics.h"
 #include "any_ptr.hpp"
-#include <torch/torch.h>
+#include "tensor.hpp"
 
 
 namespace phasm {
@@ -22,10 +22,10 @@ struct ModelVariable {
     bool is_output = false;
     OpticBase *accessor = nullptr;
     phasm::any_ptr global;
-    std::vector<torch::Tensor> training_inputs;
-    std::vector<torch::Tensor> training_outputs;
-    torch::Tensor inference_input;
-    torch::Tensor inference_output;
+    std::vector<tensor> training_inputs;
+    std::vector<tensor> training_outputs;
+    tensor inference_input;
+    tensor inference_output;
     Range<float> range;
 
     std::vector<int64_t> shape() const {
@@ -38,12 +38,12 @@ struct ModelVariable {
     }
 
     void captureTrainingInput(const phasm::any_ptr &binding) {
-        torch::Tensor data = accessor->unsafe_to(binding);
+        tensor data = accessor->unsafe_to(binding);
         training_inputs.push_back(data);
     }
 
     void captureTrainingOutput(const phasm::any_ptr &binding) {
-        torch::Tensor data = accessor->unsafe_to(binding);
+        tensor data = accessor->unsafe_to(binding);
         training_outputs.push_back(data);
     }
 

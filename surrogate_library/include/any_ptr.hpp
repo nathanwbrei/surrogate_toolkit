@@ -7,6 +7,7 @@
 #define SURROGATE_TOOLKIT_ANY_PTR_HPP
 
 #include <typeindex>
+#include <sstream>
 
 namespace phasm {
 

@@ -26,7 +26,7 @@ void TorchscriptModel::infer(std::vector<std::shared_ptr<CallSiteVariable>>& var
         v->captureAllInferenceInputs();
     }
     for (const auto &input_model_var: m_inputs) {
-        input_tensors.push_back(input_model_var->inference_input);
+        input_tensors.push_back(input_model_var->inference_input.get_underlying());
     }
 
     // This all assumes a single Tensor of floats as input and output
@@ -39,7 +39,7 @@ void TorchscriptModel::infer(std::vector<std::shared_ptr<CallSiteVariable>>& var
 
     size_t i = 0;
     for (const auto &output_model_var: m_outputs) {
-        output_model_var->inference_output = input_tensors[i++];
+        output_model_var->inference_output = phasm::tensor(input_tensors[i++]);
     }
     for (const auto &v: vars) {
         v->publishAllInferenceOutputs();

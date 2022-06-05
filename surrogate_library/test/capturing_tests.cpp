@@ -15,15 +15,15 @@ namespace phasm::tests::capturing_tests {
 template<typename T>
 T get_captured_input(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
     auto param = model->get_model_var(param_name);
-    torch::Tensor result = param->training_inputs[sample_index];
-    return *result.data_ptr<T>();
+    tensor result = param->training_inputs[sample_index];
+    return *result.get<T>();
 }
 
 template<typename T>
 T get_captured_output(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
     auto param = model->get_model_var(param_name);
-    torch::Tensor result = param->training_outputs[sample_index];
-    return *result.data_ptr<T>();
+    tensor result = param->training_outputs[sample_index];
+    return *result.get<T>();
 }
 
 int mult(int x, int y) {

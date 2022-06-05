@@ -7,6 +7,7 @@
 #define SURROGATE_TOOLKIT_UTILS_HPP
 
 #include <cxxabi.h>
+#include <string>
 
 inline std::string demangle(std::string mangled) {
     int status = -1;

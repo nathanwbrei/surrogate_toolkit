@@ -96,16 +96,16 @@ void Model::dump_captures_to_csv(std::ostream &os) {
     // print body
     for (size_t i = 0; i < m_captured_rows; ++i) {
         for (size_t j = 0; j < m_inputs.size(); ++j) {
-            auto t = m_inputs[j]->training_inputs[i].flatten(0, -1);
-            for (int k = 0; k < t.numel(); ++k) {
-                os << t[k].item().toFloat() << ", ";
+            auto t = flatten(m_inputs[j]->training_inputs[i]);
+            for (size_t k = 0; k < t.get_length(); ++k) {
+                os << *(t.get<float>() + k) << ", ";
             }
         }
         for (size_t j = 0; j < m_outputs.size(); ++j) {
-            auto t = m_outputs[j]->training_outputs[i].flatten(0, -1);
-            for (int k = 0; k < t.numel(); ++k) {
-                os << t[k].item().toFloat();
-                bool last_col = (j == m_outputs.size() - 1) && (k == t.numel() - 1);
+            auto t = flatten(m_outputs[j]->training_outputs[i]);
+            for (size_t k = 0; k < t.get_length(); ++k) {
+                os << *(t.get<float>() + k);
+                bool last_col = (j == m_outputs.size() - 1) && (k == t.get_length() - 1);
                 if (!last_col) os << ", ";
             }
         }

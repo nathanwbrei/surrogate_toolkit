@@ -62,10 +62,10 @@ TEST_CASE("Using tensors with optics") {
     auto p = PrimitiveArray<double>({2,3});
     auto t = p.to(mat[0]);
 
-    auto firstitem = t[0][0].item<double>();
+    auto firstitem = t.get_underlying()[0][0].item<double>();
     REQUIRE(firstitem == 1.0);
-    REQUIRE(t.size(0) == 2);
-    REQUIRE(t.size(1) == 3);
+    REQUIRE(t.get_underlying().size(0) == 2);
+    REQUIRE(t.get_underlying().size(1) == 3);
 }
 
 }

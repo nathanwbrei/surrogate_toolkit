@@ -24,8 +24,8 @@ TEST_CASE("Demonstrate two-way binding of a primitive") {
     Primitive<int> p;
     auto t = p.to(&x);
 
-    std::cout << t.dtype();
-    int32_t *tp = t[0].data_ptr<int>();
+    std::cout << t.get_underlying().dtype();
+    int32_t *tp = t.get<int>();
     REQUIRE(*tp == 22);
 
     // Modify the tensor
@@ -76,7 +76,7 @@ TEST_CASE("Composition of a Field lens with a Primitive") {
 
     // Should extract y and stick it in a tensor
     auto t = field_lens.to(&s);
-    float *tp = t[0].data_ptr<float>();
+    float *tp = t.get<float>();
     REQUIRE(*tp == (float) 7.6);
 
 }
@@ -97,7 +97,7 @@ TEST_CASE("Composition of two structs") {
     auto outer_lens = Field<OtherStruct, MyStruct>(&inner_lens, getMs);
 
     auto t = outer_lens.to(&os);
-    float *tp = t[0].data_ptr<float>();
+    float *tp = t.get<float>();
     REQUIRE(*tp == (float) 2.0);
 }
 
@@ -113,9 +113,9 @@ TEST_CASE("Array of structs") {
     auto array_traversal = Array<MyStruct>(&inner_lens, 5);
 
     auto t = array_traversal.to(aos);
-    std::cout << t << std::endl;
-    REQUIRE(t.size(0) == 5);
-    REQUIRE(t.size(1) == 1);
+    std::cout << t.get_underlying() << std::endl;
+    REQUIRE(t.get_underlying().size(0) == 5);
+    REQUIRE(t.get_underlying().size(1) == 1);
 }
 
 
@@ -128,7 +128,7 @@ TEST_CASE("1-D Array of Primitive produces same Tensor as PrimitiveArray") {
     auto t1 = array_trav.to(xs);
     auto t2 = primitive_array_iso.to(xs);
 
-    REQUIRE(*torch::all(t1 == t2).data_ptr<bool>() == true);
+    REQUIRE(*torch::all(t1.get_underlying() == t2.get_underlying()).data_ptr<bool>() == true);
 }
 
 TEST_CASE("Iterate over std::vector") {
@@ -143,9 +143,9 @@ TEST_CASE("Iterate over std::vector") {
     auto vector_traversal = Traversal<std::vector<MyStruct>, MyStruct, IterT>(&inner_lens, 5);
 
     auto t = vector_traversal.to(&aos);
-    std::cout << t << std::endl;
-    REQUIRE(t.size(0) == 5);
-    REQUIRE(t.size(1) == 1);
+    std::cout << t.get_underlying() << std::endl;
+    REQUIRE(t.get_underlying().size(0) == 5);
+    REQUIRE(t.get_underlying().size(1) == 1);
 }
 
 struct MyOrderableStruct {

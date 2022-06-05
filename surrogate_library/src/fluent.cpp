@@ -26,10 +26,10 @@ std::vector<std::shared_ptr<ModelVariable>> OpticBuilder::get_model_vars() const
 /// represents the path from the root node to the leaf. This way we can build the
 /// tensor for a specific model variable instead of building all tensors at once.
 OpticBase *cloneOpticsFromLeafToRoot(OpticBase *leaf) {
-    OpticBase *current = new OpticBase(*leaf);
+    OpticBase *current = leaf->clone();
     OpticBase *parent = leaf->parent;
     while (parent != nullptr) {
-        auto *new_parent = new OpticBase(*parent);
+        auto *new_parent = parent->clone();
         current->parent = new_parent;
         new_parent->unsafe_use(current);
         new_parent->children.clear();

@@ -6,9 +6,9 @@
 #ifndef SURROGATE_TOOLKIT_OPTICS_H
 #define SURROGATE_TOOLKIT_OPTICS_H
 
-#include <torch/torch.h>
 #include "../vacuum_tool/src/utils.hpp"
 #include "any_ptr.hpp"
+#include "tensor.hpp"
 // #include <concepts>
 
 // These aren't really optics yet (will they ever be?), but they are operational at least
@@ -42,10 +42,10 @@ struct OpticBase {
         children.push_back(optic);
     }
 
-    virtual torch::Tensor unsafe_to(phasm::any_ptr) {return {};};
-    virtual void unsafe_from(torch::Tensor, phasm::any_ptr) {};
-
+    virtual tensor unsafe_to(phasm::any_ptr) = 0;
+    virtual void unsafe_from(tensor, phasm::any_ptr) = 0;
     virtual void unsafe_use(OpticBase*) {};
+    virtual OpticBase* clone() = 0;
 };
 
 // This is the abstract base class for an optic.
@@ -57,13 +57,13 @@ struct OpticBase {
 template <typename T>
 struct Optic : public OpticBase {
 
-    virtual torch::Tensor to(T* /*source*/) {return {};};
-    virtual void from(torch::Tensor /*source*/, T* /*dest*/) {};
+    virtual tensor to(T* /*source*/) = 0;
+    virtual void from(tensor /*source*/, T* /*dest*/) = 0;
 
-    virtual torch::Tensor unsafe_to(phasm::any_ptr source) override {
+    virtual tensor unsafe_to(phasm::any_ptr source) override {
         return to(source.get<T>());
     };
-    virtual void unsafe_from(torch::Tensor source, phasm::any_ptr dest) override {
+    virtual void unsafe_from(tensor source, phasm::any_ptr dest) override {
         return from(source, dest.get<T>());
     };
 };
@@ -104,11 +104,15 @@ public:
     Primitive(const Primitive& other) = default;
 
     std::vector<int64_t> shape() override { return {}; }
-    torch::Tensor to(T* source) override {
-        return torch::tensor(at::ArrayRef<T>(source,1), torch::dtype<T>());
+    tensor to(T* source) override {
+        return tensor(source, 1);
     }
-    void from(torch::Tensor source, T* dest) override {
-        *dest = *source.data_ptr<T>();
+    void from(tensor source, T* dest) override {
+        *dest = *source.get<T>();
+    }
+
+    Primitive* clone() override {
+        return new Primitive<T>(*this);
     }
 };
 
@@ -129,10 +133,14 @@ public:
 template <typename T>
 class PrimitiveArray : public Optic<T> {
     const std::vector<int64_t> m_shape;
+    const size_t m_length;
     // const std::vector<size_t> m_strides; // We will need these if we want to support reading and writing tensor slices
 public:
 
-    explicit PrimitiveArray(std::vector<int64_t> shape) : m_shape(std::move(shape)) {
+    explicit PrimitiveArray(std::vector<int64_t> shape) :
+        m_shape(std::move(shape)),
+        m_length(std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;}))
+    {
         OpticBase::consumes = demangle<T>();
         OpticBase::produces = "tensor";
     };
@@ -140,17 +148,18 @@ public:
 
     std::vector<int64_t> shape() override { return m_shape; }
 
-    torch::Tensor to(T* source) override {
-        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;});
-        auto t = torch::tensor(at::ArrayRef<T>(source, length), torch::dtype<T>());
-        return t.reshape(at::ArrayRef(m_shape.data(), m_shape.size()));
+    tensor to(T* source) override {
+        return phasm::tensor(source, m_shape);
     }
-    void from(torch::Tensor source, T* dest) override {
-        size_t length = std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;});
-        T* ptr = source.data_ptr<T>();
-        for (size_t i=0; i<length; ++i) {
+    void from(tensor source, T* dest) override {
+        T* ptr = source.get<T>();
+        for (size_t i=0; i<m_length; ++i) {
             dest[i] = ptr[i];
         }
+        // TODO: This only works if the tensor is consecutive. Find a clever way to fix this problem
+    }
+    PrimitiveArray* clone() override {
+        return new PrimitiveArray<T>(*this);
     }
 };
 
@@ -162,10 +171,10 @@ class Pointer : public Optic<T*> {
 public:
     Pointer(Optic<T>* optic) : m_optic(optic) {};
     std::vector<int64_t> shape() override { return m_optic->shape(); }
-    torch::Tensor to(T* source) override {
+    tensor to(T* source) override {
         return m_optic->to(source);
     }
-    void from(torch::Tensor source, T* dest) override {
+    void from(tensor source, T* dest) override {
         return m_optic->from(source, dest);
     }
 };
@@ -186,10 +195,10 @@ public:
     Field(const Field& other) = default;
 
     std::vector<int64_t> shape() override { return m_optic->shape(); }
-    torch::Tensor to(StructT* source) override {
+    tensor to(StructT* source) override {
         return m_optic->to(m_accessor(source));
     }
-    void from(torch::Tensor source, StructT* dest) override {
+    void from(tensor source, StructT* dest) override {
         return m_optic->from(source, m_accessor(dest));
     }
     void attach(Optic<FieldT>* optic) {
@@ -202,6 +211,9 @@ public:
             throw std::runtime_error("Incompatible optic!");
         }
         m_optic = downcasted;
+    }
+    Field* clone() override {
+        return new Field<StructT, FieldT>(*this);
     }
 };
 
@@ -227,15 +239,15 @@ public:
         result.insert(result.end(), inner_shape.begin(), inner_shape.end());
         return result;
     }
-    torch::Tensor to(InnerT* source) override {
-        std::vector<torch::Tensor> tensors;
+    tensor to(InnerT* source) override {
+        std::vector<tensor> tensors;
         for (int i=0; i<m_length; ++i) {
             tensors.push_back(m_optic->to(source+i));
         }
-        return torch::stack(tensors);
+        return stack(tensors);
     }
-    void from(torch::Tensor source, InnerT* dest) override {
-        auto unstacked = torch::unbind(source, 0);
+    void from(tensor source, InnerT* dest) override {
+        auto unstacked = unstack(source);
         for (int i=0; i<m_length; ++i) {
             m_optic->from(unstacked[i], dest+i);
         }
@@ -250,6 +262,9 @@ public:
             throw std::runtime_error("Incompatible optic!");
         }
         m_optic = downcasted;
+    }
+    Array* clone() override {
+        return new Array<InnerT>(*this);
     }
 };
 
@@ -272,18 +287,18 @@ public:
         result.insert(result.end(), inner_shape.begin(), inner_shape.end());
         return result;
     }
-    torch::Tensor to(OuterT* source) override {
+    tensor to(OuterT* source) override {
         IteratorT it(source);
-        std::vector<torch::Tensor> tensors;
+        std::vector<tensor> tensors;
 
         for (int i=0; i<m_length; ++i) {
             tensors.push_back(m_optic->to(it.Current()));
             it.Next();  // Returns true because container has m_length entries XD
         }
-        return torch::stack(tensors);
+        return stack(tensors);
     }
-    void from(torch::Tensor source, OuterT* dest) override {
-        auto unstacked = torch::unbind(source, 0);
+    void from(tensor source, OuterT* dest) override {
+        auto unstacked = unstack(source);
         IteratorT it(dest);
         for (int i=0; i<m_length; ++i) {
             m_optic->from(unstacked[i], it.Current());
@@ -300,6 +315,9 @@ public:
             throw std::runtime_error("Incompatible optic!");
         }
         m_optic = downcasted;
+    }
+    Traversal* clone() override {
+        return new Traversal(*this);
     }
 };
 

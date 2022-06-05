@@ -11,7 +11,7 @@ namespace phasm::test::memorizing_tests {
 
 class MemorizingModel : public Model {
 
-    std::unordered_map<int, torch::Tensor> memorized_data;
+    std::unordered_map<int, tensor> memorized_data;
     // TODO: Figure out how to generalize this completely by correctly hashing torch::Tensor
 
 public:
@@ -25,9 +25,9 @@ public:
         auto& xs = get_model_var("x")->training_inputs;
         auto& ys = get_model_var("y")->training_outputs;
         for (size_t i = 0; i<get_capture_count(); ++i) {
-            torch::Tensor x = xs[i];
-            torch::Tensor y = ys[i];
-            double xx = *x.data_ptr<double>();
+            tensor x = xs[i];
+            tensor y = ys[i];
+            double xx = *x.get<double>();
             memorized_data[xx] = y;
         }
     }
@@ -36,8 +36,8 @@ public:
         auto x = callsite_vars[0];
         x->captureAllInferenceInputs();
 
-        torch::Tensor x_val = x->model_vars[0]->accessor->unsafe_to(x->binding);
-        double xx = *x_val.data_ptr<double>();
+        tensor x_val = x->model_vars[0]->accessor->unsafe_to(x->binding);
+        double xx = *x_val.get<double>();
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {
