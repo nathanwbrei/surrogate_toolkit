@@ -20,8 +20,8 @@ std::vector<tensor> unstack(tensor& t) {
     std::vector<phasm::tensor> phasm_unstacked;
     phasm_unstacked.reserve(t.get_underlying().size(0));
     std::vector<torch::Tensor> torch_unstacked = torch::unbind(t.get_underlying(), 0);
-    for (auto t : torch_unstacked) {
-        phasm_unstacked.push_back(tensor(t));
+    for (auto tu : torch_unstacked) {
+        phasm_unstacked.emplace_back(tu);
     }
     return phasm_unstacked;
 }
@@ -31,4 +31,5 @@ tensor flatten(tensor& t) {
     return phasm::tensor(flattened);
 }
 
-}
+} // namespace phasm
+

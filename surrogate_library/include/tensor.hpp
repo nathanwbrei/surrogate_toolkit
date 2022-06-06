@@ -10,6 +10,37 @@
 
 namespace phasm {
 
+
+
+enum class DType { UI8, I16, I32, I64, F32, F64 };
+// We aren't including F16 or BF16. It looks like the PyTorch C++ API doesn't support these even if the Python one does?
+// https://github.com/pytorch/pytorch/blob/master/torch/csrc/api/include/torch/types.h
+// https://pytorch.org/cppdocs/notes/tensor_creation.html
+// https://pytorch.org/docs/stable/tensor_attributes.html
+
+template <typename T>
+phasm::DType dtype() {
+    if (std::is_same_v<T, u_int8_t>) return phasm::DType::UI8;
+    if (std::is_same_v<T, int16_t>) return phasm::DType::I16;
+    if (std::is_same_v<T, int32_t>) return phasm::DType::I32;
+    if (std::is_same_v<T, int64_t>) return phasm::DType::I64;
+    if (std::is_same_v<T, float>) return phasm::DType::F32;
+    if (std::is_same_v<T, double>) return phasm::DType::F64;
+    throw std::runtime_error("Invalid ctype!");
+}
+
+inline phasm::DType get_dtype(torch::Dtype t) {
+    if (t == torch::kUInt8) return phasm::DType::UI8;
+    if (t == torch::kInt16) return phasm::DType::I16;
+    if (t == torch::kInt32) return phasm::DType::I32;
+    if (t == torch::kInt64) return phasm::DType::I64;
+    if (t == torch::kFloat32) return phasm::DType::F32;
+    if (t == torch::kFloat64) return phasm::DType::F64;
+    throw std::runtime_error("Invalid dtype!");
+}
+
+
+
 /// Tensor is a lightweight wrapper over torch::Tensor or similar.
 /// It supports the following things:
 /// 1. It is hashable
@@ -37,11 +68,13 @@ class tensor {
     torch::Tensor m_underlying;
     size_t m_length;
     std::vector<int64_t> m_shape;
+    DType m_dtype;
 
 public:
-    explicit tensor(torch::Tensor underlying = {}) :
+    explicit tensor(torch::Tensor underlying = {}):
         m_underlying(std::move(underlying)),
-        m_length(underlying.numel())
+        m_length(underlying.numel()),
+        m_dtype(phasm::get_dtype(underlying.dtype().toScalarType()))
     {
         auto dims = underlying.dim();
         for (int64_t d = 0; d<dims; ++d) {
@@ -53,6 +86,7 @@ public:
         m_underlying = torch::tensor(at::ArrayRef<T>(consecutive_buffer,length), torch::dtype<T>());
         m_length = length;
         m_shape = {(int64_t)length};
+        m_dtype = dtype<T>();
     }
 
     template <typename T> explicit tensor(T* consecutive_buffer, std::vector<int64_t> shape) {
@@ -64,19 +98,24 @@ public:
         m_underlying = m_underlying.reshape(at::ArrayRef(shape.data(), shape.size()));
         m_length = numel;
         m_shape = shape;
+        m_dtype = dtype<T>();
     }
 
     inline torch::Tensor& get_underlying() {  return m_underlying; }
     inline size_t get_length() const { return m_length; }
+    inline DType get_dtype() const { return m_dtype; }
+
+    inline bool operator==(const tensor& rhs) { return this->m_underlying.equal(rhs.m_underlying); }
 
     template <typename T>
     T* get() {
         return m_underlying.data_ptr<T>();
     }
 
-    // TODO: Hashable
-    // TODO: Boolean equality
-    // TODO: Bridge between C types and dtypes
+    template <typename T>
+    const T* get() const {
+        return m_underlying.data_ptr<T>();
+    }
 };
 
 
@@ -84,6 +123,49 @@ tensor stack(std::vector<tensor>&);
 std::vector<tensor> unstack(tensor&);
 tensor flatten(tensor& t);
 
+
+inline size_t combineHashes(size_t hash1, size_t hash2) {
+    // Not clear why this isn't part of the standard library.
+    // Taken from https://en.cppreference.com/w/cpp/utility/hash
+    return hash1 ^ (hash2 << 1);
+}
+
+template <typename T>
+size_t hashTensorOfDType(const phasm::tensor& t) {
+    // TODO: This only works on consecutive tensors. Need to figure
+    //       out how to iterate over non-consecutive tensors efficiently
+    size_t len = t.get_length();
+    if (len == 0) return 0;
+    std::hash<T> hash;
+    const T* ptr = t.get<T>();
+    size_t seed = hash(ptr[0]);
+    for (size_t i=1; i<len; ++i) {
+        seed = combineHashes(seed, hash(ptr[i]));
+    }
+    return seed;
+}
+
 } // namespace phasm
+
+
+template<>
+struct std::hash<phasm::tensor>
+{
+    std::size_t operator()(phasm::tensor const& t) const noexcept
+    {
+        switch (t.get_dtype()) {
+            case phasm::DType::UI8: return phasm::hashTensorOfDType<uint8_t>(t);
+            case phasm::DType::I16: return phasm::hashTensorOfDType<int16_t>(t);
+            case phasm::DType::I32: return phasm::hashTensorOfDType<int32_t>(t);
+            case phasm::DType::I64: return phasm::hashTensorOfDType<int64_t>(t);
+            case phasm::DType::F32: return phasm::hashTensorOfDType<float>(t);
+            case phasm::DType::F64: return phasm::hashTensorOfDType<double>(t);
+            default: return 0;
+        }
+    }
+};
+
+
+
 
 #endif //SURROGATE_TOOLKIT_TENSOR_HPP
