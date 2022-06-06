@@ -12,7 +12,7 @@ namespace phasm {
 
 
 
-enum class DType { UI8, I16, I32, I64, F32, F64 };
+enum class DType { Undefined, UI8, I16, I32, I64, F32, F64 };
 // We aren't including F16 or BF16. It looks like the PyTorch C++ API doesn't support these even if the Python one does?
 // https://github.com/pytorch/pytorch/blob/master/torch/csrc/api/include/torch/types.h
 // https://pytorch.org/cppdocs/notes/tensor_creation.html
@@ -26,7 +26,7 @@ phasm::DType dtype() {
     if (std::is_same_v<T, int64_t>) return phasm::DType::I64;
     if (std::is_same_v<T, float>) return phasm::DType::F32;
     if (std::is_same_v<T, double>) return phasm::DType::F64;
-    throw std::runtime_error("Invalid ctype!");
+    return phasm::DType::Undefined;
 }
 
 inline phasm::DType get_dtype(torch::Dtype t) {
@@ -36,7 +36,7 @@ inline phasm::DType get_dtype(torch::Dtype t) {
     if (t == torch::kInt64) return phasm::DType::I64;
     if (t == torch::kFloat32) return phasm::DType::F32;
     if (t == torch::kFloat64) return phasm::DType::F64;
-    throw std::runtime_error("Invalid dtype!");
+    return phasm::DType::Undefined;
 }
 
 
@@ -72,7 +72,7 @@ class tensor {
 
 public:
     explicit tensor(torch::Tensor underlying = {}):
-        m_underlying(std::move(underlying)),
+        m_underlying(underlying),
         m_length(underlying.numel()),
         m_dtype(phasm::get_dtype(underlying.dtype().toScalarType()))
     {

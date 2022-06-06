@@ -11,13 +11,15 @@
 #include "DMagneticFieldMapFineMesh.h"
 #include "surrogate.h"
 #include "torchscript_model.h"
+#include "feedforward_model.h"
 
 using phasm::Model, phasm::Direction;
 
 int main() {
 
 
-    auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
+    // auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
+    auto model = std::make_shared<phasm::FeedForwardModel>();
     model->add_var<double>("x", Direction::Input);
     model->add_var<double>("y", Direction::Input);
     model->add_var<double>("z", Direction::Input);

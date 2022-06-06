@@ -54,9 +54,11 @@ void Model::finalize() {
         case Surrogate::CallMode::CaptureAndTrain:
             train_from_captures();
             break;
-        case Surrogate::CallMode::CaptureAndDump:
-            dump_captures_to_csv(std::cout);
+        case Surrogate::CallMode::CaptureAndDump: {
+            std::ofstream outfile("captures.csv");
+            dump_captures_to_csv(outfile);
             break;
+        }
         case Surrogate::CallMode::CaptureAndSummarize:
         default:
             break;
@@ -98,20 +100,36 @@ void Model::dump_captures_to_csv(std::ostream &os) {
         for (size_t j = 0; j < m_inputs.size(); ++j) {
             auto t = flatten(m_inputs[j]->training_inputs[i]);
             for (size_t k = 0; k < t.get_length(); ++k) {
-                os << *(t.get<float>() + k) << ", ";
+                switch (t.get_dtype()) {
+                    case DType::UI8: os << *(t.get<uint8_t>() + k); break;
+                    case DType::I16: os << *(t.get<int16_t>() + k); break;
+                    case DType::I32: os << *(t.get<int32_t>() + k); break;
+                    case DType::I64: os << *(t.get<int64_t>() + k); break;
+                    case DType::F32: os << *(t.get<float>() + k); break;
+                    case DType::F64: os << *(t.get<double>() + k); break;
+                    default: os << "?, "; break;
+                }
+                os << ", ";
             }
         }
         for (size_t j = 0; j < m_outputs.size(); ++j) {
             auto t = flatten(m_outputs[j]->training_outputs[i]);
             for (size_t k = 0; k < t.get_length(); ++k) {
-                os << *(t.get<float>() + k);
+                switch (t.get_dtype()) {
+                    case DType::UI8: os << *(t.get<uint8_t>() + k); break;
+                    case DType::I16: os << *(t.get<int16_t>() + k); break;
+                    case DType::I32: os << *(t.get<int32_t>() + k); break;
+                    case DType::I64: os << *(t.get<int64_t>() + k); break;
+                    case DType::F32: os << *(t.get<float>() + k); break;
+                    case DType::F64: os << *(t.get<double>() + k); break;
+                    default: os << "?"; break;
+                }
                 bool last_col = (j == m_outputs.size() - 1) && (k == t.get_length() - 1);
                 if (!last_col) os << ", ";
             }
         }
         os << std::endl;
     }
-    os << std::endl;
 }
 
 void Model::save() {
