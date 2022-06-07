@@ -6,87 +6,67 @@
 #ifndef SURROGATE_TOOLKIT_RANGE_H
 #define SURROGATE_TOOLKIT_RANGE_H
 
-#include <set>
+#include <unordered_set>
+#include <torch/torch.h>
 #include <map>
 #include <vector>
 #include <limits>
 #include <ostream>
 
+#include "tensor.hpp"
+
 namespace phasm {
 
 enum class RangeType {
-    Interval, FiniteSet
+    Unknown, Skip, Interval, FiniteSet
 };
 
-template<typename T>
 struct Range {
     RangeType rangeType;
-    std::set<T> items;
-    T lower_bound_inclusive = std::numeric_limits<T>::lowest();
-    T upper_bound_inclusive = std::numeric_limits<T>::max();
 
-    // For range-finding
-    size_t remaining_captures = 10000;
-    std::map<T, size_t> distribution;
-    T bucket_count = 50;
+    std::optional<tensor> lower_bound_inclusive;
+    std::optional<tensor> upper_bound_inclusive;
+    std::unordered_set<tensor> items;
 
-    Range() : rangeType(RangeType::Interval) {};
+    static inline size_t max_samples_in_finite_set = 100;
+    size_t samples_count = 0;
 
-    Range(std::set<T> items) : rangeType(RangeType::FiniteSet), items(std::move(items)) {}
+    Range() : rangeType(RangeType::Skip) {};
 
-    Range(T lower, T upper) : rangeType(RangeType::Interval), lower_bound_inclusive(lower),
+    Range(std::unordered_set<tensor> items) : rangeType(RangeType::FiniteSet), items(std::move(items)) {}
+
+    Range(torch::Tensor lower, torch::Tensor upper) : rangeType(RangeType::Interval), lower_bound_inclusive(lower),
                               upper_bound_inclusive(upper) {}
 
-    bool contains(T t) {
+    bool contains(const tensor& t) {
         if (rangeType == RangeType::FiniteSet) {
             return (items.find(t) != items.end());
-        } else {
-            return (t >= lower_bound_inclusive) && (t <= upper_bound_inclusive);
+        }
+        else if (rangeType == RangeType::Interval){
+            return false;
+            // TODO: Re-enable
+            // return ((t >= lower_bound_inclusive.value()).all() &&
+            //         (t <= upper_bound_inclusive.value()).all());
+        }
+        else {
+            return true;
         }
     }
 
-    void capture(T t) {
-        if (t < lower_bound_inclusive) lower_bound_inclusive = t;
-        if (t > upper_bound_inclusive) upper_bound_inclusive = t;
-        if (rangeType == RangeType::FiniteSet) {
+    void capture(tensor t) {
+        // TODO: Re-enable
+        // if (t < lower_bound_inclusive) lower_bound_inclusive = t;
+        // if (t > upper_bound_inclusive) upper_bound_inclusive = t;
+        if (rangeType == RangeType::FiniteSet && samples_count++ <= max_samples_in_finite_set) {
             items.insert(t);
         }
-        if (remaining_captures > 0) {
-            remaining_captures -= 1;
-            distribution[t] += 1;
-        }
-    }
-
-    std::vector<size_t> make_histogram() {
-        T bucket_size = (upper_bound_inclusive - lower_bound_inclusive) / bucket_count;
-        std::vector<size_t> hist(bucket_count, 0);
-        for (auto pair: distribution) {
-            size_t bucket = (pair.first - lower_bound_inclusive) / bucket_size;
-            hist[bucket] += pair.second;
-        }
-        return hist;
     }
 
     void report(std::ostream &os) {
-        os << "Min = " << lower_bound_inclusive << std::endl;
-        os << "Max = " << upper_bound_inclusive << std::endl;
-        os << "Distribution = " << std::endl;
-        if (distribution.size() < bucket_count) {
-            for (auto &pair: distribution) {
-                os << pair.first << ": " << pair.second << std::endl;
-            }
-            os << std::endl;
-        } else {
-            auto hist = make_histogram();
-            T bucket_size = (upper_bound_inclusive - lower_bound_inclusive) / bucket_count;
-            T interval_start = lower_bound_inclusive;
-            T interval_end = interval_start + bucket_size;
-            for (int bucket = 0; bucket < bucket_count; ++bucket) {
-                os << interval_start << "..." << interval_end << ": " << hist[bucket] << std::endl;
-                interval_start = interval_end;
-                interval_end += bucket_size;
-            }
-        }
+        os << "Min = " << std::endl;
+        lower_bound_inclusive->get_underlying().print();
+        os << "Max = " << std::endl;
+        upper_bound_inclusive->get_underlying().print();
     }
 };
 

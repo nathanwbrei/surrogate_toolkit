@@ -105,7 +105,7 @@ public:
     inline size_t get_length() const { return m_length; }
     inline DType get_dtype() const { return m_dtype; }
 
-    inline bool operator==(const tensor& rhs) { return this->m_underlying.equal(rhs.m_underlying); }
+    inline bool operator==(const tensor& rhs) const { return this->m_underlying.equal(rhs.m_underlying); }
 
     template <typename T>
     T* get() {

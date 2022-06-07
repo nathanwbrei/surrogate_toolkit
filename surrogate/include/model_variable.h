@@ -25,7 +25,7 @@ struct ModelVariable {
     std::vector<tensor> training_outputs;
     tensor inference_input;
     tensor inference_output;
-    Range<float> range;
+    Range range;
 
     std::vector<int64_t> shape() const {
         if (accessor == nullptr) {

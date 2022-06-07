@@ -114,12 +114,6 @@ void Model::dump_captures_to_csv(std::ostream &os) {
     }
 }
 
-void Model::save() {
-    std::ofstream outfile("captures.csv");
-    dump_captures_to_csv(outfile);
-    outfile.close();
-}
-
 void Model::dump_ranges(std::ostream &) {
     // for (auto i : inputs) {
     // }
