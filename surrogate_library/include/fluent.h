@@ -38,10 +38,10 @@ public:
     Cursor<T> global(std::string name, T*);
 
     template <typename T>
-    OpticBuilder& local_primitive(std::string name, Direction dir, std::vector<int64_t> shape = {1});
+    OpticBuilder& local_primitive(std::string name, Direction dir, std::vector<int64_t>&& shape = {1});
 
     template <typename T>
-    OpticBuilder& global_primitive(std::string name, T* binding, Direction dir, std::vector<int64_t> shape = {1});
+    OpticBuilder& global_primitive(std::string name, T* binding, Direction dir, std::vector<int64_t>&& shape = {1});
 
     std::vector<std::shared_ptr<CallSiteVariable>> get_callsite_vars() const;
     std::vector<std::shared_ptr<ModelVariable>> get_model_vars() const;
@@ -108,37 +108,14 @@ Cursor<T> OpticBuilder::global(std::string name, T* tp) {
 }
 
 template <typename T>
-OpticBuilder& OpticBuilder::local_primitive(std::string name, Direction dir, std::vector<int64_t> shape) {
-
-    auto csv = std::make_shared<CallSiteVariable>(name, make_any<T>());
-    m_csvs.push_back(csv);
-    auto child = new PrimitiveArray<T>(std::move(shape));
-    child->name = name;
-    child->is_leaf = true;
-
-    auto mv = std::make_shared<ModelVariable>();
-    mv->name = name;
-    mv->accessor = cloneOpticsFromLeafToRoot(child);
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
-    csv->model_vars.push_back(mv);
+OpticBuilder& OpticBuilder::local_primitive(std::string name, Direction dir, std::vector<int64_t>&& shape) {
+    auto cursor = local<T>(name).primitives(name, std::move(shape), dir);
     return *this;
 }
 
 template <typename T>
-OpticBuilder& OpticBuilder::global_primitive(std::string name, T* tp, Direction dir, std::vector<int64_t> shape) {
-    auto csv = std::make_shared<CallSiteVariable>(name, make_any<T>(tp));
-    m_csvs.push_back(csv);
-    auto child = new PrimitiveArray<T>(std::move(shape));
-    child->name = name;
-    child->is_leaf = true;
-
-    auto mv = std::make_shared<ModelVariable>();
-    mv->name = name;
-    mv->accessor = cloneOpticsFromLeafToRoot(child);
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
-    csv->model_vars.push_back(mv);
+OpticBuilder& OpticBuilder::global_primitive(std::string name, T* tp, Direction dir, std::vector<int64_t>&& shape) {
+    global<T>(name, tp).primitives(name, dir, std::move(shape));
     return *this;
 }
 
