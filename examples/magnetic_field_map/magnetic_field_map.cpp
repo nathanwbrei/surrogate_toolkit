@@ -20,12 +20,12 @@ int main() {
 
     // auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
     auto model = std::make_shared<phasm::FeedForwardModel>();
-    model->add_var<double>("x", Direction::Input);
-    model->add_var<double>("y", Direction::Input);
-    model->add_var<double>("z", Direction::Input);
-    model->add_var<double>("Bx", Direction::Output);
-    model->add_var<double>("By", Direction::Output);
-    model->add_var<double>("Bz", Direction::Output);
+    model->add_var<double>("x", Direction::IN);
+    model->add_var<double>("y", Direction::IN);
+    model->add_var<double>("z", Direction::IN);
+    model->add_var<double>("Bx", Direction::OUT);
+    model->add_var<double>("By", Direction::OUT);
+    model->add_var<double>("Bz", Direction::OUT);
     model->initialize();
 
     phasm::Surrogate::set_call_mode(phasm::Surrogate::CallMode::CaptureAndDump);

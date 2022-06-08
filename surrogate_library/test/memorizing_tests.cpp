@@ -17,8 +17,8 @@ class MemorizingModel : public Model {
 public:
 
     MemorizingModel() {
-        add_var<double>("x", Direction::Input);
-        add_var<double>("y", Direction::Output);
+        add_var<double>("x", Direction::IN);
+        add_var<double>("y", Direction::OUT);
     }
 
     void train_from_captures() override {

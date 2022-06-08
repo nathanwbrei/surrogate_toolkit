@@ -9,15 +9,16 @@
 #include "fluent.h"
 
 std::shared_ptr<phasm::FeedForwardModel> make_model() {
-    phasm::OpticBuilder builder;
-    builder.local_primitive<double>("x", phasm::Direction::Input)
-           .local_primitive<double>("y", phasm::Direction::Input)
-           .local_primitive<double>("z", phasm::Direction::Input)
-           .local_primitive<double>("Bx", phasm::Direction::Output)
-           .local_primitive<double>("By", phasm::Direction::Output)
-           .local_primitive<double>("Bz", phasm::Direction::Output);
+    using namespace phasm;
+    OpticBuilder builder;
+    builder.local_primitive<double>("x", IN)
+           .local_primitive<double>("y", IN)
+           .local_primitive<double>("z", IN)
+           .local_primitive<double>("Bx", OUT)
+           .local_primitive<double>("By", OUT)
+           .local_primitive<double>("Bz", OUT);
 
-    auto model = std::make_shared<phasm::FeedForwardModel>();
+    auto model = std::make_shared<FeedForwardModel>();
     model->add_vars(builder);
     model->initialize(); // TODO: If we forget this, everything crashes when we try to train
     return model;

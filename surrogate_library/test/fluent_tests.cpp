@@ -23,7 +23,7 @@ TEST_CASE("Basic fluent construction") {
 
     builder
             .local<int>("a")
-            .primitive("a", Direction::Output)
+            .primitive("a", Direction::OUT)
             .end()
             .global("my_global", &my_global)
             .primitive("b")
@@ -33,7 +33,7 @@ TEST_CASE("Basic fluent construction") {
             .primitive("x")
             .end()
             .accessor<double>([](MyStruct *s) { return s->y; })
-            .primitives("y", {3}, Direction::InputOutput)
+            .primitives("y", {3}, Direction::INOUT)
             .end();
 
     REQUIRE(builder.get_callsite_vars().size() == 3);

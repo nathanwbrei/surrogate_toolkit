@@ -83,8 +83,8 @@ template<typename T>
 void Model::add_var(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name, Direction dir) {
     auto mv = std::make_shared<ModelVariable>();
     mv->name = model_var_name;
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
+    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
+    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
     mv->accessor = accessor;
     if (m_model_var_map.find(model_var_name) != m_model_var_map.end()) {
         throw std::runtime_error("Model variable already exists!");

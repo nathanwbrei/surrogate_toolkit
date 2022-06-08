@@ -59,8 +59,8 @@ struct Cursor<HeadT> {
     OpticBuilder* builder = nullptr;
 
     Cursor(OpticBase* o, std::shared_ptr<CallSiteVariable> csv, OpticBuilder* builder);
-    Cursor<HeadT> primitive(std::string name, Direction dir=Direction::Input);
-    Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::Input);
+    Cursor<HeadT> primitive(std::string name, Direction dir=Direction::IN);
+    Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN);
     Cursor<HeadT> array(size_t size);
     OpticBuilder& end();
 
@@ -76,8 +76,8 @@ struct Cursor {
     OpticBuilder* builder = nullptr;
 
     Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, OpticBuilder* builder);
-    Cursor<HeadT, RestTs...> primitive(std::string name, Direction dir=Direction::Input);
-    Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::Input);
+    Cursor<HeadT, RestTs...> primitive(std::string name, Direction dir=Direction::IN);
+    Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN);
     Cursor<HeadT, RestTs...> array(size_t size);
     Cursor<RestTs...> end();
 
@@ -136,8 +136,8 @@ Cursor<HeadT> Cursor<HeadT>::primitive(std::string name, Direction dir) {
     auto mv = std::make_shared<ModelVariable>();
     mv->name = name;
     mv->accessor = child;
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
+    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
+    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
     current_callsite_var->model_vars.push_back(mv);
     return *this;
 }
@@ -152,8 +152,8 @@ Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &
     auto mv = std::make_shared<ModelVariable>();
     mv->name = name;
     mv->accessor = child;
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
+    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
+    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
     current_callsite_var->model_vars.push_back(mv);
     return *this;
 }
@@ -197,8 +197,8 @@ Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitive(std::string name, D
     auto mv = std::make_shared<ModelVariable>();
     mv->name = name;
     mv->accessor = cloneOpticsFromLeafToRoot(child);
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
+    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
+    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
     current_callsite_var->model_vars.push_back(mv);
     return *this;
 }
@@ -213,8 +213,8 @@ Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitives(std::string name, 
     auto mv = std::make_shared<ModelVariable>();
     mv->name = name;
     mv->accessor = cloneOpticsFromLeafToRoot(child);
-    mv->is_input = (dir == Direction::Input) || (dir == Direction::InputOutput);
-    mv->is_output = (dir == Direction::Output) || (dir == Direction::InputOutput);
+    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
+    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
     current_callsite_var->model_vars.push_back(mv);
     return *this;
 }
