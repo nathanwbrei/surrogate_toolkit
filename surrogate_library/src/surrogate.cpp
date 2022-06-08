@@ -17,8 +17,12 @@ Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
     }
 
     // Copy over expected callsite vars from model so that we can validate the bindings
-    m_bound_callsite_vars = model->m_unbound_callsite_vars;
-    m_bound_callsite_var_map = model->m_unbound_callsite_var_map;
+    for (auto csv : model->m_unbound_callsite_vars) {
+        auto cloned = std::make_shared<CallSiteVariable>(*csv);
+        // Clone the CallSiteVars but leave references to the original Optics and ModelVariables
+        m_bound_callsite_vars.push_back(cloned);
+        m_bound_callsite_var_map[cloned->name] = cloned;
+    }
 };
 
 

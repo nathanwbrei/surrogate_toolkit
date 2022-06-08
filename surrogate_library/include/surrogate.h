@@ -66,7 +66,7 @@ void Surrogate::bind(std::string param_name, T *slot) {
     if (csv == m_bound_callsite_var_map.end()) {
         throw std::runtime_error("No such callsite variable specified in model");
     }
-    if (csv->second->binding.get<T>() != nullptr) {
+    if (csv->second->binding.get() != nullptr) {
         throw std::runtime_error("Callsite variable already set! Possibly a global var");
     }
     csv->second->binding = slot;

@@ -36,12 +36,13 @@ public:
     template <typename T>
     T* get() const {
         auto tt = std::type_index(typeid(T));
+        if (m_p == nullptr) return nullptr;
         if (m_t != tt) {
             std::string other_typename = demangle<T>();
             std::ostringstream oss;
             oss << "any_ptr: Bad cast: expected '" << m_typename << "', got '" << other_typename << "'" << std::endl;
             throw std::runtime_error(oss.str());
-        }
+        };
         return static_cast<T*>(m_p);
     }
 };
