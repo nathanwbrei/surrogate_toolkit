@@ -28,19 +28,17 @@ static auto s_model = make_model();
 
 struct ToyMagFieldMap {
     void getField(double x, double y, double z, double& Bx, double& By, double& Bz) {
-        auto surrogate = phasm::Surrogate([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);}, s_model);
-        // TODO: If we only have one call site, do we have to recreate the lambda every time?
         // TODO: Fluent interface for surrogate!?
+
+        std::cout << "Binding &Bz=" << &Bz << std::endl;
+        // Because Bz is a reference, &Bz changes depending on the caller, so we have to rebind on every call!
+        // This includes both the lambda and the CallSiteVariables.
+        // In theory we don't have to re-copy the CallSiteVariables over from the model every time, but
+        // that is an optimization that can wait until the next time we rejigger the whole domain model.
+
+        auto surrogate = phasm::Surrogate([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);}, s_model);
         surrogate.bind_all_locals(&x, &y, &z, &Bx, &By, &Bz);
-        // surrogate.bind("x", &x);
-        // surrogate.bind("y", &y);
-        // surrogate.bind("z", &z);
-        // surrogate.bind("Bx", &Bx); // TODO: Verify that &Bz changes depending on caller, so we have to rebind every time
-        // surrogate.bind("By", &By);
-        // surrogate.bind("Bz", &Bz);
-        // surrogate.bind("result", &result);
         surrogate.call();
-        // return result;
     }
     void getFieldOriginal(double x, double y, double z, double& Bx, double& By, double& Bz) {
         Bx = 2;
@@ -67,10 +65,15 @@ TEST_CASE("Toy magnetic field map") {
     REQUIRE(By == 5);
     REQUIRE(Bz == 4);
 
+    double Bz2;
+
+    tmfm.getField(7, 2, 2, Bx, By, Bz2);
+    REQUIRE(Bz == 4);
+    REQUIRE(Bz2 == 49);
 
     s_model->dump_captures_to_csv(std::cout);
 
-    REQUIRE(s_model->get_capture_count() == 2);
+    REQUIRE(s_model->get_capture_count() == 3);
     REQUIRE(s_model->get_model_var("x")->training_inputs[0].get<double>()[0] == 1);
     REQUIRE(s_model->get_model_var("Bz")->training_outputs[1].get<double>()[0] == 4);
 }
