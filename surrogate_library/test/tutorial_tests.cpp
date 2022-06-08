@@ -8,28 +8,27 @@
 #include "surrogate.h"
 #include "fluent.h"
 
-std::shared_ptr<phasm::FeedForwardModel> make_model() {
-    using namespace phasm;
-    OpticBuilder builder;
-    builder.local_primitive<double>("x", IN)
-           .local_primitive<double>("y", IN)
-           .local_primitive<double>("z", IN)
-           .local_primitive<double>("Bx", OUT)
-           .local_primitive<double>("By", OUT)
-           .local_primitive<double>("Bz", OUT);
 
-    auto model = std::make_shared<FeedForwardModel>();
-    model->add_vars(builder);
-    model->initialize(); // TODO: If we forget this, everything crashes when we try to train
-    return model;
-}
-
-static auto s_model = make_model();
+std::shared_ptr<phasm::FeedForwardModel> s_model = nullptr;
 
 struct ToyMagFieldMap {
-    void getField(double x, double y, double z, double& Bx, double& By, double& Bz) {
-        // TODO: Fluent interface for surrogate!?
 
+    void getField(double x, double y, double z, double& Bx, double& By, double& Bz) {
+        using namespace phasm;
+        if (s_model == nullptr) {
+            // TODO: std::call_once or similar
+            OpticBuilder builder;
+            builder.local_primitive<double>("x", IN)
+                   .local_primitive<double>("y", IN)
+                   .local_primitive<double>("z", IN)
+                   .local_primitive<double>("Bx", OUT)
+                   .local_primitive<double>("By", OUT)
+                   .local_primitive<double>("Bz", OUT);
+
+            s_model = std::make_shared<FeedForwardModel>();
+            s_model->add_vars(builder);
+            s_model->initialize(); // TODO: If we forget this, everything crashes when we try to train
+        }
         std::cout << "Binding &Bz=" << &Bz << std::endl;
         // Because Bz is a reference, &Bz changes depending on the caller, so we have to rebind on every call!
         // This includes both the lambda and the CallSiteVariables.
@@ -39,6 +38,7 @@ struct ToyMagFieldMap {
         auto surrogate = phasm::Surrogate([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);}, s_model);
         surrogate.bind_all_locals(&x, &y, &z, &Bx, &By, &Bz);
         surrogate.call();
+        // TODO: Fluent interface for surrogate!?
     }
     void getFieldOriginal(double x, double y, double z, double& Bx, double& By, double& Bz) {
         Bx = 2;
