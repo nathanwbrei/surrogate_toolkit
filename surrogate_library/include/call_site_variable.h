@@ -18,6 +18,7 @@ struct CallSiteVariable {
     std::vector<OpticBase*> optics_tree;
     std::vector<std::shared_ptr<ModelVariable>> model_vars;
 
+    CallSiteVariable(std::string name, any_ptr binding) : name(name), binding(binding) {}
 
     inline void captureAllTrainingInputs() {
         for (const auto& model_var : model_vars) {

@@ -97,9 +97,7 @@ void Model::add_var(std::string call_site_var_name, Optic<T> *accessor, std::str
     std::shared_ptr<CallSiteVariable> csv = nullptr;
     auto pair = m_unbound_callsite_var_map.find(call_site_var_name);
     if (pair == m_unbound_callsite_var_map.end()) {
-        csv = std::make_shared<CallSiteVariable>();
-        csv->name = call_site_var_name;
-        csv->binding = phasm::any_ptr((T *) nullptr);
+        csv = std::make_shared<CallSiteVariable>(call_site_var_name, make_any<T>());
         m_unbound_callsite_var_map[call_site_var_name] = csv;
         m_unbound_callsite_vars.push_back(csv);
     } else {

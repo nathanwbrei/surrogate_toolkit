@@ -31,12 +31,13 @@ struct ToyMagFieldMap {
         // TODO: If we only have one call site, do we have to recreate the lambda every time?
         // TODO: Create an impl of bind that doesn't need to do any string lookups, e.g. bind_all_locals
         // TODO: Fluent interface for surrogate!?
-        surrogate.bind("x", &x);
-        surrogate.bind("y", &y);
-        surrogate.bind("z", &z);
-        surrogate.bind("Bx", &Bx); // TODO: Verify that &Bz changes depending on caller, so we have to rebind every time
-        surrogate.bind("By", &By);
-        surrogate.bind("Bz", &Bz);
+        surrogate.bind_all_locals(&x, &y, &z, &Bx, &By, &Bz);
+        // surrogate.bind("x", &x);
+        // surrogate.bind("y", &y);
+        // surrogate.bind("z", &z);
+        // surrogate.bind("Bx", &Bx); // TODO: Verify that &Bz changes depending on caller, so we have to rebind every time
+        // surrogate.bind("By", &By);
+        // surrogate.bind("Bz", &Bz);
         // surrogate.bind("result", &result);
         surrogate.call();
         // return result;
@@ -66,5 +67,10 @@ TEST_CASE("Toy magnetic field map") {
     REQUIRE(By == 5);
     REQUIRE(Bz == 4);
 
+
+    s_model->dump_captures_to_csv(std::cout);
+
     REQUIRE(s_model->get_capture_count() == 2);
+    REQUIRE(s_model->get_model_var("x")->training_inputs[0].get<double>()[0] == 1);
+    REQUIRE(s_model->get_model_var("Bz")->training_outputs[1].get<double>()[0] == 4);
 }

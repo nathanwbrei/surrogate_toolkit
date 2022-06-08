@@ -21,7 +21,6 @@ struct ModelVariable {
     bool is_input = false;
     bool is_output = false;
     OpticBase *accessor = nullptr;
-    phasm::any_ptr global;
     std::vector<tensor> training_inputs;
     std::vector<tensor> training_outputs;
     tensor inference_input;

@@ -21,13 +21,28 @@ public:
     template <typename T>
     any_ptr(T* p) : m_p(p), m_t(typeid(T)), m_typename(demangle<T>()) {};
 
-    any_ptr() : m_p(nullptr), m_t(typeid(std::nullptr_t)), m_typename("nullptr_t") {};
-
     any_ptr(const any_ptr& other) : m_p(other.m_p), m_t(other.m_t), m_typename(other.m_typename) {};
+
+    template <typename T>
+    void set(T* p) {
+        auto tt = std::type_index(typeid(T));
+        if (m_t != tt) {
+            std::string other_typename = demangle<T>();
+            std::ostringstream oss;
+            oss << "any_ptr::set(): Bad cast: expected '" << m_typename << "', got '" << other_typename << "'" << std::endl;
+            throw std::runtime_error(oss.str());
+        };
+        m_p = p;
+    }
+
+    void unsafe_set(void* p) {
+        m_p = p;
+    }
 
     inline void* get() const {
         return m_p;
     }
+
 
     inline operator void*() const {
         return m_p;
@@ -47,5 +62,11 @@ public:
     }
 };
 
+/// This is just for convenience. The any_ptr constructor won't take explicit template parameters.
+template <typename T>
+any_ptr make_any(T* p = nullptr) {
+    return any_ptr(p);
 }
+
+} // namespace phasm
 #endif //SURROGATE_TOOLKIT_ANY_PTR_HPP

@@ -25,6 +25,21 @@ Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
     }
 };
 
+/// Binds all local variables in one call with minimal overhead. This is a more efficient and concise
+/// replacement for repeated calls to Surrogate::bind("varname", v*). However, it is much more error prone.
+/// The user has to provide the pointers in the same order that the corresponding CallSiteVariables were added.
+/// Furthermore, there is no type safety, unlike in bind<T>, not even at runtime.
+/// Potential improvements: It is probably possible to regain the type safety by using a variadic template instead.
+void Surrogate::bind_all_locals(void* head, ...) {
+    va_list args;
+    va_start(args, head);
+    m_bound_callsite_vars[0]->binding.unsafe_set(head);
+    size_t len = m_bound_callsite_vars.size();
+    for (size_t i=1; i<len; ++i) {
+        m_bound_callsite_vars[i]->binding.unsafe_set(va_arg(args, void*));
+    }
+    va_end(args);
+};
 
 std::shared_ptr<CallSiteVariable> Surrogate::get_binding(size_t index) {
     if (index >= m_bound_callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }

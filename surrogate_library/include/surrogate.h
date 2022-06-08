@@ -35,6 +35,8 @@ public:
     template<typename T>
     void bind(std::string param_name, T *slot);
 
+    void bind_all_locals(void* head...);
+
     std::shared_ptr<CallSiteVariable> get_binding(size_t index);
     std::shared_ptr<CallSiteVariable> get_binding(std::string name);
 

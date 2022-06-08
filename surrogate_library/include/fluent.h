@@ -89,17 +89,14 @@ OpticBase* cloneOpticsFromLeafToRoot(OpticBase* leaf);
 template <typename T>
 Cursor<T> OpticBuilder::local(std::string name) {
 
-    auto csv = std::make_shared<CallSiteVariable>();
-    csv->name = std::move(name);
+    auto csv = std::make_shared<CallSiteVariable>(std::move(name), make_any<T>());
     m_csvs.push_back(csv);
     return Cursor<T>(nullptr, csv, this);
 }
 
 template <typename T>
 Cursor<T> OpticBuilder::global(std::string name, T* tp) {
-    auto csv = std::make_shared<CallSiteVariable>();
-    csv->name = std::move(name);
-    csv->binding = phasm::any_ptr(tp);
+    auto csv = std::make_shared<CallSiteVariable>(std::move(name), make_any<T>(tp));
     m_csvs.push_back(csv);
     return Cursor<T>(nullptr, csv, this);
 }
