@@ -34,8 +34,15 @@ protected:
 
 public:
     Model() = default;
-    explicit Model(const OpticBuilder &b);
     virtual ~Model() = default; // We want to be able to inherit from this
+
+    void add_vars(const OpticBuilder& b);
+
+    template<typename T>
+    void add_var(std::string param_name, Direction dir);
+
+    template<typename T>
+    void add_var(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name, Direction dir);
 
     // Initialize the underlying neural net once all the inputs and outputs are known
     virtual void initialize() {};
@@ -59,13 +66,6 @@ public:
     void dump_ranges(std::ostream &);
 
     virtual void save();
-
-    template<typename T>
-    void add_var(std::string param_name, Direction dir);
-
-    template<typename T>
-    void add_var(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name, Direction dir);
-
 };
 
 

@@ -9,7 +9,7 @@
 
 namespace phasm {
 
-Model::Model(const OpticBuilder &b) {
+void Model::add_vars(const OpticBuilder &b) {
     for (std::shared_ptr<CallSiteVariable> &csv: b.get_callsite_vars()) {
         m_unbound_callsite_vars.push_back(csv);
         m_unbound_callsite_var_map[csv->name] = csv;
