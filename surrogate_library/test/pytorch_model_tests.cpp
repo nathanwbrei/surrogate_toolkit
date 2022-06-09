@@ -25,9 +25,9 @@ TEST_CASE("Can we build against pytorch at all?") {
             .finish();
 
     double x, y;
-    s.bind_locals_to_original_function([&]() { y = square(x); });
-    s.bind("x", &x);
-    s.bind("y", &y);
+    s.bind_original_function([&]() { y = square(x); });
+    s.bind_callsite_var("x", &x);
+    s.bind_callsite_var("y", &y);
 
     for (int i = -3; i < 3; ++i) {
         // x =

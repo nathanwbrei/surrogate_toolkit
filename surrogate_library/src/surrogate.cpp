@@ -18,11 +18,11 @@ Surrogate::~Surrogate() {
 
 
 /// Binds all local variables in one call with minimal overhead. This is a more efficient and concise
-/// replacement for repeated calls to Surrogate::bind("varname", v*). However, it is much more error prone.
+/// replacement for repeated calls to Surrogate::bind_callsite_var("varname", v*). However, it is much more error prone.
 /// The user has to provide the pointers in the same order that the corresponding CallSiteVariables were added.
-/// Furthermore, there is no type safety, unlike in bind<T>, not even at runtime.
+/// Furthermore, there is no type safety, unlike in bind_callsite_var<T>, not even at runtime.
 /// Potential improvements: It is probably possible to regain the type safety by using a variadic template instead.
-Surrogate& Surrogate::bind_locals_to_model(void* head, ...) {
+Surrogate& Surrogate::bind_all_callsite_vars(void* head, ...) {
     va_list args;
     va_start(args, head);
     m_callsite_vars[0]->binding.unsafe_set(head);

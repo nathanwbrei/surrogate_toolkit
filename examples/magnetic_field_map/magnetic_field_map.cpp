@@ -43,8 +43,8 @@ int main() {
 
     double x, y, z, bx, by, bz;
 
-    surrogate.bind_locals_to_original_function([&](){ mfmfm.GetField(x,y,z,bx,by,bz);});
-    surrogate.bind_locals_to_model(&x, &y, &z, &bx, &by, &bz);
+    surrogate.bind_original_function([&]() { mfmfm.GetField(x, y, z, bx, by, bz); });
+    surrogate.bind_all_callsite_vars(&x, &y, &z, &bx, &by, &bz);
 
     for (x = 0.0; x < 3.0; x+=.5) {
         for (y = 0.0; y < 3.0; y+=0.5) {

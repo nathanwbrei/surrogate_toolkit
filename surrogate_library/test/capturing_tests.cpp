@@ -42,10 +42,10 @@ TEST_CASE("Capture int(int,int)") {
         .local_primitive<int>("z", OUT)
         .finish();
 
-    surrogate.bind_locals_to_original_function([&]() { z = mult(x, y); });
-    surrogate.bind("x", &x);
-    surrogate.bind("y", &y);
-    surrogate.bind("z", &z);
+    surrogate.bind_original_function([&]() { z = mult(x, y); });
+    surrogate.bind_callsite_var("x", &x);
+    surrogate.bind_callsite_var("y", &y);
+    surrogate.bind_callsite_var("z", &z);
 
     x = 3;
     y = 5;
@@ -72,10 +72,10 @@ TEST_CASE("Capture int(const int, const int)") {
             .local_primitive<int>("z", OUT)
             .finish();
 
-    surrogate.bind_locals_to_original_function([&]() { z = mult_const(x, y); });
-    surrogate.bind<int>("x", &x);
-    surrogate.bind<int>("y", &y);
-    surrogate.bind<int>("z", &z);
+    surrogate.bind_original_function([&]() { z = mult_const(x, y); });
+    surrogate.bind_callsite_var<int>("x", &x);
+    surrogate.bind_callsite_var<int>("y", &y);
+    surrogate.bind_callsite_var<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
@@ -99,10 +99,10 @@ TEST_CASE("Capture int(int&,int&&)") {
             .finish();
 
     int x = 3, y = 5, z = 0;
-    surrogate.bind_locals_to_original_function([&]() { z = mult_with_ref(x, std::move(y)); });
-    surrogate.bind<int>("x", &x);
-    surrogate.bind<int>("y", &y);
-    surrogate.bind<int>("z", &z);
+    surrogate.bind_original_function([&]() { z = mult_with_ref(x, std::move(y)); });
+    surrogate.bind_callsite_var<int>("x", &x);
+    surrogate.bind_callsite_var<int>("y", &y);
+    surrogate.bind_callsite_var<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
@@ -129,10 +129,10 @@ TEST_CASE("Capture int(int&,int) [input and output]") {
             .local_primitive<int>("z", Direction::OUT)
             .finish();
 
-    surrogate.bind_locals_to_original_function([&]() { z = mult_with_out_param(x, y); });
-    surrogate.bind<int>("x", &x);
-    surrogate.bind<int>("y", &y);
-    surrogate.bind<int>("z", &z);
+    surrogate.bind_original_function([&]() { z = mult_with_out_param(x, y); });
+    surrogate.bind_callsite_var<int>("x", &x);
+    surrogate.bind_callsite_var<int>("y", &y);
+    surrogate.bind_callsite_var<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 15);
@@ -162,10 +162,10 @@ TEST_CASE("Capture int(int) [with global]") {
             .local_primitive<int>("z", Direction::OUT)
             .finish();
 
-    surrogate.bind_locals_to_original_function([&]() { z = mult_with_global(x); });
-    surrogate.bind<int>("x", &x);
-    surrogate.bind<int>("g", &g);
-    surrogate.bind<int>("z", &z);
+    surrogate.bind_original_function([&]() { z = mult_with_global(x); });
+    surrogate.bind_callsite_var<int>("x", &x);
+    surrogate.bind_callsite_var<int>("g", &g);
+    surrogate.bind_callsite_var<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 110);
@@ -187,8 +187,8 @@ TEST_CASE("Capture int() [with no args]") {
             .local_primitive<int>("z", Direction::OUT)
             .finish();
 
-    surrogate.bind_locals_to_original_function([&]() { z = no_args(); });
-    surrogate.bind<int>("z", &z);
+    surrogate.bind_original_function([&]() { z = no_args(); });
+    surrogate.bind_callsite_var<int>("z", &z);
 
     surrogate.call_original_and_capture();
     REQUIRE(z == 0);
@@ -209,8 +209,8 @@ TEST_CASE("Capture void(int)") {
             .local_primitive<int>("x", Direction::IN)
             .finish();
 
-    surrogate.bind_locals_to_original_function([&]() { return_void(x); });
-    surrogate.bind<int>("x", &x);
+    surrogate.bind_original_function([&]() { return_void(x); });
+    surrogate.bind_callsite_var<int>("x", &x);
 
     surrogate.call_original_and_capture();
     REQUIRE(get_captured_input<int>(m, "x", 0) == 3);

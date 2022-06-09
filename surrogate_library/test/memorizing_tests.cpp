@@ -54,9 +54,9 @@ TEST_CASE("Memorizing model memorizes!") {
             .local_primitive<double>("y", Direction::OUT)
             .finish();
 
-    s.bind_locals_to_original_function([&](){y=x*x;});
-    s.bind<double>("x", &x);
-    s.bind<double>("y", &y);
+    s.bind_original_function([&]() { y = x * x; });
+    s.bind_callsite_var<double>("x", &x);
+    s.bind_callsite_var<double>("y", &y);
 
     x = 2.0;
     y = 7.0;

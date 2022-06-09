@@ -37,11 +37,11 @@ public:
     // ------------------------------------------------------------------------
 
     template<typename T>
-    Surrogate& bind(std::string param_name, T *slot);
+    Surrogate& bind_callsite_var(std::string param_name, T *slot);
 
-    Surrogate& bind_locals_to_model(void* head...);
+    Surrogate& bind_all_callsite_vars(void* head...);
 
-    inline Surrogate& bind_locals_to_original_function(std::function<void(void)> f) {m_original_function = std::move(f); return *this;};
+    inline Surrogate& bind_original_function(std::function<void(void)> f) { m_original_function = std::move(f); return *this;};
 
     void call();
     void call_original();
@@ -91,7 +91,7 @@ void print_help_screen();
 // --------------------
 
 template<typename T>
-Surrogate& Surrogate::bind(std::string param_name, T *slot) {
+Surrogate& Surrogate::bind_callsite_var(std::string param_name, T *slot) {
     auto csv = m_callsite_var_map.find(param_name);
     if (csv == m_callsite_var_map.end()) {
         throw std::runtime_error("No such callsite variable specified in model");

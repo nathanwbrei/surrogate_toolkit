@@ -33,8 +33,8 @@ struct ToyMagFieldMap {
         // In theory we don't have to re-copy the CallSiteVariables over from the model every time, but
         // that is an optimization that can wait until the next time we rejigger the whole domain model.
 
-        s_surrogate.bind_locals_to_original_function([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);});
-        s_surrogate.bind_locals_to_model(&x, &y, &z, &Bx, &By, &Bz);
+        s_surrogate.bind_original_function([&]() { return this->getFieldOriginal(x, y, z, Bx, By, Bz); });
+        s_surrogate.bind_all_callsite_vars(&x, &y, &z, &Bx, &By, &Bz);
         s_surrogate.call();
     }
     void getFieldOriginal(double x, double y, double z, double& Bx, double& By, double& Bz) {
