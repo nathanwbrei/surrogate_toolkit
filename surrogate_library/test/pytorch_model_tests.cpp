@@ -16,13 +16,15 @@ double square(double x) {
 
 TEST_CASE("Can we build against pytorch at all?") {
 
+
+    auto s = Surrogate();
     auto m = std::make_shared<FeedForwardModel>();
-    m->add_var<double>("x", new Primitive<double>(), "x", Direction::IN);
-    m->add_var<double>("y", Direction::OUT);
+    s.add_var<double>("x", new Primitive<double>(), "x", Direction::IN);
+    s.add_var<double>("y", Direction::OUT);
+    s.set_model(m);
+    m->add_model_vars(s.get_model_vars());
 
     double x, y;
-    auto s = Surrogate();
-    s.set_model(m);
     s.bind_locals_to_original_function([&]() { y = square(x); });
     s.bind("x", &x);
     s.bind("y", &y);

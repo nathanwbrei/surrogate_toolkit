@@ -17,8 +17,8 @@ class MemorizingModel : public Model {
 public:
 
     MemorizingModel() {
-        add_var<double>("x", Direction::IN);
-        add_var<double>("y", Direction::OUT);
+        // add_var<double>("x", Direction::IN);
+        // add_var<double>("y", Direction::OUT);
     }
 
     void train_from_captures() override {
@@ -50,7 +50,10 @@ TEST_CASE("Memorizing model memorizes!") {
     auto m = std::make_shared<MemorizingModel>();
     double x, y;
     auto s = Surrogate();
+    s.add_var<double>("x", Direction::IN);
+    s.add_var<double>("y", Direction::OUT);
     s.set_model(m);
+    m->add_model_vars(s.get_model_vars());
     s.bind_locals_to_original_function([&](){y=x*x;});
     s.bind<double>("x", &x);
     s.bind<double>("y", &y);

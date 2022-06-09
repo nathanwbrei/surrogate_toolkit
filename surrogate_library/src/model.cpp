@@ -9,24 +9,6 @@
 
 namespace phasm {
 
-void Model::add_vars(const OpticBuilder &b) {
-    for (std::shared_ptr<CallSiteVariable> &csv: b.get_callsite_vars()) {
-        m_unbound_callsite_vars.push_back(csv);
-        m_unbound_callsite_var_map[csv->name] = csv;
-    }
-
-    for (std::shared_ptr<ModelVariable> &mv: b.get_model_vars()) {
-        // ModelVariables may show up under inputs, outputs, or both
-        m_model_vars.push_back(mv);
-        m_model_var_map[mv->name] = mv;
-        if (mv->is_input) {
-            m_inputs.push_back(mv);
-        }
-        if (mv->is_output) {
-            m_outputs.push_back(mv);
-        }
-    }
-}
 
 size_t Model::get_capture_count() const { return m_captured_rows; }
 

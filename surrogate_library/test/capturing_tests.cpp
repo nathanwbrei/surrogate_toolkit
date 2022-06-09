@@ -34,12 +34,13 @@ TEST_CASE("Capture int(int,int)") {
 
     int x, y, z;
     auto model = std::make_shared<Model>();
-    model->add_var<int>("x", Direction::IN);
-    model->add_var<int>("y", Direction::IN);
-    model->add_var<int>("z", Direction::OUT);
 
     Surrogate surrogate;
     surrogate.set_model(model);
+    surrogate.add_var<int>("x", Direction::IN);
+    surrogate.add_var<int>("y", Direction::IN);
+    surrogate.add_var<int>("z", Direction::OUT);
+    model->add_model_vars(surrogate.get_model_vars());
     surrogate.bind_locals_to_original_function([&]() { z = mult(x, y); });
     surrogate.bind("x", &x);
     surrogate.bind("y", &y);
@@ -62,13 +63,14 @@ int mult_const(const int x, const int y) {
 TEST_CASE("Capture int(const int, const int)") {
 
     int x = 3, y = 5, z = 0;
-    auto m = std::make_shared<Model>();
-    m->add_var<int>("x", Direction::IN);
-    m->add_var<int>("y", Direction::IN);
-    m->add_var<int>("z", Direction::OUT);
-
     auto surrogate = Surrogate();
+    surrogate.add_var<int>("x", Direction::IN);
+    surrogate.add_var<int>("y", Direction::IN);
+    surrogate.add_var<int>("z", Direction::OUT);
+
+    auto m = std::make_shared<Model>();
     surrogate.set_model(m);
+    m->add_model_vars(surrogate.get_model_vars());
     surrogate.bind_locals_to_original_function([&]() { z = mult_const(x, y); });
     surrogate.bind<int>("x", &x);
     surrogate.bind<int>("y", &y);
@@ -87,14 +89,15 @@ int mult_with_ref(int &x, int &&y) {
 
 TEST_CASE("Capture int(int&,int&&)") {
 
+    auto surrogate = Surrogate();
     auto m = std::make_shared<Model>();
-    m->add_var<int>("x", Direction::IN);
-    m->add_var<int>("y", Direction::IN);
-    m->add_var<int>("z", Direction::OUT);
+    surrogate.add_var<int>("x", Direction::IN);
+    surrogate.add_var<int>("y", Direction::IN);
+    surrogate.add_var<int>("z", Direction::OUT);
+    surrogate.set_model(m);
+    m->add_model_vars(surrogate.get_model_vars());
 
     int x = 3, y = 5, z = 0;
-    auto surrogate = Surrogate();
-    surrogate.set_model(m);
     surrogate.bind_locals_to_original_function([&]() { z = mult_with_ref(x, std::move(y)); });
     surrogate.bind<int>("x", &x);
     surrogate.bind<int>("y", &y);
@@ -116,13 +119,15 @@ int mult_with_out_param(int &x, int y) {
 TEST_CASE("Capture int(int&,int) [input and output]") {
 
     int x = 3, y = 5, z = 0;
-    auto m = std::make_shared<Model>();
-    m->add_var<int>("x", Direction::INOUT);
-    m->add_var<int>("y", Direction::IN);
-    m->add_var<int>("z", Direction::OUT);
 
     auto surrogate = Surrogate();
+    auto m = std::make_shared<Model>();
+    surrogate.add_var<int>("x", Direction::INOUT);
+    surrogate.add_var<int>("y", Direction::IN);
+    surrogate.add_var<int>("z", Direction::OUT);
+
     surrogate.set_model(m);
+    m->add_model_vars(surrogate.get_model_vars());
     surrogate.bind_locals_to_original_function([&]() { z = mult_with_out_param(x, y); });
     surrogate.bind<int>("x", &x);
     surrogate.bind<int>("y", &y);
@@ -148,13 +153,13 @@ int mult_with_global(int x) {
 TEST_CASE("Capture int(int) [with global]") {
 
     int x = 5, z = 0;
-    auto m = std::make_shared<Model>();
-    m->add_var<int>("x", Direction::IN);
-    m->add_var<int>("g", Direction::IN);
-    m->add_var<int>("z", Direction::OUT);
-
     auto surrogate = Surrogate();
+    auto m = std::make_shared<Model>();
+    surrogate.add_var<int>("x", Direction::IN);
+    surrogate.add_var<int>("g", Direction::IN);
+    surrogate.add_var<int>("z", Direction::OUT);
     surrogate.set_model(m);
+    m->add_model_vars(surrogate.get_model_vars());
     surrogate.bind_locals_to_original_function([&]() { z = mult_with_global(x); });
     surrogate.bind<int>("x", &x);
     surrogate.bind<int>("g", &g);
@@ -174,11 +179,11 @@ int no_args(void) {
 TEST_CASE("Capture int() [with no args]") {
 
     int z = 22;
-    auto m = std::make_shared<Model>();
-    m->add_var<int>("z", Direction::OUT);
-
     auto surrogate = Surrogate();
+    auto m = std::make_shared<Model>();
+    surrogate.add_var<int>("z", Direction::OUT);
     surrogate.set_model(m);
+    m->add_model_vars(surrogate.get_model_vars());
     surrogate.bind_locals_to_original_function([&]() { z = no_args(); });
     surrogate.bind<int>("z", &z);
 
@@ -195,11 +200,11 @@ void return_void(int x) {
 TEST_CASE("Capture void(int)") {
 
     int x = 3;
-    auto m = std::make_shared<Model>();
-    m->add_var<int>("x", Direction::IN);
-
     auto surrogate = Surrogate();
+    auto m = std::make_shared<Model>();
+    surrogate.add_var<int>("x", Direction::IN);
     surrogate.set_model(m);
+    m->add_model_vars(surrogate.get_model_vars());
     surrogate.bind_locals_to_original_function([&]() { return_void(x); });
     surrogate.bind<int>("x", &x);
 

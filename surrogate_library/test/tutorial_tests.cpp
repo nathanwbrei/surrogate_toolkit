@@ -11,13 +11,14 @@
 // For now this is a static global, so that we can inspect it and write assertions
 // against it. However, in general we probably want to declare it static inside the
 // wrapper function itself. That way, the entirety of PHASM machinery lives in one place.
-static std::shared_ptr<phasm::FeedForwardModel> s_model = nullptr;
+static std::shared_ptr<phasm::Surrogate> s_surrogate = nullptr;
 
 struct ToyMagFieldMap {
 
     void getField(double x, double y, double z, double& Bx, double& By, double& Bz) {
         using namespace phasm;
-        if (s_model == nullptr) {
+        if (s_surrogate == nullptr) {
+            s_surrogate = std::make_shared<Surrogate>();
             // TODO: std::call_once or similar
             OpticBuilder builder;
             builder.local_primitive<double>("x", IN)
@@ -27,9 +28,11 @@ struct ToyMagFieldMap {
                    .local_primitive<double>("By", OUT)
                    .local_primitive<double>("Bz", OUT);
 
-            s_model = std::make_shared<FeedForwardModel>();
-            s_model->add_vars(builder);
-            s_model->initialize(); // TODO: If we forget this, everything crashes when we try to train
+            auto model = std::make_shared<FeedForwardModel>();
+            model->add_model_vars(builder.get_model_vars());
+            model->initialize();
+            s_surrogate->set_model(model);
+            s_surrogate->add_vars(builder);
         }
         std::cout << "Binding &Bz=" << &Bz << std::endl;
         // Because Bz is a reference, &Bz changes depending on the caller, so we have to rebind on every call!
@@ -37,12 +40,9 @@ struct ToyMagFieldMap {
         // In theory we don't have to re-copy the CallSiteVariables over from the model every time, but
         // that is an optimization that can wait until the next time we rejigger the whole domain model.
 
-        auto surrogate = phasm::Surrogate();
-        surrogate.set_model(s_model);
-        surrogate.bind_locals_to_original_function([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);});
-        surrogate.bind_locals_to_model(&x, &y, &z, &Bx, &By, &Bz);
-        surrogate.call();
-        // TODO: Fluent interface for surrogate!?
+        s_surrogate->bind_locals_to_original_function([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);});
+        s_surrogate->bind_locals_to_model(&x, &y, &z, &Bx, &By, &Bz);
+        s_surrogate->call();
     }
     void getFieldOriginal(double x, double y, double z, double& Bx, double& By, double& Bz) {
         Bx = 2;
@@ -75,9 +75,10 @@ TEST_CASE("Toy magnetic field map") {
     REQUIRE(Bz == 4);
     REQUIRE(Bz2 == 49);
 
-    s_model->dump_captures_to_csv(std::cout);
+    auto model = s_surrogate->get_model();
+    model->dump_captures_to_csv(std::cout);
 
-    REQUIRE(s_model->get_capture_count() == 3);
-    REQUIRE(s_model->get_model_var("x")->training_inputs[0].get<double>()[0] == 1);
-    REQUIRE(s_model->get_model_var("Bz")->training_outputs[1].get<double>()[0] == 4);
+    REQUIRE(model->get_capture_count() == 3);
+    REQUIRE(model->get_model_var("x")->training_inputs[0].get<double>()[0] == 1);
+    REQUIRE(model->get_model_var("Bz")->training_outputs[1].get<double>()[0] == 4);
 }

@@ -18,15 +18,18 @@ using phasm::Model, phasm::Direction;
 int main() {
 
 
+    phasm::Surrogate surrogate;
     // auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
     auto model = std::make_shared<phasm::FeedForwardModel>();
-    model->add_var<double>("x", Direction::IN);
-    model->add_var<double>("y", Direction::IN);
-    model->add_var<double>("z", Direction::IN);
-    model->add_var<double>("Bx", Direction::OUT);
-    model->add_var<double>("By", Direction::OUT);
-    model->add_var<double>("Bz", Direction::OUT);
+    surrogate.set_model(model);
+    surrogate.add_var<double>("x", Direction::IN);
+    surrogate.add_var<double>("y", Direction::IN);
+    surrogate.add_var<double>("z", Direction::IN);
+    surrogate.add_var<double>("Bx", Direction::OUT);
+    surrogate.add_var<double>("By", Direction::OUT);
+    surrogate.add_var<double>("Bz", Direction::OUT);
     model->initialize();
+    model->add_model_vars(surrogate.get_model_vars());
 
     phasm::Surrogate::set_call_mode(phasm::Surrogate::CallMode::CaptureAndDump);
 
@@ -42,8 +45,6 @@ int main() {
 
     double x, y, z, bx, by, bz;
 
-    phasm::Surrogate surrogate;
-    surrogate.set_model(model);
     surrogate.bind_locals_to_original_function([&](){ mfmfm.GetField(x,y,z,bx,by,bz);});
     surrogate.bind("x", &x);
     surrogate.bind("y", &y);

@@ -6,6 +6,8 @@
 #include <iostream>
 #include "model.h"
 
+#include "fluent.h"
+
 namespace phasm {
 
 
@@ -17,13 +19,6 @@ Surrogate::Surrogate() {
 
 Surrogate &Surrogate::set_model(const std::shared_ptr<Model> &model) {
     m_model = model;
-    // TODO: Everything below here goes away once Surrogate takes ownership of CallSiteVariables
-    for (auto csv: model->m_unbound_callsite_vars) {
-        auto cloned = std::make_shared<CallSiteVariable>(*csv);
-        // Clone the CallSiteVars but leave references to the original Optics and ModelVariables
-        m_bound_callsite_vars.push_back(cloned);
-        m_bound_callsite_var_map[cloned->name] = cloned;
-    }
     return *this;
 }
 
@@ -159,6 +154,13 @@ void print_help_screen() {
             << "    CaptureAndSummarize  Call the original function, track the ranges of all inputs and outputs, and dump them to file"
             << std::endl;
     std::cout << std::endl;
+}
+
+void Surrogate::add_vars(const OpticBuilder &b) {
+    for (std::shared_ptr<CallSiteVariable> &csv: b.get_callsite_vars()) {
+        m_bound_callsite_vars.push_back(csv);
+        m_bound_callsite_var_map[csv->name] = csv;
+    }
 }
 
 } // namespace phasm
