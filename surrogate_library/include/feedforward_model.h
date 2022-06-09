@@ -48,7 +48,7 @@ public:
 
     void train_from_captures() override;
 
-    void infer(std::vector<std::shared_ptr<CallSiteVariable>>& vars) override;
+    bool infer() override;
 
     torch::Tensor flatten_and_join(std::vector<torch::Tensor> inputs);
 

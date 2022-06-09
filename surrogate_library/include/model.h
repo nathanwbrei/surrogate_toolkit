@@ -59,7 +59,7 @@ public:
 
     virtual void train_from_captures() {};
 
-    virtual void infer(std::vector<std::shared_ptr<CallSiteVariable>>&) {};
+    virtual bool infer() { return false; };
 
     void dump_captures_to_csv(std::ostream &);
 

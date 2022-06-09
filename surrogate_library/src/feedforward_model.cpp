@@ -35,13 +35,10 @@ void phasm::FeedForwardModel::initialize() {
 }
 
 
-void phasm::FeedForwardModel::infer(std::vector<std::shared_ptr<CallSiteVariable>>& vars) {
+bool phasm::FeedForwardModel::infer() {
 
     std::vector<torch::Tensor> input_tensors;
 
-    for (const std::shared_ptr<CallSiteVariable>& v : vars) {
-        v->captureAllInferenceInputs();
-    }
     for (const auto& input_model_var : m_inputs) {
         input_tensors.push_back(input_model_var->inference_input.get_underlying());
     }
@@ -54,9 +51,7 @@ void phasm::FeedForwardModel::infer(std::vector<std::shared_ptr<CallSiteVariable
     for (const auto& output_model_var : m_outputs) {
         output_model_var->inference_output = phasm::tensor(input_tensors[i++]);
     }
-    for (const auto& v : vars) {
-        v->publishAllInferenceOutputs();
-    }
+    return true;
 }
 
 void phasm::FeedForwardModel::train_from_captures() {

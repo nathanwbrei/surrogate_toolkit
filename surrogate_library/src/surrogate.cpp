@@ -109,7 +109,19 @@ void Surrogate::capture_input_distribution() {
 
 
 void Surrogate::call_model() {
-    m_model->infer(m_bound_callsite_vars);
+    for (const std::shared_ptr<CallSiteVariable>& v : m_bound_callsite_vars) {
+        v->captureAllInferenceInputs();
+    }
+    bool result = m_model->infer();
+    if (result) {
+        for (const std::shared_ptr<CallSiteVariable>& v : m_bound_callsite_vars) {
+            v->publishAllInferenceOutputs();
+        }
+    }
+    else {
+        call_original_and_capture();
+    }
+
 }
 
 

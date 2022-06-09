@@ -32,18 +32,16 @@ public:
         }
     }
 
-    void infer(std::vector<std::shared_ptr<CallSiteVariable>>& callsite_vars) override {
-        auto x = callsite_vars[0];
-        x->captureAllInferenceInputs();
-
-        tensor x_val = x->model_vars[0]->accessor->unsafe_to(x->binding);
+    bool infer() override {
+        tensor x_val = m_model_vars[0]->inference_input;
         double xx = *x_val.get<double>();
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {
-            auto y = callsite_vars[1];
-            y->model_vars[0]->accessor->unsafe_from(pair->second, y->binding);
+            auto y = m_model_vars[1]->inference_output = pair->second;
+            return true;
         }
+        return false;
     }
 };
 
