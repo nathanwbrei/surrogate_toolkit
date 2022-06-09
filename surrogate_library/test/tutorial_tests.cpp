@@ -11,37 +11,31 @@
 // For now this is a static global, so that we can inspect it and write assertions
 // against it. However, in general we probably want to declare it static inside the
 // wrapper function itself. That way, the entirety of PHASM machinery lives in one place.
-static std::shared_ptr<phasm::Surrogate> s_surrogate = nullptr;
+
+using namespace phasm;
+static Surrogate s_surrogate = SurrogateBuilder()
+        .set_model(std::make_shared<FeedForwardModel>())
+        .set_callmode(phasm::CallMode::CaptureAndDump)
+        .local_primitive<double>("x", IN)
+        .local_primitive<double>("y", IN)
+        .local_primitive<double>("z", IN)
+        .local_primitive<double>("Bx", OUT)
+        .local_primitive<double>("By", OUT)
+        .local_primitive<double>("Bz", OUT)
+        .finish();
 
 struct ToyMagFieldMap {
 
     void getField(double x, double y, double z, double& Bx, double& By, double& Bz) {
-        using namespace phasm;
-        if (s_surrogate == nullptr) {
-            // TODO: std::call_once or similar
-
-            SurrogateBuilder builder;
-            builder
-                .local_primitive<double>("x", IN)
-                .local_primitive<double>("y", IN)
-                .local_primitive<double>("z", IN)
-                .local_primitive<double>("Bx", OUT)
-                .local_primitive<double>("By", OUT)
-                .local_primitive<double>("Bz", OUT)
-                .set_callmode(phasm::CallMode::CaptureAndDump)
-                .set_model(std::make_shared<FeedForwardModel>());
-
-            s_surrogate = builder.make_surrogate();
-        }
         std::cout << "Binding &Bz=" << &Bz << std::endl;
         // Because Bz is a reference, &Bz changes depending on the caller, so we have to rebind on every call!
         // This includes both the lambda and the CallSiteVariables.
         // In theory we don't have to re-copy the CallSiteVariables over from the model every time, but
         // that is an optimization that can wait until the next time we rejigger the whole domain model.
 
-        s_surrogate->bind_locals_to_original_function([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);});
-        s_surrogate->bind_locals_to_model(&x, &y, &z, &Bx, &By, &Bz);
-        s_surrogate->call();
+        s_surrogate.bind_locals_to_original_function([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);});
+        s_surrogate.bind_locals_to_model(&x, &y, &z, &Bx, &By, &Bz);
+        s_surrogate.call();
     }
     void getFieldOriginal(double x, double y, double z, double& Bx, double& By, double& Bz) {
         Bx = 2;
@@ -71,7 +65,7 @@ TEST_CASE("Toy magnetic field map") {
     REQUIRE(Bz == 4);
     REQUIRE(Bz2 == 49);
 
-    auto model = s_surrogate->get_model();
+    auto model = s_surrogate.get_model();
     model->dump_captures_to_csv(std::cout);
 
     REQUIRE(model->get_capture_count() == 3);

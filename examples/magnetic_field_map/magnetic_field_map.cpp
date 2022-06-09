@@ -15,6 +15,7 @@
 
 using phasm::Model, phasm::Direction;
 
+
 int main() {
 
 
@@ -28,7 +29,7 @@ int main() {
     surrogate.add_var<double>("Bx", Direction::OUT);
     surrogate.add_var<double>("By", Direction::OUT);
     surrogate.add_var<double>("Bz", Direction::OUT);
-    surrogate.set_call_mode(phasm::CallMode::CaptureAndDump);
+    surrogate.set_callmode(phasm::CallMode::CaptureAndDump);
     model->initialize();
     model->add_model_vars(surrogate.get_model_vars());
 

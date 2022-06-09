@@ -67,7 +67,7 @@ public:
     }
 
 
-    inline Surrogate& set_call_mode(CallMode callmode) { m_callmode = callmode; return *this; };
+    inline Surrogate& set_callmode(CallMode callmode) { m_callmode = callmode; return *this; };
 
     void call();
     void call_original();

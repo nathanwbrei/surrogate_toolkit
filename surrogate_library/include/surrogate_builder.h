@@ -50,17 +50,17 @@ public:
     std::vector<std::shared_ptr<CallSiteVariable>> get_callsite_vars() const;
     std::vector<std::shared_ptr<ModelVariable>> get_model_vars() const;
 
-    std::unique_ptr<Surrogate> make_surrogate() const {
-        auto s = std::make_unique<Surrogate>();
+    Surrogate finish() const {
+        Surrogate s;
         if (m_callmode != CallMode::NotSet) {
-            s->set_call_mode(m_callmode);
+            s.set_callmode(m_callmode);
         }
         else if (g_callmode != CallMode::NotSet) {
-            s->set_call_mode(g_callmode);
+            s.set_callmode(g_callmode);
         }
-        s->add_callsite_vars(m_csvs);
-        s->set_model(m_model);
-        m_model->add_model_vars(s->get_model_vars());
+        s.add_callsite_vars(m_csvs);
+        s.set_model(m_model);
+        m_model->add_model_vars(s.get_model_vars());
         m_model->initialize();
         return s;
     }
