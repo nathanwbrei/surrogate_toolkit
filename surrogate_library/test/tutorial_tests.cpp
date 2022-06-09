@@ -6,7 +6,7 @@
 #include <catch.hpp>
 #include "feedforward_model.h"
 #include "surrogate.h"
-#include "fluent.h"
+#include "surrogate_builder.h"
 
 // For now this is a static global, so that we can inspect it and write assertions
 // against it. However, in general we probably want to declare it static inside the
@@ -28,6 +28,7 @@ struct ToyMagFieldMap {
                 .local_primitive<double>("Bx", OUT)
                 .local_primitive<double>("By", OUT)
                 .local_primitive<double>("Bz", OUT)
+                .set_callmode(phasm::CallMode::CaptureAndDump)
                 .set_model(std::make_shared<FeedForwardModel>());
 
             s_surrogate = builder.make_surrogate();
@@ -50,9 +51,6 @@ struct ToyMagFieldMap {
 };
 
 TEST_CASE("Toy magnetic field map") {
-
-    // TODO: Can we make this any less awkward?
-    phasm::Surrogate::set_call_mode(phasm::Surrogate::CallMode::CaptureAndDump);
 
     ToyMagFieldMap tmfm;
     double Bx, By, Bz;

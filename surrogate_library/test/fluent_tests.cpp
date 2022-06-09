@@ -4,7 +4,7 @@
 
 
 #include <catch.hpp>
-#include "fluent.h"
+#include "surrogate_builder.h"
 using namespace phasm;
 
 namespace phasm::test::fluent_tests {

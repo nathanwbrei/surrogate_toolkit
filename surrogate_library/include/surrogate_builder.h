@@ -3,8 +3,8 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 
-#ifndef SURROGATE_TOOLKIT_FLUENT_H
-#define SURROGATE_TOOLKIT_FLUENT_H
+#ifndef SURROGATE_TOOLKIT_SURROGATE_BUILDER_H
+#define SURROGATE_TOOLKIT_SURROGATE_BUILDER_H
 
 #include <model.h>
 #include <surrogate.h>
@@ -23,13 +23,17 @@ struct Cursor;
 /// Right now, PHASM uses (2) internally because it is simple. However, when we add support for non-default-constructible
 /// objects, we will likely need (1) because we cannot always hydrate objects piecemeal.
 
+inline CallMode g_callmode = get_call_mode_from_envvar();
+
 class SurrogateBuilder {
 
     std::vector<std::shared_ptr<CallSiteVariable>> m_csvs;
     std::shared_ptr<Model> m_model;
+    CallMode m_callmode = CallMode::NotSet;
 
 public:
-    inline void set_model(std::shared_ptr<Model> model) { m_model = model; }
+    inline SurrogateBuilder& set_model(std::shared_ptr<Model> model) { m_model = model; return *this; }
+    inline SurrogateBuilder& set_callmode(CallMode callmode) { m_callmode = callmode; return *this; }
 
     template <typename T>
     Cursor<T> local(std::string name);
@@ -48,8 +52,14 @@ public:
 
     std::unique_ptr<Surrogate> make_surrogate() const {
         auto s = std::make_unique<Surrogate>();
-        s->set_model(m_model);
+        if (m_callmode != CallMode::NotSet) {
+            s->set_call_mode(m_callmode);
+        }
+        else if (g_callmode != CallMode::NotSet) {
+            s->set_call_mode(g_callmode);
+        }
         s->add_callsite_vars(m_csvs);
+        s->set_model(m_model);
         m_model->add_model_vars(s->get_model_vars());
         m_model->initialize();
         return s;
@@ -252,4 +262,4 @@ Cursor<RestTs...> Cursor<HeadT, RestTs...>::end() {
 
 } // namespace phasm
 
-#endif //SURROGATE_TOOLKIT_FLUENT_H
+#endif //SURROGATE_TOOLKIT_SURROGATE_BUILDER_H

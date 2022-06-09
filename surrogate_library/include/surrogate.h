@@ -12,26 +12,24 @@
 namespace phasm {
 
 class Model;
-class SurrogateBuilder;
+enum class CallMode {
+    NotSet, UseOriginal, UseModel, CaptureAndTrain, CaptureAndDump, CaptureAndSummarize
+};
 
 class Surrogate {
 public:
     friend class Model;
 
-    enum class CallMode {
-        NotSet, UseOriginal, UseModel, CaptureAndTrain, CaptureAndDump, CaptureAndSummarize
-    };
-
 private:
-    static inline CallMode s_callmode = CallMode::NotSet;
+    CallMode m_callmode = CallMode::NotSet;
     std::function<void(void)> m_original_function;
     std::shared_ptr<Model> m_model;
-    std::vector<std::shared_ptr<CallSiteVariable>> m_bound_callsite_vars;
-    std::map<std::string, std::shared_ptr<CallSiteVariable>> m_bound_callsite_var_map;
+    std::vector<std::shared_ptr<CallSiteVariable>> m_callsite_vars;
+    std::map<std::string, std::shared_ptr<CallSiteVariable>> m_callsite_var_map;
 
 public:
 
-    Surrogate();
+    ~Surrogate();
 
     void add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars);
 
@@ -55,12 +53,12 @@ public:
 
     // These are mainly for testing purposes
 
-    std::shared_ptr<CallSiteVariable> get_binding(size_t index);
-    std::shared_ptr<CallSiteVariable> get_binding(std::string name);
+    std::shared_ptr<CallSiteVariable> get_callsite_var(size_t index);
+    std::shared_ptr<CallSiteVariable> get_callsite_var(std::string name);
 
     std::vector<std::shared_ptr<ModelVariable>> get_model_vars() {
         std::vector<std::shared_ptr<ModelVariable>> results;
-        for (auto csv : m_bound_callsite_vars) {
+        for (auto csv : m_callsite_vars) {
             for (auto mv : csv->model_vars) {
                 results.push_back(mv);
             }
@@ -69,7 +67,7 @@ public:
     }
 
 
-    static void set_call_mode(CallMode callmode);
+    inline Surrogate& set_call_mode(CallMode callmode) { m_callmode = callmode; return *this; };
 
     void call();
     void call_original();
@@ -83,7 +81,7 @@ public:
 // Free function declarations
 // --------------------------
 
-Surrogate::CallMode get_call_mode_from_envvar();
+CallMode get_call_mode_from_envvar();
 void print_help_screen();
 
 
@@ -93,8 +91,8 @@ void print_help_screen();
 
 template<typename T>
 Surrogate& Surrogate::bind(std::string param_name, T *slot) {
-    auto csv = m_bound_callsite_var_map.find(param_name);
-    if (csv == m_bound_callsite_var_map.end()) {
+    auto csv = m_callsite_var_map.find(param_name);
+    if (csv == m_callsite_var_map.end()) {
         throw std::runtime_error("No such callsite variable specified in model");
     }
     if (csv->second->binding.get() != nullptr) {
@@ -123,11 +121,11 @@ void Surrogate::add_var(std::string call_site_var_name, Optic<T> *accessor, std:
     mv->accessor = accessor;
 
     std::shared_ptr<CallSiteVariable> csv = nullptr;
-    auto pair = m_bound_callsite_var_map.find(call_site_var_name);
-    if (pair == m_bound_callsite_var_map.end()) {
+    auto pair = m_callsite_var_map.find(call_site_var_name);
+    if (pair == m_callsite_var_map.end()) {
         csv = std::make_shared<CallSiteVariable>(call_site_var_name, make_any<T>());
-        m_bound_callsite_var_map[call_site_var_name] = csv;
-        m_bound_callsite_vars.push_back(csv);
+        m_callsite_var_map[call_site_var_name] = csv;
+        m_callsite_vars.push_back(csv);
     } else {
         csv = pair->second;
     }

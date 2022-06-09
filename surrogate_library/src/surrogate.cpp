@@ -6,16 +6,15 @@
 #include <iostream>
 #include "model.h"
 
-#include "fluent.h"
+#include "surrogate_builder.h"
 
 namespace phasm {
 
 
-Surrogate::Surrogate() {
-    if (s_callmode == CallMode::NotSet) {
-        s_callmode = get_call_mode_from_envvar();
-    }
-};
+Surrogate::~Surrogate() {
+    // TODO: If model is shared, maybe check reference count?
+    if (m_model != nullptr) m_model->finalize(m_callmode);
+}
 
 Surrogate &Surrogate::set_model(const std::shared_ptr<Model> &model) {
     m_model = model;
@@ -30,36 +29,32 @@ Surrogate &Surrogate::set_model(const std::shared_ptr<Model> &model) {
 Surrogate& Surrogate::bind_locals_to_model(void* head, ...) {
     va_list args;
     va_start(args, head);
-    m_bound_callsite_vars[0]->binding.unsafe_set(head);
-    size_t len = m_bound_callsite_vars.size();
+    m_callsite_vars[0]->binding.unsafe_set(head);
+    size_t len = m_callsite_vars.size();
     for (size_t i=1; i<len; ++i) {
-        m_bound_callsite_vars[i]->binding.unsafe_set(va_arg(args, void*));
+        m_callsite_vars[i]->binding.unsafe_set(va_arg(args, void*));
     }
     va_end(args);
     return *this;
 };
 
-std::shared_ptr<CallSiteVariable> Surrogate::get_binding(size_t index) {
-    if (index >= m_bound_callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }
-    return m_bound_callsite_vars[index];
+std::shared_ptr<CallSiteVariable> Surrogate::get_callsite_var(size_t index) {
+    if (index >= m_callsite_vars.size()) { throw std::runtime_error("Index out of range for callsite var binding"); }
+    return m_callsite_vars[index];
 }
 
 
-std::shared_ptr<CallSiteVariable> Surrogate::get_binding(std::string name) {
-    auto pair = m_bound_callsite_var_map.find(name);
-    if (pair == m_bound_callsite_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
+std::shared_ptr<CallSiteVariable> Surrogate::get_callsite_var(std::string name) {
+    auto pair = m_callsite_var_map.find(name);
+    if (pair == m_callsite_var_map.end()) { throw std::runtime_error("Invalid input parameter name"); }
     return pair->second;
 }
 
 
-void Surrogate::set_call_mode(CallMode callmode) {
-    s_callmode = callmode;
-}
 
 
-/// call() looks at PHASM_CALL_MODE env var to decide what to do
 void Surrogate::call() {
-    switch (s_callmode) {
+    switch (m_callmode) {
         case CallMode::UseModel:
             call_model();
             break;
@@ -78,9 +73,6 @@ void Surrogate::call() {
             print_help_screen();
             exit(-1);
     }
-    if (s_callmode == CallMode::UseModel) {
-        call_model();
-    }
 }
 
 
@@ -90,11 +82,11 @@ void Surrogate::call_original() {
 
 
 void Surrogate::call_original_and_capture() {
-    for (auto &input: m_bound_callsite_vars) {
+    for (auto &input: m_callsite_vars) {
         input->captureAllTrainingInputs();
     }
     m_original_function();
-    for (auto &output: m_bound_callsite_vars) {
+    for (auto &output: m_callsite_vars) {
         output->captureAllTrainingOutputs();
     }
     m_model->m_captured_rows++;
@@ -107,12 +99,12 @@ void Surrogate::capture_input_distribution() {
 
 
 void Surrogate::call_model() {
-    for (const std::shared_ptr<CallSiteVariable>& v : m_bound_callsite_vars) {
+    for (const std::shared_ptr<CallSiteVariable>& v : m_callsite_vars) {
         v->captureAllInferenceInputs();
     }
     bool result = m_model->infer();
     if (result) {
-        for (const std::shared_ptr<CallSiteVariable>& v : m_bound_callsite_vars) {
+        for (const std::shared_ptr<CallSiteVariable>& v : m_callsite_vars) {
             v->publishAllInferenceOutputs();
         }
     }
@@ -125,15 +117,15 @@ void Surrogate::call_model() {
 }
 
 
-Surrogate::CallMode get_call_mode_from_envvar() {
+CallMode get_call_mode_from_envvar() {
     char *callmode_str = std::getenv("PHASM_CALL_MODE");
-    if (callmode_str == nullptr) return Surrogate::CallMode::NotSet;
-    if (strcmp(callmode_str, "UseModel") == 0) return Surrogate::CallMode::UseModel;
-    if (strcmp(callmode_str, "UseOriginal") == 0) return Surrogate::CallMode::UseOriginal;
-    if (strcmp(callmode_str, "CaptureAndTrain") == 0) return Surrogate::CallMode::CaptureAndTrain;
-    if (strcmp(callmode_str, "CaptureAndDump") == 0) return Surrogate::CallMode::CaptureAndDump;
-    if (strcmp(callmode_str, "CaptureAndSummarize") == 0) return Surrogate::CallMode::CaptureAndSummarize;
-    return Surrogate::CallMode::NotSet;
+    if (callmode_str == nullptr) return CallMode::NotSet;
+    if (strcmp(callmode_str, "UseModel") == 0) return CallMode::UseModel;
+    if (strcmp(callmode_str, "UseOriginal") == 0) return CallMode::UseOriginal;
+    if (strcmp(callmode_str, "CaptureAndTrain") == 0) return CallMode::CaptureAndTrain;
+    if (strcmp(callmode_str, "CaptureAndDump") == 0) return CallMode::CaptureAndDump;
+    if (strcmp(callmode_str, "CaptureAndSummarize") == 0) return CallMode::CaptureAndSummarize;
+    return CallMode::NotSet;
 }
 
 
@@ -158,8 +150,8 @@ void print_help_screen() {
 
 void Surrogate::add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars) {
     for (auto csv : vars) {
-        m_bound_callsite_vars.push_back(csv);
-        m_bound_callsite_var_map[csv->name] = csv;
+        m_callsite_vars.push_back(csv);
+        m_callsite_var_map[csv->name] = csv;
     }
 }
 

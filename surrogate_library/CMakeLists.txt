@@ -5,7 +5,7 @@ find_package(Torch REQUIRED)
 set(SURROGATE_LIBRARY_SOURCES
         src/surrogate.cpp
         src/model.cpp
-        src/fluent.cpp
+        src/surrogate_builder.cpp
         src/tensor.cpp
         src/feedforward_model.cpp
         src/torchscript_model.cpp

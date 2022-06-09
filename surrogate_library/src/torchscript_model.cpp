@@ -11,7 +11,6 @@ TorchscriptModel::TorchscriptModel(std::string filename) {
 }
 
 TorchscriptModel::~TorchscriptModel() {
-    finalize();
 }
 
 void TorchscriptModel::initialize() {

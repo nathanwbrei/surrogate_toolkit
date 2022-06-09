@@ -6,7 +6,6 @@
 
 
 phasm::FeedForwardModel::~FeedForwardModel() {
-    finalize();
 }
 
 void phasm::FeedForwardModel::initialize() {

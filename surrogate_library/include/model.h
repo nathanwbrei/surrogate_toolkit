@@ -7,13 +7,10 @@
 #define SURROGATE_TOOLKIT_MODEL_H
 
 #include "model_variable.h"
-#include "call_site_variable.h"
+#include "surrogate.h"
 
 namespace phasm {
 
-class SurrogateBuilder;
-
-class Surrogate;
 
 /// There should be exactly one Model in your codebase for each unique function that you wish to surrogate.
 /// Contrast this with Surrogate. There should be one Surrogate for each call site of that function,
@@ -35,6 +32,7 @@ public:
     virtual ~Model() = default; // We want to be able to inherit from this
 
     /// Surrogate calls set_model_vars() for us before calling initialize(). This way,
+    /// the model can configure itself to adjust to the input and output sizes.
     void add_model_vars(const std::vector<std::shared_ptr<ModelVariable>>& model_vars) {
         for (auto m : model_vars) {
             m_model_vars.push_back(m);
@@ -45,8 +43,7 @@ public:
     }
 
     // Performs tasks such as training or writing to CSV, right before the model gets destroyed.
-    // This needs to be called from the virtual destructor, specifically, from the
-    void finalize();
+    void finalize(CallMode callmode);
 
     // The total number of training samples we have accumulated so far
     size_t get_capture_count() const;
