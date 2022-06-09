@@ -3,8 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include <catch.hpp>
-#include "surrogate.h"
-#include "model.h"
+#include "surrogate_builder.h"
 
 using namespace phasm;
 namespace phasm::test::memorizing_tests {
@@ -49,11 +48,12 @@ TEST_CASE("Memorizing model memorizes!") {
 
     auto m = std::make_shared<MemorizingModel>();
     double x, y;
-    auto s = Surrogate();
-    s.add_var<double>("x", Direction::IN);
-    s.add_var<double>("y", Direction::OUT);
-    s.set_model(m);
-    m->add_model_vars(s.get_model_vars());
+    auto s = SurrogateBuilder()
+            .set_model(m)
+            .local_primitive<double>("x", Direction::IN)
+            .local_primitive<double>("y", Direction::OUT)
+            .finish();
+
     s.bind_locals_to_original_function([&](){y=x*x;});
     s.bind<double>("x", &x);
     s.bind<double>("y", &y);

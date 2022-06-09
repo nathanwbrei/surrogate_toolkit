@@ -16,10 +16,6 @@ Surrogate::~Surrogate() {
     if (m_model != nullptr) m_model->finalize(m_callmode);
 }
 
-Surrogate &Surrogate::set_model(const std::shared_ptr<Model> &model) {
-    m_model = model;
-    return *this;
-}
 
 /// Binds all local variables in one call with minimal overhead. This is a more efficient and concise
 /// replacement for repeated calls to Surrogate::bind("varname", v*). However, it is much more error prone.
@@ -66,7 +62,7 @@ void Surrogate::call() {
             call_original_and_capture();
             break;
         case CallMode::CaptureAndSummarize:
-            capture_input_distribution();
+            capture_input_range();
             break;
         case CallMode::NotSet:
         default:
@@ -93,7 +89,7 @@ void Surrogate::call_original_and_capture() {
 }
 
 
-void Surrogate::capture_input_distribution() {
+void Surrogate::capture_input_range() {
 
 }
 
@@ -148,11 +144,12 @@ void print_help_screen() {
     std::cout << std::endl;
 }
 
-void Surrogate::add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars) {
+Surrogate& Surrogate::add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars) {
     for (auto csv : vars) {
         m_callsite_vars.push_back(csv);
         m_callsite_var_map[csv->name] = csv;
     }
+    return *this;
 }
 
 } // namespace phasm

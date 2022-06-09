@@ -5,7 +5,7 @@
 #include <catch.hpp>
 #include "feedforward_model.h"
 
-#include "surrogate.h"
+#include "surrogate_builder.h"
 
 using namespace phasm;
 namespace phasm::test::pytorch_model_tests {
@@ -17,12 +17,12 @@ double square(double x) {
 TEST_CASE("Can we build against pytorch at all?") {
 
 
-    auto s = Surrogate();
     auto m = std::make_shared<FeedForwardModel>();
-    s.add_var<double>("x", new Primitive<double>(), "x", Direction::IN);
-    s.add_var<double>("y", Direction::OUT);
-    s.set_model(m);
-    m->add_model_vars(s.get_model_vars());
+    auto s = SurrogateBuilder()
+            .set_model(m)
+            .local_primitive<double>("x", IN)
+            .local_primitive<double>("y", OUT)
+            .finish();
 
     double x, y;
     s.bind_locals_to_original_function([&]() { y = square(x); });

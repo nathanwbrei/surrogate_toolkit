@@ -29,30 +29,39 @@ private:
 
 public:
 
+    Surrogate() = default;
     ~Surrogate();
 
-    void add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars);
-
-    template<typename T>
-    void add_var(std::string param_name, Direction dir);
-
-    template<typename T>
-    void add_var(std::string call_site_var_name, Optic <T> *accessor, std::string model_var_name, Direction dir);
-
-
+    // ------------------------------------------------------------------------
+    // Main API: This is how users are supposed to interact with a Surrogate
+    // ------------------------------------------------------------------------
 
     template<typename T>
     Surrogate& bind(std::string param_name, T *slot);
 
-    // inline Surrogate& set_call_mode(CallMode callmode) { m_callmode = callmode; return *this;}
-    Surrogate& set_model(const std::shared_ptr<Model>& model);
-    inline std::shared_ptr<Model> get_model() { return m_model; }
     Surrogate& bind_locals_to_model(void* head...);
+
     inline Surrogate& bind_locals_to_original_function(std::function<void(void)> f) {m_original_function = std::move(f); return *this;};
 
+    void call();
+    void call_original();
+    void call_original_and_capture();
+    void capture_input_range();
+    void call_model();
 
-    // These are mainly for testing purposes
+    // ------------------------------------------------------------------------
+    // Configuration: These are meant to be called by the SurrogateBuilder
+    // ------------------------------------------------------------------------
 
+    inline Surrogate& set_callmode(CallMode callmode) { m_callmode = callmode; return *this; };
+    inline Surrogate& set_model(const std::shared_ptr<Model>& model) { m_model = model; return *this; };
+    Surrogate& add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars);
+
+    // ------------------------------------------------------------------------
+    // Inspection: These are meant to be used for debugging and testing
+    // ------------------------------------------------------------------------
+
+    inline std::shared_ptr<Model> get_model() { return m_model; }
     std::shared_ptr<CallSiteVariable> get_callsite_var(size_t index);
     std::shared_ptr<CallSiteVariable> get_callsite_var(std::string name);
 
@@ -66,14 +75,6 @@ public:
         return results;
     }
 
-
-    inline Surrogate& set_callmode(CallMode callmode) { m_callmode = callmode; return *this; };
-
-    void call();
-    void call_original();
-    void call_original_and_capture();
-    void capture_input_distribution();
-    void call_model();
 };
 
 
@@ -100,36 +101,6 @@ Surrogate& Surrogate::bind(std::string param_name, T *slot) {
     }
     csv->second->binding = slot;
     return *this;
-}
-
-// --------------------
-// Template definitions
-// --------------------
-
-template<typename T>
-void Surrogate::add_var(std::string param_name, Direction dir) {
-    add_var(param_name, new Primitive<T>, param_name, dir);
-}
-
-
-template<typename T>
-void Surrogate::add_var(std::string call_site_var_name, Optic<T> *accessor, std::string model_var_name, Direction dir) {
-    auto mv = std::make_shared<ModelVariable>();
-    mv->name = model_var_name;
-    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
-    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
-    mv->accessor = accessor;
-
-    std::shared_ptr<CallSiteVariable> csv = nullptr;
-    auto pair = m_callsite_var_map.find(call_site_var_name);
-    if (pair == m_callsite_var_map.end()) {
-        csv = std::make_shared<CallSiteVariable>(call_site_var_name, make_any<T>());
-        m_callsite_var_map[call_site_var_name] = csv;
-        m_callsite_vars.push_back(csv);
-    } else {
-        csv = pair->second;
-    }
-    csv->model_vars.push_back(mv);
 }
 
 
