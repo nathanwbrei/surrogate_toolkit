@@ -21,7 +21,9 @@ TEST_CASE("Can we build against pytorch at all?") {
     m->add_var<double>("y", Direction::OUT);
 
     double x, y;
-    auto s = Surrogate([&]() { y = square(x); }, m);
+    auto s = Surrogate();
+    s.set_model(m);
+    s.bind_locals_to_original_function([&]() { y = square(x); });
     s.bind("x", &x);
     s.bind("y", &y);
 

@@ -9,28 +9,30 @@
 namespace phasm {
 
 
-Surrogate::Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model)
-        : m_original_function(std::move(f)), m_model(model) {
-
+Surrogate::Surrogate() {
     if (s_callmode == CallMode::NotSet) {
         s_callmode = get_call_mode_from_envvar();
     }
+};
 
-    // Copy over expected callsite vars from model so that we can validate the bindings
-    for (auto csv : model->m_unbound_callsite_vars) {
+Surrogate &Surrogate::set_model(const std::shared_ptr<Model> &model) {
+    m_model = model;
+    // TODO: Everything below here goes away once Surrogate takes ownership of CallSiteVariables
+    for (auto csv: model->m_unbound_callsite_vars) {
         auto cloned = std::make_shared<CallSiteVariable>(*csv);
         // Clone the CallSiteVars but leave references to the original Optics and ModelVariables
         m_bound_callsite_vars.push_back(cloned);
         m_bound_callsite_var_map[cloned->name] = cloned;
     }
-};
+    return *this;
+}
 
 /// Binds all local variables in one call with minimal overhead. This is a more efficient and concise
 /// replacement for repeated calls to Surrogate::bind("varname", v*). However, it is much more error prone.
 /// The user has to provide the pointers in the same order that the corresponding CallSiteVariables were added.
 /// Furthermore, there is no type safety, unlike in bind<T>, not even at runtime.
 /// Potential improvements: It is probably possible to regain the type safety by using a variadic template instead.
-void Surrogate::bind_all_locals(void* head, ...) {
+Surrogate& Surrogate::bind_locals_to_model(void* head, ...) {
     va_list args;
     va_start(args, head);
     m_bound_callsite_vars[0]->binding.unsafe_set(head);
@@ -39,6 +41,7 @@ void Surrogate::bind_all_locals(void* head, ...) {
         m_bound_callsite_vars[i]->binding.unsafe_set(va_arg(args, void*));
     }
     va_end(args);
+    return *this;
 };
 
 std::shared_ptr<CallSiteVariable> Surrogate::get_binding(size_t index) {
@@ -119,9 +122,11 @@ void Surrogate::call_model() {
         }
     }
     else {
-        call_original_and_capture();
+        // TODO: Currently we do nothing, but we most likely want to call_original,
+        //       and we may even wish to capture the results. Do we ignore the
+        //       results, dump them, or use them for training? Unclear at the moment.
+        //call_original_and_capture();
     }
-
 }
 
 

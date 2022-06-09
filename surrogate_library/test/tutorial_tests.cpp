@@ -8,8 +8,10 @@
 #include "surrogate.h"
 #include "fluent.h"
 
-
-std::shared_ptr<phasm::FeedForwardModel> s_model = nullptr;
+// For now this is a static global, so that we can inspect it and write assertions
+// against it. However, in general we probably want to declare it static inside the
+// wrapper function itself. That way, the entirety of PHASM machinery lives in one place.
+static std::shared_ptr<phasm::FeedForwardModel> s_model = nullptr;
 
 struct ToyMagFieldMap {
 
@@ -35,8 +37,10 @@ struct ToyMagFieldMap {
         // In theory we don't have to re-copy the CallSiteVariables over from the model every time, but
         // that is an optimization that can wait until the next time we rejigger the whole domain model.
 
-        auto surrogate = phasm::Surrogate([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);}, s_model);
-        surrogate.bind_all_locals(&x, &y, &z, &Bx, &By, &Bz);
+        auto surrogate = phasm::Surrogate();
+        surrogate.set_model(s_model);
+        surrogate.bind_locals_to_original_function([&](){ return this->getFieldOriginal(x,y,z,Bx,By,Bz);});
+        surrogate.bind_locals_to_model(&x, &y, &z, &Bx, &By, &Bz);
         surrogate.call();
         // TODO: Fluent interface for surrogate!?
     }

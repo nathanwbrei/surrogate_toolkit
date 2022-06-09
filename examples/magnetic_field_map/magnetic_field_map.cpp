@@ -42,7 +42,9 @@ int main() {
 
     double x, y, z, bx, by, bz;
 
-    phasm::Surrogate surrogate([&](){ mfmfm.GetField(x,y,z,bx,by,bz); }, model);
+    phasm::Surrogate surrogate;
+    surrogate.set_model(model);
+    surrogate.bind_locals_to_original_function([&](){ mfmfm.GetField(x,y,z,bx,by,bz);});
     surrogate.bind("x", &x);
     surrogate.bind("y", &y);
     surrogate.bind("z", &z);

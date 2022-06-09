@@ -9,7 +9,6 @@
 #include <vector>
 #include "call_site_variable.h"
 
-
 namespace phasm {
 
 class Model;
@@ -30,12 +29,19 @@ private:
     std::map<std::string, std::shared_ptr<CallSiteVariable>> m_bound_callsite_var_map;
 
 public:
-    explicit Surrogate(std::function<void(void)> f, std::shared_ptr<Model> model);
+
+    Surrogate();
 
     template<typename T>
-    void bind(std::string param_name, T *slot);
+    Surrogate& bind(std::string param_name, T *slot);
 
-    void bind_all_locals(void* head...);
+    // inline Surrogate& set_call_mode(CallMode callmode) { m_callmode = callmode; return *this;}
+    Surrogate& set_model(const std::shared_ptr<Model>& model);
+    Surrogate& bind_locals_to_model(void* head...);
+    inline Surrogate& bind_locals_to_original_function(std::function<void(void)> f) {m_original_function = std::move(f); return *this;};
+
+
+    // These are mainly for testing purposes
 
     std::shared_ptr<CallSiteVariable> get_binding(size_t index);
     std::shared_ptr<CallSiteVariable> get_binding(std::string name);
@@ -63,7 +69,7 @@ void print_help_screen();
 // --------------------
 
 template<typename T>
-void Surrogate::bind(std::string param_name, T *slot) {
+Surrogate& Surrogate::bind(std::string param_name, T *slot) {
     auto csv = m_bound_callsite_var_map.find(param_name);
     if (csv == m_bound_callsite_var_map.end()) {
         throw std::runtime_error("No such callsite variable specified in model");
@@ -72,6 +78,7 @@ void Surrogate::bind(std::string param_name, T *slot) {
         throw std::runtime_error("Callsite variable already set! Possibly a global var");
     }
     csv->second->binding = slot;
+    return *this;
 }
 
 } // namespace phasm

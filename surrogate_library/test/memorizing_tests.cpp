@@ -49,7 +49,9 @@ TEST_CASE("Memorizing model memorizes!") {
 
     auto m = std::make_shared<MemorizingModel>();
     double x, y;
-    auto s = Surrogate([&](){y=x*x;}, m);
+    auto s = Surrogate();
+    s.set_model(m);
+    s.bind_locals_to_original_function([&](){y=x*x;});
     s.bind<double>("x", &x);
     s.bind<double>("y", &y);
 
