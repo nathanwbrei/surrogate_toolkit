@@ -6,13 +6,10 @@
 #ifndef SURROGATE_TOOLKIT_FLUENT_H
 #define SURROGATE_TOOLKIT_FLUENT_H
 
-#include <optics.h>
-#include <call_site_variable.h>
-#include <model_variable.h>
-
+#include <model.h>
+#include <surrogate.h>
 
 namespace phasm {
-
 
 
 template <typename HeadT, typename ...RestTs>
@@ -26,11 +23,14 @@ struct Cursor;
 /// Right now, PHASM uses (2) internally because it is simple. However, when we add support for non-default-constructible
 /// objects, we will likely need (1) because we cannot always hydrate objects piecemeal.
 
-class OpticBuilder {
+class SurrogateBuilder {
 
     std::vector<std::shared_ptr<CallSiteVariable>> m_csvs;
+    std::shared_ptr<Model> m_model;
 
 public:
+    inline void set_model(std::shared_ptr<Model> model) { m_model = model; }
+
     template <typename T>
     Cursor<T> local(std::string name);
 
@@ -38,13 +38,23 @@ public:
     Cursor<T> global(std::string name, T*);
 
     template <typename T>
-    OpticBuilder& local_primitive(std::string name, Direction dir, std::vector<int64_t>&& shape = {1});
+    SurrogateBuilder& local_primitive(std::string name, Direction dir, std::vector<int64_t>&& shape = {1});
 
     template <typename T>
-    OpticBuilder& global_primitive(std::string name, T* binding, Direction dir, std::vector<int64_t>&& shape = {1});
+    SurrogateBuilder& global_primitive(std::string name, T* binding, Direction dir, std::vector<int64_t>&& shape = {1});
 
     std::vector<std::shared_ptr<CallSiteVariable>> get_callsite_vars() const;
     std::vector<std::shared_ptr<ModelVariable>> get_model_vars() const;
+
+    std::unique_ptr<Surrogate> make_surrogate() const {
+        auto s = std::make_unique<Surrogate>();
+        s->set_model(m_model);
+        s->add_callsite_vars(m_csvs);
+        m_model->add_model_vars(s->get_model_vars());
+        m_model->initialize();
+        return s;
+    }
+
     void printOpticsTree();
     void printModelVars();
 
@@ -56,13 +66,13 @@ private:
 template <typename HeadT>
 struct Cursor<HeadT> {
     std::shared_ptr<CallSiteVariable> current_callsite_var;
-    OpticBuilder* builder = nullptr;
+    SurrogateBuilder* builder = nullptr;
 
-    Cursor(OpticBase* o, std::shared_ptr<CallSiteVariable> csv, OpticBuilder* builder);
+    Cursor(OpticBase* o, std::shared_ptr<CallSiteVariable> csv, SurrogateBuilder* builder);
     Cursor<HeadT> primitive(std::string name, Direction dir=Direction::IN);
     Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN);
     Cursor<HeadT> array(size_t size);
-    OpticBuilder& end();
+    SurrogateBuilder& end();
 
     template <typename T>
     Cursor<T, HeadT> accessor(std::function<T*(HeadT*)> lambda);
@@ -73,9 +83,9 @@ template <typename HeadT, typename... RestTs>
 struct Cursor {
     OpticBase* focus = nullptr;
     std::shared_ptr<CallSiteVariable> current_callsite_var;
-    OpticBuilder* builder = nullptr;
+    SurrogateBuilder* builder = nullptr;
 
-    Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, OpticBuilder* builder);
+    Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, SurrogateBuilder* builder);
     Cursor<HeadT, RestTs...> primitive(std::string name, Direction dir=Direction::IN);
     Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN);
     Cursor<HeadT, RestTs...> array(size_t size);
@@ -93,7 +103,7 @@ OpticBase* cloneOpticsFromLeafToRoot(OpticBase* leaf);
 // ------------------------------------------------------
 
 template <typename T>
-Cursor<T> OpticBuilder::local(std::string name) {
+Cursor<T> SurrogateBuilder::local(std::string name) {
 
     auto csv = std::make_shared<CallSiteVariable>(std::move(name), make_any<T>());
     m_csvs.push_back(csv);
@@ -101,20 +111,20 @@ Cursor<T> OpticBuilder::local(std::string name) {
 }
 
 template <typename T>
-Cursor<T> OpticBuilder::global(std::string name, T* tp) {
+Cursor<T> SurrogateBuilder::global(std::string name, T* tp) {
     auto csv = std::make_shared<CallSiteVariable>(std::move(name), make_any<T>(tp));
     m_csvs.push_back(csv);
     return Cursor<T>(nullptr, csv, this);
 }
 
 template <typename T>
-OpticBuilder& OpticBuilder::local_primitive(std::string name, Direction dir, std::vector<int64_t>&& shape) {
+SurrogateBuilder& SurrogateBuilder::local_primitive(std::string name, Direction dir, std::vector<int64_t>&& shape) {
     auto cursor = local<T>(name).primitives(name, std::move(shape), dir);
     return *this;
 }
 
 template <typename T>
-OpticBuilder& OpticBuilder::global_primitive(std::string name, T* tp, Direction dir, std::vector<int64_t>&& shape) {
+SurrogateBuilder& SurrogateBuilder::global_primitive(std::string name, T* tp, Direction dir, std::vector<int64_t>&& shape) {
     global<T>(name, tp).primitives(name, dir, std::move(shape));
     return *this;
 }
@@ -124,7 +134,7 @@ OpticBuilder& OpticBuilder::global_primitive(std::string name, T* tp, Direction 
 // ------------------------------------------------------
 
 template<typename HeadT>
-Cursor<HeadT>::Cursor(OpticBase*, std::shared_ptr<CallSiteVariable> c, OpticBuilder *b) : current_callsite_var(c), builder(b) {}
+Cursor<HeadT>::Cursor(OpticBase*, std::shared_ptr<CallSiteVariable> c, SurrogateBuilder *b) : current_callsite_var(c), builder(b) {}
 
 template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::primitive(std::string name, Direction dir) {
@@ -174,7 +184,7 @@ Cursor<HeadT> Cursor<HeadT>::array(size_t size) {
 }
 
 template<typename HeadT>
-OpticBuilder &Cursor<HeadT>::end() {
+SurrogateBuilder &Cursor<HeadT>::end() {
     return *builder;
 }
 
@@ -184,7 +194,7 @@ OpticBuilder &Cursor<HeadT>::end() {
 // -----------------------------------------------------------------
 
 template <typename HeadT, typename... RestTs>
-Cursor<HeadT, RestTs...>::Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, OpticBuilder* builder)
+Cursor<HeadT, RestTs...>::Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, SurrogateBuilder* builder)
 : focus(focus), current_callsite_var(callsite_var), builder(builder) {}
 
 template <typename HeadT, typename... RestTs>

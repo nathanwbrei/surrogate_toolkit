@@ -19,7 +19,7 @@ int my_global;
 
 TEST_CASE("Basic fluent construction") {
 
-    OpticBuilder builder;
+    SurrogateBuilder builder;
 
     builder
             .local<int>("a")

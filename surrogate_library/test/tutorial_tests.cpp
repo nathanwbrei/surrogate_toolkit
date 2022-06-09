@@ -18,21 +18,19 @@ struct ToyMagFieldMap {
     void getField(double x, double y, double z, double& Bx, double& By, double& Bz) {
         using namespace phasm;
         if (s_surrogate == nullptr) {
-            s_surrogate = std::make_shared<Surrogate>();
             // TODO: std::call_once or similar
-            OpticBuilder builder;
-            builder.local_primitive<double>("x", IN)
-                   .local_primitive<double>("y", IN)
-                   .local_primitive<double>("z", IN)
-                   .local_primitive<double>("Bx", OUT)
-                   .local_primitive<double>("By", OUT)
-                   .local_primitive<double>("Bz", OUT);
 
-            auto model = std::make_shared<FeedForwardModel>();
-            model->add_model_vars(builder.get_model_vars());
-            model->initialize();
-            s_surrogate->set_model(model);
-            s_surrogate->add_vars(builder);
+            SurrogateBuilder builder;
+            builder
+                .local_primitive<double>("x", IN)
+                .local_primitive<double>("y", IN)
+                .local_primitive<double>("z", IN)
+                .local_primitive<double>("Bx", OUT)
+                .local_primitive<double>("By", OUT)
+                .local_primitive<double>("Bz", OUT)
+                .set_model(std::make_shared<FeedForwardModel>());
+
+            s_surrogate = builder.make_surrogate();
         }
         std::cout << "Binding &Bz=" << &Bz << std::endl;
         // Because Bz is a reference, &Bz changes depending on the caller, so we have to rebind on every call!

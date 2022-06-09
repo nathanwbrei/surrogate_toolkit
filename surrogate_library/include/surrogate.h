@@ -12,7 +12,7 @@
 namespace phasm {
 
 class Model;
-class OpticBuilder;
+class SurrogateBuilder;
 
 class Surrogate {
 public:
@@ -33,7 +33,7 @@ public:
 
     Surrogate();
 
-    void add_vars(const OpticBuilder& b);
+    void add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars);
 
     template<typename T>
     void add_var(std::string param_name, Direction dir);

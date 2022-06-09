@@ -7,11 +7,11 @@
 namespace phasm {
 
 
-std::vector<std::shared_ptr<CallSiteVariable>> OpticBuilder::get_callsite_vars() const {
+std::vector<std::shared_ptr<CallSiteVariable>> SurrogateBuilder::get_callsite_vars() const {
     return m_csvs;
 }
 
-std::vector<std::shared_ptr<ModelVariable>> OpticBuilder::get_model_vars() const {
+std::vector<std::shared_ptr<ModelVariable>> SurrogateBuilder::get_model_vars() const {
     std::vector<std::shared_ptr<ModelVariable>> results;
     for (const auto &csv: m_csvs) {
         for (const auto &mv: csv->model_vars) {
@@ -41,7 +41,7 @@ OpticBase *cloneOpticsFromLeafToRoot(OpticBase *leaf) {
 }
 
 
-void OpticBuilder::printOptic(OpticBase *optic, int level) {
+void SurrogateBuilder::printOptic(OpticBase *optic, int level) {
 
     for (int i = 0; i < level; ++i) {
         std::cout << "    ";
@@ -61,7 +61,7 @@ void OpticBuilder::printOptic(OpticBase *optic, int level) {
     }
 }
 
-void OpticBuilder::printOpticsTree() {
+void SurrogateBuilder::printOpticsTree() {
     for (const auto &csv: m_csvs) {
         for (auto o: csv->optics_tree) {
             printOptic(o, 0);
@@ -69,7 +69,7 @@ void OpticBuilder::printOpticsTree() {
     }
 }
 
-void OpticBuilder::printModelVars() {
+void SurrogateBuilder::printModelVars() {
     auto vars = get_model_vars();
     for (const auto &p: vars) {
         std::cout << p->name << ":" << std::endl;

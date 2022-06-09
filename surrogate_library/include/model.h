@@ -11,7 +11,7 @@
 
 namespace phasm {
 
-class OpticBuilder;
+class SurrogateBuilder;
 
 class Surrogate;
 

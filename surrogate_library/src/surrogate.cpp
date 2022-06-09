@@ -156,8 +156,8 @@ void print_help_screen() {
     std::cout << std::endl;
 }
 
-void Surrogate::add_vars(const OpticBuilder &b) {
-    for (std::shared_ptr<CallSiteVariable> &csv: b.get_callsite_vars()) {
+void Surrogate::add_callsite_vars(const std::vector<std::shared_ptr<CallSiteVariable>> &vars) {
+    for (auto csv : vars) {
         m_bound_callsite_vars.push_back(csv);
         m_bound_callsite_var_map[csv->name] = csv;
     }
