@@ -59,7 +59,7 @@ TEST_CASE("Getting a multidimensional array out of a Torch tensor with arbitrary
 
 TEST_CASE("Using tensors with optics") {
     double mat[2][3] = {{1,2,3},{4,5,6}};
-    auto p = PrimitiveArray<double>({2,3});
+    auto p = TensorIso<double>({2, 3});
     auto t = p.to(mat[0]);
 
     auto firstitem = t.get_underlying()[0][0].item<double>();

@@ -148,23 +148,12 @@ Cursor<HeadT>::Cursor(OpticBase*, std::shared_ptr<CallSiteVariable> c, Surrogate
 
 template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::primitive(std::string name, Direction dir) {
-    auto child = new Primitive<HeadT>();
-    child->name = name;
-    child->is_leaf = true;
-    current_callsite_var->optics_tree.push_back(child);
-
-    auto mv = std::make_shared<ModelVariable>();
-    mv->name = name;
-    mv->accessor = child;
-    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
-    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
-    current_callsite_var->model_vars.push_back(mv);
-    return *this;
+    return primitives(name, {}, dir);
 }
 
 template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &&shape, Direction dir) {
-    auto child = new PrimitiveArray<HeadT>(std::move(shape));
+    auto child = new TensorIso<HeadT>(std::move(shape));
     child->name = name;
     child->is_leaf = true;
     current_callsite_var->optics_tree.push_back(child);
@@ -181,14 +170,14 @@ Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &
 template<typename HeadT>
 template<typename T>
 Cursor<T, HeadT> Cursor<HeadT>::accessor(std::function<T *(HeadT *)> lambda) {
-    auto child = new Field<HeadT, T>(nullptr, lambda);
+    auto child = new Lens<HeadT, T>(nullptr, lambda);
     current_callsite_var->optics_tree.push_back(child);
     return Cursor<T, HeadT>(child, current_callsite_var, builder);
 }
 
 template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::array(size_t size) {
-    auto child = new Array<HeadT>(nullptr, size);
+    auto child = new ArrayTraversal<HeadT>(nullptr, size);
     current_callsite_var->optics_tree.push_back(child);
     return Cursor<HeadT>(child, builder);
 }
@@ -209,23 +198,12 @@ Cursor<HeadT, RestTs...>::Cursor(OpticBase* focus, std::shared_ptr<CallSiteVaria
 
 template <typename HeadT, typename... RestTs>
 Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitive(std::string name, Direction dir) {
-    auto child = new Primitive<HeadT>();
-    child->name = name;
-    child->is_leaf = true;
-    focus->unsafe_attach(child);
-
-    auto mv = std::make_shared<ModelVariable>();
-    mv->name = name;
-    mv->accessor = cloneOpticsFromLeafToRoot(child);
-    mv->is_input = (dir == Direction::IN) || (dir == Direction::INOUT);
-    mv->is_output = (dir == Direction::OUT) || (dir == Direction::INOUT);
-    current_callsite_var->model_vars.push_back(mv);
-    return *this;
+    return primitives(name, {}, dir);
 }
 
 template <typename HeadT, typename... RestTs>
 Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitives(std::string name, std::vector<int64_t>&& shape, Direction dir) {
-    auto child = new PrimitiveArray<HeadT>(std::move(shape));
+    auto child = new TensorIso<HeadT>(std::move(shape));
     child->name = name;
     child->is_leaf = true;
     focus->unsafe_attach(child);
@@ -242,14 +220,14 @@ Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitives(std::string name, 
 template <typename HeadT, typename... RestTs>
 template <typename T>
 Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T*(HeadT*)> lambda) {
-    auto child = new Field<HeadT, T>(nullptr, lambda);
+    auto child = new Lens<HeadT, T>(nullptr, lambda);
     focus->unsafe_attach(child);
     return Cursor<T, HeadT, RestTs...>(child, builder);
 }
 
 template <typename HeadT, typename... RestTs>
 Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::array(size_t size) {
-    auto child = new Array<HeadT>(nullptr, size);
+    auto child = new ArrayTraversal<HeadT>(nullptr, size);
     focus->unsafe_attach(child);
     return Cursor<HeadT, RestTs...>(child, builder);
 }

@@ -21,7 +21,7 @@ TEST_CASE("Demonstrate two-way binding of a primitive") {
     int32_t x = 22;
 
     // Write out x into the tensor at index [1,1]
-    Primitive<int> p;
+    TensorIso<int> p;
     auto t = p.to(&x);
 
     std::cout << t.get_underlying().dtype();
@@ -63,12 +63,12 @@ struct MyStruct {
     float y;
 };
 
-TEST_CASE("Composition of a Field lens with a Primitive") {
+TEST_CASE("Composition of a Field lens with a TensorIso") {
     MyStruct s{49.0, 7.6};
 
-    auto primitive_lens = Primitive<float>();
+    auto primitive_lens = TensorIso<float>();
     auto getY = [](MyStruct *s) { return &(s->y); };
-    auto field_lens = Field<MyStruct, float>(&primitive_lens, getY);
+    auto field_lens = Lens<MyStruct, float>(&primitive_lens, getY);
     // auto field_lens = Field(primitive_lens, getY);
 
     // Obviously we need to get template type deduction working... maybe just use a newer compiler?
@@ -90,11 +90,11 @@ TEST_CASE("Composition of two structs") {
     MyStruct ms{1, 2};
     OtherStruct os{3, &ms};
 
-    auto primitive_lens = Primitive<float>();
+    auto primitive_lens = TensorIso<float>();
     auto getY = [](MyStruct *s) { return &(s->y); };
-    auto inner_lens = Field<MyStruct, float>(&primitive_lens, getY);
+    auto inner_lens = Lens<MyStruct, float>(&primitive_lens, getY);
     auto getMs = [](OtherStruct *os) { return os->s; };
-    auto outer_lens = Field<OtherStruct, MyStruct>(&inner_lens, getMs);
+    auto outer_lens = Lens<OtherStruct, MyStruct>(&inner_lens, getMs);
 
     auto t = outer_lens.to(&os);
     float *tp = t.get<float>();
@@ -108,22 +108,21 @@ TEST_CASE("Array of structs") {
                        {10, 11},
                        {15, 16},
                        {20, 21}};
-    auto primitive_iso = Primitive<float>();
-    auto inner_lens = Field<MyStruct, float>(&primitive_iso, [](MyStruct *s) { return &(s->y); });
-    auto array_traversal = Array<MyStruct>(&inner_lens, 5);
+    auto primitive_iso = TensorIso<float>();
+    auto inner_lens = Lens<MyStruct, float>(&primitive_iso, [](MyStruct *s) { return &(s->y); });
+    auto array_traversal = ArrayTraversal<MyStruct>(&inner_lens, 5);
 
     auto t = array_traversal.to(aos);
     std::cout << t.get_underlying() << std::endl;
     REQUIRE(t.get_underlying().size(0) == 5);
-    REQUIRE(t.get_underlying().size(1) == 1);
 }
 
 
-TEST_CASE("1-D Array of Primitive produces same Tensor as PrimitiveArray") {
+TEST_CASE("1-D Array of TensorIso produces same Tensor as TensorIsoArray") {
     int xs[] = {1, 2, 3, 4, 5};
-    auto primitive_iso = Primitive<int>();
-    auto array_trav = Array<int>(&primitive_iso, 5);
-    auto primitive_array_iso = PrimitiveArray<int>({5, 1});  // Note we can also specify shape as {5}
+    auto primitive_iso = TensorIso<int>();
+    auto array_trav = ArrayTraversal<int>(&primitive_iso, 5);
+    auto primitive_array_iso = TensorIso<int>({5});  // Note we can also specify shape as {5}
 
     auto t1 = array_trav.to(xs);
     auto t2 = primitive_array_iso.to(xs);
@@ -137,15 +136,14 @@ TEST_CASE("Iterate over std::vector") {
                                  {10, 11},
                                  {15, 16},
                                  {20, 21}};
-    auto primitive_iso = Primitive<float>();
-    auto inner_lens = Field<MyStruct, float>(&primitive_iso, [](MyStruct *s) { return &(s->y); });
+    auto primitive_iso = TensorIso<float>();
+    auto inner_lens = Lens<MyStruct, float>(&primitive_iso, [](MyStruct *s) { return &(s->y); });
     using IterT = STLIterator<std::vector<MyStruct>, MyStruct>;
     auto vector_traversal = Traversal<std::vector<MyStruct>, MyStruct, IterT>(&inner_lens, 5);
 
     auto t = vector_traversal.to(&aos);
     std::cout << t.get_underlying() << std::endl;
     REQUIRE(t.get_underlying().size(0) == 5);
-    REQUIRE(t.get_underlying().size(1) == 1);
 }
 
 struct MyOrderableStruct {
@@ -163,7 +161,7 @@ struct MyOrderableStruct {
 /*
 TEST_CASE("Iterate over std::set just like above") {
     std::set<MyOrderableStruct> aos = {{1,2},{5,6},{10,11},{15,16},{20,21}};
-    auto primitive_iso = Primitive<float>();
+    auto primitive_iso = TensorIso<float>();
     auto inner_lens = Field<MyOrderableStruct, float>(&primitive_iso, [](MyOrderableStruct* s){return &(s->y);});
     using IterT = STLIterator<std::set<MyOrderableStruct>, MyOrderableStruct>;
     auto vector_traversal = Traversal<std::set<MyOrderableStruct>, MyOrderableStruct, IterT>(&inner_lens, 5);
