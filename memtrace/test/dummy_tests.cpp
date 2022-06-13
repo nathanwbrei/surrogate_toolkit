@@ -4,9 +4,9 @@
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
-#include <dwarf.h>
-#include <libdwarf.h>
-#include "utils.hpp"
+// #include <dwarf.h>
+// #include <libdwarf.h>
+#include "typename.hpp"
 
 
 TEST_CASE("Demangling a string") {

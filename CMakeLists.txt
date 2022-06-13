@@ -45,7 +45,7 @@ message(STATUS "-----------------------")
 include_directories(external)
 
 add_subdirectory(examples)
-add_subdirectory(surrogate_library)
-add_subdirectory(vacuum_tool)
+add_subdirectory(surrogate)
+add_subdirectory(memtrace)
 add_subdirectory(gpu_perf_tester)
 

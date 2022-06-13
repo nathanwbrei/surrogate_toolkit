@@ -4,7 +4,7 @@
 
 
 #include <catch.hpp>
-#include "../vacuum_tool/src/utils.hpp"
+#include "typename.hpp"
 #include <iostream>
 
 namespace phasm::test::fluent_experiments {

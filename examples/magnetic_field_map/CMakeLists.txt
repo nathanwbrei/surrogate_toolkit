@@ -10,8 +10,12 @@ set(MAGNETIC_FIELD_MAP_SOURCES
         HDEVIO.cc
         )
 
-add_executable(magnetic_field_map ${MAGNETIC_FIELD_MAP_SOURCES})
-target_include_directories(magnetic_field_map PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../surrogate_library/include ${JANA_INCLUDE_DIR})
-target_link_libraries(magnetic_field_map ${TORCH_LIBRARIES} surrogate_library ${JANA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS})
-install(TARGETS magnetic_field_map DESTINATION bin)
+add_executable(phasm-example-magfieldmap ${MAGNETIC_FIELD_MAP_SOURCES})
+target_include_directories(phasm-example-magfieldmap PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../surrogate/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../memtrace/include
+        ${JANA_INCLUDE_DIR}
+        )
+target_link_libraries(phasm-example-magfieldmap ${TORCH_LIBRARIES} phasm-surrogate ${JANA_LIBRARY} Threads::Threads ${CMAKE_DL_LIBS})
+install(TARGETS phasm-example-magfieldmap DESTINATION bin)
 

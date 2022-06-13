@@ -2,7 +2,7 @@
 deps/
 build/
 cmake-build*/
-vacuum_tool/src/obj*/
+memtrace_pin/obj*/
 pin.log
 pinatrace.out
 a.out

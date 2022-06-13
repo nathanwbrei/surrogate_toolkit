@@ -6,7 +6,7 @@
 #ifndef SURROGATE_TOOLKIT_OPTICS_H
 #define SURROGATE_TOOLKIT_OPTICS_H
 
-#include "../vacuum_tool/src/utils.hpp"
+#include "typename.hpp"
 #include "any_ptr.hpp"
 #include "tensor.hpp"
 // #include <concepts>

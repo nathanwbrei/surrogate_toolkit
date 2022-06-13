@@ -11,10 +11,10 @@ set(SURROGATE_LIBRARY_SOURCES
         src/torchscript_model.cpp
         )
 
-add_library(surrogate_library STATIC ${SURROGATE_LIBRARY_SOURCES})
-target_include_directories(surrogate_library PRIVATE include ${TORCH_INCLUDE_DIRS})
-target_link_libraries(surrogate_library ${TORCH_LIBRARIES})
-install(TARGETS surrogate_library DESTINATION lib)
+add_library(phasm-surrogate STATIC ${SURROGATE_LIBRARY_SOURCES})
+target_include_directories(phasm-surrogate PRIVATE include ../memtrace/include ${TORCH_INCLUDE_DIRS})
+target_link_libraries(phasm-surrogate ${TORCH_LIBRARIES})
+install(TARGETS phasm-surrogate DESTINATION lib)
 
 
 set(SURROGATE_LIBRARY_TEST_SOURCES
@@ -33,8 +33,8 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/fluent_experiments.cpp
         test/tutorial_tests.cpp
         )
-add_executable("surrogate_library_tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
-target_include_directories(surrogate_library_tests PRIVATE include)
-target_link_libraries(surrogate_library_tests surrogate_library ${TORCH_LIBRARIES})
+add_executable("phasm-surrogate-tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
+target_include_directories(phasm-surrogate-tests PRIVATE include ../memtrace/include)
+target_link_libraries(phasm-surrogate-tests phasm-surrogate ${TORCH_LIBRARIES})
 
 
