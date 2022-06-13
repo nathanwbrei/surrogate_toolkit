@@ -38,3 +38,6 @@ target_include_directories(phasm-surrogate-tests PRIVATE include ../memtrace/inc
 target_link_libraries(phasm-surrogate-tests phasm-surrogate ${TORCH_LIBRARIES})
 
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+        DESTINATION include/phasm)
+
