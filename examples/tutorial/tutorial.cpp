@@ -6,6 +6,9 @@
 #include <surrogate_builder.h>
 #include <feedforward_model.h>
 
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>
+
 /* This tutorial describes the key features of libphasm. These allow the user to introduce a neural net surrogate model
  * for an arbitrary function, capture training data, create new training data via sampling, train the model in
  * place, etc. Although the PHASM project also includes performance analysis and memory tracing functionality, they will
@@ -21,36 +24,23 @@ double f(double x, double y, double z) {
     return 3*x*x + 2*y + z;
 }
 
-/* We write our PHASM wrapper for f like so. f_wrapper is a drop-in replacement for f,
- * which
- * */
+// We create a surrogate model for f like so:
 
-double f_wrapper(double x, double y, double z) {
-    using namespace phasm;
-    static Surrogate surrogate = SurrogateBuilder()                    // [1]
-            .set_model(std::make_shared<FeedForwardModel>())           // [2]
-            .local_primitive<double>("x", IN)                          // [3]
-            .local_primitive<double>("y", IN)
-            .local_primitive<double>("z", IN)
-            .local_primitive<double>("returns", OUT)
-            .finish();                                                 // [4]
-
-    double result = 0.0;
-
-    surrogate.bind_original_function([&](){ result = f(x,y,z); })      // [5]
-             .bind_all_callsite_vars(&x, &y, &z)                       // [6]
-             .call_original_and_capture();                             // [7]
-
-    return result;
-}
+phasm::Surrogate f_surrogate = phasm::SurrogateBuilder()                  // [1]
+        .set_model(std::make_shared<phasm::FeedForwardModel>())           // [2]
+        .local_primitive<double>("x", phasm::IN)                          // [3]
+        .local_primitive<double>("y", phasm::IN)
+        .local_primitive<double>("z", phasm::IN)
+        .local_primitive<double>("returns", phasm::OUT)
+        .finish();                                                        // [4]
 
 /* Let's unpack this piece by piece.
  *
  * [1] PHASM's main abstraction for a surrogate model is called `Surrogate`. Because we are
  *     wrapping the original function and always calling the wrapper, we only need one Surrogate
  *     object for f_wrapper, and it needs to last for the lifetime of the program,
- *     so we make it static. To configure a Surrogate, use the `SurrogateBuilder`, which provides
- *     a fluent interface.
+ *     so we make it global and/or static. To configure a Surrogate, we use the `SurrogateBuilder`,
+ *     which provides a fluent interface.
  *
  * [2] The first thing we need to tell the SurrogateBuilder is which model to use. Here we are
  *     using FeedForwardModel, which gives us the simplest possible neural net architecture using
@@ -70,7 +60,73 @@ double f_wrapper(double x, double y, double z) {
  *     the Model. We've configured the Surrogate! (Note that because we declared the Surrogate to be
  *     static, we bypassed the lazy initialization/double-checked locking problem, so the initialization
  *     is thread-safe.)
- *
+ */
+
+// Here is what we can now do with the surrogate:
+TEST_CASE("Calling f_surrogate") {
+
+    double x, y, z, result;                                       // [5]
+
+    f_surrogate
+        .bind_original_function([&](){ result = f(x,y,z); })      // [6]
+        .bind_all_callsite_vars(&x, &y, &z);                      // [7]
+
+    x = 1; y = 1; z = 1;
+    f_surrogate.call_original_and_capture();
+    REQUIRE(result == 6);
+
+    x = 1; y = 1; z = 2;
+    f_surrogate.call_original_and_capture();
+    REQUIRE(result == 7);
+
+    x = 1; y = 2; z = 1;
+    f_surrogate.call_original_and_capture();                       // [8]
+    REQUIRE(result == 10);
+
+    f_surrogate.get_model()->train_from_captures();                // [9]
+
+    x = 1; y = 1; z = 1;
+    f_surrogate.call_model();                                      // [10]
+    REQUIRE(result == 6);
+
+}
+
+// One thing that makes general surrogate models harder in C/C++ compared to other
+// languages is value semantics. Essentially, the
+
+
+// In a real-world codebase, we usually don't want to modify every call site for f, or
+// hard-code actions such as "call_original_and_capture()". Instead, we
+// want to create a wrapper function for f and make the surrogate machinery transparent
+// to the rest of the program. We want to be able to specify the action our surrogate
+// model takes via a side-channel. In this case, we
+
+
+// We can create a wrapper function for f like so:
+
+double f_wrapper(double x, double y, double z) {
+    double result = 0.0;
+    f_surrogate.bind_original_function([&](){ result = f(x,y,z); })      // [5]
+               .bind_all_callsite_vars(&x, &y, &z)                       // [6]
+               .call();                                                  // [7]
+    return result;
+}
+
+TEST_CASE("Call f_wrapper") {
+
+    f_surrogate.set_callmode(phasm::CallMode::CaptureAndDump);
+
+    double result = f_wrapper(1,2,3);
+    result = f_wrapper(2,2,3);
+    result = f_wrapper(3,2,3);
+    result = f_wrapper(4,2,3);
+
+    // PHASM will capture the inputs and outputs for each call
+    // When the program exits, PHASM will dump the captures to CSV.
+}
+
+
+/*
  * [5] For our Surrogate to call the original function f, we need to _bind_ the input and output parameters to f.
  *     We pass the Surrogate a lambda function with type signature `void(void)`. Note that we have to declare a
  *     variable on the stack to use as the return value. If you are wondering why we do this on every call as
@@ -87,15 +143,88 @@ double f_wrapper(double x, double y, double z) {
  *     directly.
  * */
 
+
+template <typename T>
+void print_matrix(std::ostream& os, T* arr, int nrows, int ncols) {
+    for (int row=0; row<nrows; ++row) {
+        for (int col=0; col<ncols; ++col) {
+            size_t idx = row*ncols + col;
+            os << std::setw(2) << arr[idx] << " ";
+        }
+        os << std::endl;
+    }
+    os << std::endl;
+}
+
+template <typename T>
+void fill_matrix(T* arr, int nrows, int ncols) {
+    for (int row=0; row<nrows; ++row) {
+        for (int col=0; col<ncols; ++col) {
+            size_t idx = row*ncols + col;
+            arr[idx] = idx;
+        }
+    }
+}
+
+template <typename T>
+void zero_top_right(T* arr, int nrows, int ncols) {
+
+    for (int row=0; row<nrows; ++row) {
+        for (int col=0; col<ncols; ++col) {
+            if (row < col) {
+                size_t idx = row*ncols + col;
+                arr[idx] = 0;
+            }
+        }
+    }
+}
+
+
+
+TEST_CASE("Surrogates with array input data") {
+
+    float matrix[] = { 1,  2,  3,  4,  5,
+                       6,  7,  8,  9, 10,
+                       11, 12, 13, 14, 15,
+                       16, 17, 18, 19, 20 };
+
+    std::cout << "Buffer before running the original function: " << std::endl;
+    print_matrix(std::cout, matrix, 4, 5);
+
+    zero_top_right(matrix, 4, 5);
+
+    std::cout << "Buffer after running the original function: " << std::endl;
+    print_matrix(std::cout, matrix, 4, 5);
+
+
+    std::cout << "Buffer after being reset:" << std::endl;
+    fill_matrix(matrix, 4, 5);
+    print_matrix(std::cout, matrix, 4, 5);
+
+
+    using namespace phasm;
+    Surrogate zero_top_right_surrogate = SurrogateBuilder()
+            .set_model(std::make_shared<FeedForwardModel>())
+            .local_primitive<float>("m", INOUT, {4, 5})
+            .finish();
+
+    // note we don't include nrows and ncols as model params because they are
+    // implicitly included in the shape of parameter "m". Also note that this
+    // implies that our model is constrained to use
+
+    zero_top_right_surrogate
+        .bind_original_function([&](){ return zero_top_right(matrix, 4, 5); })
+        .bind_all_callsite_vars(matrix);
+
+    fill_matrix(matrix, 4, 5);
+    zero_top_right_surrogate.call_model();
+
+    std::cout << "Buffer after running the surrogate model:" << std::endl;
+    print_matrix(std::cout, matrix, 4, 5);
+
+
+}
+
+
 // Global variables
 // Arrays of structs of structs of arrays of data
-//
-// Phasm call mode
-
-
-
-
-
-int main() {
-    return 0;
-}
