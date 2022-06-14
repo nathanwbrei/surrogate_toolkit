@@ -8,33 +8,43 @@
 #include <surrogate.h>
 #include "feedforward_model.h"
 
-/// Modify a 2D array by setting each cell in the top right to zero.
-/// The idea is that it should be pretty easy to train a neural net to
-/// do this, as long as we keep the size fixed. In this case, `arr` is
-/// both an input and an output, and the `nrows` and `ncols` are not
-/// needed as inputs to the neural net at all because they are encoded
-/// in the tensor shape.
-/// One more interesting question is how to make this work without
-/// restricting us to one exact size. It might be possible using
-/// RaggedTensors, or we might want to rescale to fixed size, feed it to
-/// the neural net, and then rescale back. For now, however, this also
-/// serves as a good demonstration of using `Range` to constrain our
-/// surrogate model to delegate to the surrogate model only when the
-/// matrix size is correct.
-void zero_top_right(float* arr, int nrows, int ncols) {
-
+template <typename T>
+void zero_matrix(T* arr, int nrows, int ncols) {
     for (int row=0; row<nrows; ++row) {
         for (int col=0; col<ncols; ++col) {
-            if (row < col) {
-                size_t idx = row*ncols + col;
-                arr[idx] = 0;
-            }
+            size_t idx = row*ncols + col;
+            arr[idx] = 0;
         }
     }
 }
 
+constexpr double PI = 3.1415926589793238;
+
+void make_forcing_term(double* f, int n) {
+    // Forcing function assumes an n*n grid with (h,h) in top left corner and (n*h,n*h) in bottom right
+    // Once we include the boundary conditions this gives us a square with corners at (0,0) to (1,1)
+    double h = 1.0/(n+1);
+    for (int r=0; r<n; ++r) {
+        for (int c=0; c<n; ++c) {
+            double x = (r+1) * h;
+            double y = (c+1) * h;
+            f[r*n+c] = -2*PI*PI*sin(PI*x)*sin(PI*y);
+        }
+    }
+}
+
+void make_boundary(double* T, int n, double value) {
+    for (int i=0; i<n+2; ++i) {
+        T[i] = value;   // top
+        T[(n+1)*(n+2)+i] = value;   // bottom
+        T[i*(n+2)] = value;   // left
+        T[i*(n+2)+n+1] = value;   // right
+    }
+}
+
+
 /// Prints our extremely minimal matrix to `os`.
-void print_matrix(std::ostream& os, float* arr, int nrows, int ncols) {
+void print_matrix(std::ostream& os, double* arr, int nrows, int ncols) {
     for (int row=0; row<nrows; ++row) {
         for (int col=0; col<ncols; ++col) {
             size_t idx = row*ncols + col;
@@ -47,119 +57,68 @@ void print_matrix(std::ostream& os, float* arr, int nrows, int ncols) {
 
 /// Uses Gauss-Seidel iteration with a second-order central finite difference discretization.
 /// Assume homogeneous Dirichlet boundary conditions for simplicity for now.
-/// Parameters:     temperature_matrix
-///                 nrows
-///                 ncols
+/// Parameters:     T: a matrix of size n+2 * n+2, with Dirichlet boundary conditions along the edges
+///                 f: a matrix of size n * n, giving the forcing term for each mesh cell
+///                 n: the number of non-boundary cells in each direction
+int solve_stationary_heat_eqn(double* T, double* f, int n) {
 
-
-int solve_stationary_heat_eqn(float* temperature_matrix, int nrows, int ncols,
-                               std::function<float(float, float)> forcing_fn
-                               ) {
-
-    float* T = temperature_matrix;
-    double error_threshold = 0.0001;
+    double error_threshold = 0.00001;
     double residual = 2*error_threshold;
-    double hx = 1.0/(ncols+1);
-    double hy = 1.0/(nrows+1);
-    double wx = 1.0/(hx * hx);
-    double wy = 1.0/(hy * hy);
-    double wh = 2*(wx+wy);   // Usually 4/(h^2)
+    double h = 1.0/(n+1);
+    double w = 1.0/(h * h);
+
+    // Populate an initial guess inside domain
+    for (int r=1; r<n+1; ++r) {
+        for (int c=1; c<n+1; ++c) {
+            T[r*(n+2)+c] = 1.0;
+        }
+    }
+
     int iters = 0;
 
     while (residual > error_threshold) {
-        for (int r=1; r<nrows-1; ++r) {
-            for (int c=1; c<ncols-1; ++c) {
+        for (int r=1; r<n+1; ++r) {
+            for (int c=1; c<n+1; ++c) {
                 // T[r,c] = -forcing_fn(r,c)/wh + wx*(T[r,c-1] + T[r,c+1]) + wy*(T[r-1,c] + T[r+1,c]);
-                T[r*ncols+c] = -forcing_fn(r,c)/wh + wx*(T[r*ncols+c-1] + T[r*ncols+c+1]) + wy*(T[(r-1)*ncols+c] + T[(r+1)*ncols+c]);
+                T[r*(n+2)+c] = -f[(r-1)*(n)+(c-1)]/(4.0*w) + (T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c])/4.0;
             }
         }
-        print_matrix(std::cout, temperature_matrix, nrows, ncols);
+        print_matrix(std::cout, T, n+2, n+2);
         iters++;
         residual = 0;
         double cell_residual = 0;
         double sum_of_cell_residuals_squared = 0;
-        for (int r=1; r<nrows-1; ++r) {
-            for (int c=1; c<ncols-1; ++c) {
-                cell_residual = -forcing_fn(r,c) - wh*T[r*ncols+c] + wx*(T[r*ncols+c-1] + T[r*ncols+c+1]) + wy*(T[(r-1)*ncols+c] + T[(r+1)*ncols+c]);
+        for (int r=1; r<(n+2)-1; ++r) {
+            for (int c=1; c<(n+2)-1; ++c) {
+                cell_residual = -f[(r-1)*n+(c-1)] - 4*w*T[r*(n+2)+c] + w*(T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c]);
                 sum_of_cell_residuals_squared += cell_residual*cell_residual;
             }
         }
-        residual = sqrt((1.0/(nrows+ncols)) * sum_of_cell_residuals_squared);
+        residual = sqrt((1.0/(n*n)) * sum_of_cell_residuals_squared);
+        std::cout << "Residual is " << residual << std::endl;
     }
     return iters;
 }
 
 
-void fill_matrix(float* arr, int nrows, int ncols) {
-    for (int row=0; row<nrows; ++row) {
-        for (int col=0; col<ncols; ++col) {
-            size_t idx = row*ncols + col;
-            arr[idx] = idx;
-        }
-    }
-}
-
-void zero_matrix(float* arr, int nrows, int ncols) {
-    for (int row=0; row<nrows; ++row) {
-        for (int col=0; col<ncols; ++col) {
-            size_t idx = row*ncols + col;
-            arr[idx] = 0;
-        }
-    }
-}
-
-#define PI 3.141592
-
 
 int main() {
-    /*
-    float matrix[] = { 1,  2,  3,  4,  5,
-                       6,  7,  8,  9, 10,
-                      11, 12, 13, 14, 15,
-                      16, 17, 18, 19, 20 };
+    constexpr size_t N = 7;
 
-    std::cout << "Buffer before running the original function: " << std::endl;
-    print_matrix(std::cout, matrix, 4, 5);
+    double T[(N+2) * (N+2)];
+    double f[N * N];
 
-    zero_top_right(matrix, 4, 5);
+    zero_matrix(T, N+2, N+2);
 
-    std::cout << "Buffer after running the original function: " << std::endl;
-    print_matrix(std::cout, matrix, 4, 5);
+    make_forcing_term(f, N);
+    print_matrix(std::cout, f, N, N);
 
+    make_boundary(T, N, 0);
+    print_matrix(std::cout, T, N+2, N+2);
 
-    std::cout << "Buffer after being reset:" << std::endl;
-    fill_matrix(matrix, 4, 5);
-    print_matrix(std::cout, matrix, 4, 5);
+    solve_stationary_heat_eqn(T, f, N);
+    print_matrix(std::cout, T, N+2, N+2);
 
-
-    auto model = std::make_shared<FeedForwardModel>();
-    model->input_output("arr", new optics::PrimitiveArray<float>({4,5}));
-    model->input("nrows", new optics::Primitive<int>());
-    model->input("ncols", new optics::Primitive<int>());
-    model->initialize();
-
-    int nrows = 4;
-    int ncols = 5;
-    Surrogate surrogate([&](){ zero_top_right(matrix, nrows, ncols); }, model);
-    surrogate.bind_input_output("arr", matrix);
-    surrogate.bind_input("nrows", &nrows);
-    surrogate.bind_input("ncols", &ncols);
-
-    surrogate.call_original_and_capture();
-    model->train_from_captures();
-
-    fill_matrix(matrix, 4, 5);
-    surrogate.call_model();
-
-    std::cout << "Buffer after running the surrogate model:" << std::endl;
-    print_matrix(std::cout, matrix, 4, 5);
-
-     */
-    float temperature[10*10];
-    zero_matrix(temperature, 10, 10);
-    auto forcing_fn = [](float x, float y) {return -2*PI*PI*sin(PI*x)*sin(PI*y);};
-    int iters = solve_stationary_heat_eqn(temperature, 10, 10, forcing_fn);
-    std::cout << "Calculated solution in " << iters << " iters." << std::endl;
-    print_matrix(std::cout, temperature, 10, 10);
+    return 0;
 }
 
