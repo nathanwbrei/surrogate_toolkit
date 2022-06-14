@@ -5,7 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <model.h>
-#include <surrogate.h>
+#include <surrogate_builder.h>
 #include "feedforward_model.h"
 
 template <typename T>
@@ -33,12 +33,12 @@ void make_forcing_term(double* f, int n) {
     }
 }
 
-void make_boundary(double* T, int n, double value) {
+void make_boundary(double* T, int n, double top, double bottom, double right, double left) {
     for (int i=0; i<n+2; ++i) {
-        T[i] = value;   // top
-        T[(n+1)*(n+2)+i] = value;   // bottom
-        T[i*(n+2)] = value;   // left
-        T[i*(n+2)+n+1] = value;   // right
+        T[i] = top;
+        T[(n+1)*(n+2)+i] = bottom;
+        T[i*(n+2)] = left;
+        T[i*(n+2)+n+1] = right;
     }
 }
 
@@ -101,6 +101,21 @@ int solve_stationary_heat_eqn(double* T, double* f, int n) {
 }
 
 
+phasm::Surrogate g_stationary_heat_eqn_surrogate = phasm::SurrogateBuilder()
+        .set_model(std::make_shared<phasm::FeedForwardModel>())
+        .local_primitive<double>("T", phasm::INOUT)
+        .local_primitive<double>("f", phasm::IN)
+        .local_primitive<int>("n", phasm::IN)
+        .finish();
+
+void wrapped_stationary_heat_eqn(double* T, double* f, int n) {
+    g_stationary_heat_eqn_surrogate
+        .bind_all_callsite_vars(T, f, &n)
+        .bind_original_function([&](){ return solve_stationary_heat_eqn(T, f, n); })
+        .call();
+}
+
+
 
 int main() {
     constexpr size_t N = 7;
@@ -111,14 +126,20 @@ int main() {
     zero_matrix(T, N+2, N+2);
 
     make_forcing_term(f, N);
-    print_matrix(std::cout, f, N, N);
+    // print_matrix(std::cout, f, N, N);
 
-    make_boundary(T, N, 0);
+    make_boundary(T, N, 0, 0, 0, 0);
+    // print_matrix(std::cout, T, N+2, N+2);
+
+    wrapped_stationary_heat_eqn(T, f, N);
     print_matrix(std::cout, T, N+2, N+2);
 
-    solve_stationary_heat_eqn(T, f, N);
+    g_stationary_heat_eqn_surrogate
+        .bind_all_callsite_vars(T, f, &N)
+        .bind_original_function([&](){ return solve_stationary_heat_eqn(T, f, N); })
+        .call_original_and_capture();
+
     print_matrix(std::cout, T, N+2, N+2);
 
-    return 0;
 }
 
