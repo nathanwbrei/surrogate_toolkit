@@ -3,10 +3,11 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include "surrogate.h"
-#include <iostream>
-#include "model.h"
 
-#include "surrogate_builder.h"
+#include <iostream>
+#include <cstdarg>  // For va_start, etc
+
+#include "model.h"
 
 namespace phasm {
 
