@@ -5,6 +5,7 @@
 
 #include "interpreter.hpp"
 #include <iostream>
+#include <cassert>
 
 using namespace phasm::memtrace;
 
