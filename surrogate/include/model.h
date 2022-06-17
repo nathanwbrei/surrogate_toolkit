@@ -63,8 +63,6 @@ public:
     virtual void train_from_captures() {};
 
     virtual bool infer() { return false; };
-
-    virtual void save();
 };
 
 

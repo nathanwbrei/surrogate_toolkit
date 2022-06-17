@@ -35,7 +35,7 @@ struct Range {
 
     Range(std::unordered_set<tensor> items) : rangeType(RangeType::FiniteSet), items(std::move(items)) {}
 
-    Range(torch::Tensor lower, torch::Tensor upper) : rangeType(RangeType::Interval), lower_bound_inclusive(lower),
+    Range(tensor lower, tensor upper) : rangeType(RangeType::Interval), lower_bound_inclusive(lower),
                               upper_bound_inclusive(upper) {}
 
     bool contains(const tensor& t) {
@@ -64,9 +64,9 @@ struct Range {
 
     void report(std::ostream &os) {
         os << "Min = " << std::endl;
-        lower_bound_inclusive->get_underlying().print();
+        // lower_bound_inclusive->get_underlying().print();
         os << "Max = " << std::endl;
-        upper_bound_inclusive->get_underlying().print();
+        // upper_bound_inclusive->get_underlying().print();
     }
 };
 

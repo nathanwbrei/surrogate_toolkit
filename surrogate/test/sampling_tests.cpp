@@ -4,24 +4,25 @@
 
 
 #include <catch.hpp>
-#include "surrogate.h"
+#include "surrogate_builder.h"
 #include "sampler.h"
 
 using namespace phasm;
 
 namespace phasm::tests::sampling_tests {
 
+template <typename T>
+phasm::tensor scalar_to_tensor(T scalar) {
+    return tensor(&scalar, 1);
+}
 
 TEST_CASE("Basic GridSampler") {
 
     int x = 100;
-    auto i = std::make_shared<ModelVariable>();
-    i->range.lower_bound_inclusive = 3;
-    i->range.upper_bound_inclusive = 5;
-    CallSiteVariable cs("x", any_ptr((int*) nullptr));
-    cs.model_vars.push_back(i);
-    cs.binding = &x;
-    GridSampler<int> s(cs, i);
+    auto v = SurrogateBuilder().local_primitive<int>("x", INOUT).get_model_vars()[0];
+    v->range.lower_bound_inclusive = scalar_to_tensor(3);
+    v->range.upper_bound_inclusive = scalar_to_tensor(5);
+    GridSampler s(v, 1);
 
     bool result;
     result = s.next();
@@ -43,17 +44,19 @@ TEST_CASE("Basic GridSampler") {
 
 
 TEST_CASE("Basic FiniteSetSampler") {
+    auto v = SurrogateBuilder().local_primitive<int>("x", INOUT).get_model_vars()[0];
+    v->range.items.insert(scalar_to_tensor(7));
+    v->range.items.insert(scalar_to_tensor(8));
+    v->range.items.insert(scalar_to_tensor(9));
+    v->range.rangeType = RangeType::FiniteSet;
+    FiniteSetSampler s(v);
+
     int x = 100;
-    auto i = std::make_shared<ModelVariable>();
-    i->range.items = {7,8,9};
-    CallSiteVariable b("x", any_ptr((int*) nullptr));
-    b.model_vars.push_back(i);
-    b.binding = &x;
-    FiniteSetSampler<int> s(b);
 
     bool result;
     result = s.next();
     REQUIRE(result == true);
+    v->publishInferenceOutput(&x);
     REQUIRE(x == 7);
 
     result = s.next();

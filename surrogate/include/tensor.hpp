@@ -71,7 +71,7 @@ class tensor {
     DType m_dtype;
 
 public:
-    explicit tensor(torch::Tensor underlying = {}):
+    explicit inline tensor(torch::Tensor underlying = {}):
         m_underlying(underlying),
         m_length(underlying.numel()),
         m_dtype(phasm::get_dtype(underlying.dtype().toScalarType()))

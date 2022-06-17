@@ -6,7 +6,7 @@
 #ifndef SURROGATE_TOOLKIT_SAMPLER_H
 #define SURROGATE_TOOLKIT_SAMPLER_H
 
-#include <call_site_variable.h>
+#include <tensor.hpp>
 
 namespace phasm {
 
@@ -16,35 +16,34 @@ struct Sampler {
     /// Returns true if there are _more_ samples remaining. E.g.:
     /// `while (sampler.next()) surrogate.call_and_capture();`
     virtual bool next() = 0;
-
 };
 
+class GridSampler : public Sampler {
 
-template<typename T>
-struct GridSampler : public Sampler {
+    tensor current_sample;
+    tensor initial_sample;
+    tensor final_sample;
+    tensor sample_delta;
+    // int64_t sample_count;
+    std::shared_ptr<ModelVariable> model_var;
 
-    T current_sample;
-    T initial_sample;
-    T final_sample;
-    T step_size;
-    T *slot;
+public:
 
-    GridSampler(CallSiteVariable &cs, std::shared_ptr<ModelVariable> var, size_t nsteps = 100) {
-        initial_sample = var->range.lower_bound_inclusive;
-        final_sample = var->range.upper_bound_inclusive;
+    GridSampler(std::shared_ptr<ModelVariable> var, int nsteps = 100) {
+        model_var = var;
+        initial_sample = var->range.lower_bound_inclusive.value();
+        final_sample = var->range.upper_bound_inclusive.value();
         current_sample = initial_sample;
-        step_size = (final_sample - current_sample) / nsteps;
-        if (step_size < 1) step_size = 1;
-        slot = cs.binding.get<T>();
+        sample_delta = tensor((final_sample.get_underlying() - current_sample.get_underlying()) / nsteps);
     }
 
     bool next() override {
-        *slot = current_sample;
-        if (current_sample >= final_sample) {
+        model_var->training_inputs.push_back(current_sample);
+        if ((current_sample.get_underlying() >= final_sample.get_underlying()).all().item<bool>()) {
             current_sample = initial_sample;
             return false;
         } else {
-            current_sample += step_size;
+            current_sample.get_underlying() += sample_delta.get_underlying();
             return true;
         }
     }
@@ -68,20 +67,18 @@ class CartesianProductSampler : public Sampler {
     }
 };
 
-template<typename T>
 struct FiniteSetSampler : public Sampler {
-    std::vector<T> samples;
+    std::vector<tensor> samples;
+    std::shared_ptr<ModelVariable> model_var;
     size_t sample_index = 0;
-    T *slot;
 
-    FiniteSetSampler(CallSiteVariable &binding) {
-        slot = binding.binding.get<T>();
-        auto &s = binding.model_vars[0]->range.items;
+    FiniteSetSampler(std::shared_ptr<ModelVariable> mv) {
+        model_var = mv;
+        auto &s = mv->range.items;
         samples.insert(samples.end(), s.begin(), s.end());
     }
 
     bool next() override {
-        *slot = samples[sample_index++];
         if (sample_index >= samples.size()) {
             sample_index = 0;
             return false;
