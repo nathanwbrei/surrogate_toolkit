@@ -13,7 +13,7 @@ export DEPS=`pwd`/deps
 # Build everything except vacuum tool
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/install" ..
+cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" ..
 make install
 
 # To run one of the examples:

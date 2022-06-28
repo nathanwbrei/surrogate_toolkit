@@ -59,12 +59,12 @@ cd ../..
 wget https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
 tar -xf libdwarf-0.3.4.tar.xz
 mkdir libdwarf-0.3.4/build
-mkdir libdwarf-0.3.4/install
+mkdir libdwarf-0.3.4/installdir
 cd libdwarf-0.3.4/build
-cmake .. -DCMAKE_INSTALL_PREFIX=$DEPSDIR/libdwarf-0.3.4/install
+cmake .. -DCMAKE_INSTALL_PREFIX=$DEPSDIR/libdwarf-0.3.4/installdir
 make install
 
 
 echo "Download succeeded!"
 echo "Pass to CMake:"
-echo "-DCMAKE_PREFIX_PATH=\"$DEPSDIR/libtorch;$DEPSDIR/JANA2/install;$DEPSDIR/libdwarf-0.3.4/install\""
+echo "-DCMAKE_PREFIX_PATH=\"$DEPSDIR/libtorch;$DEPSDIR/JANA2/install;$DEPSDIR/libdwarf-0.3.4/installdir\""
