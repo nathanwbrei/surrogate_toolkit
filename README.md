@@ -3,8 +3,8 @@
 
 ## How to build
 ```bash
-git clone https://github.com/nathanwbrei/surrogate_toolkit
-cd surrogate_toolkit
+git clone https://github.com/nathanwbrei/phasm
+cd phasm
 
 # Install PyTorch, Intel Pin, and JANA2 dependencies
 ./download_deps.sh
