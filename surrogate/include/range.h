@@ -12,6 +12,7 @@
 #include <vector>
 #include <limits>
 #include <ostream>
+#include <optional>
 
 #include "tensor.hpp"
 
