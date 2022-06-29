@@ -28,8 +28,8 @@ if [[ $MACOS -eq 1 ]]; then
 else
     # If you are getting weird linker errors mentioning GLIBCXX and basic_string, it may have to do with the cxx11 ABI change
     # In which case try this version instead:
-    #    wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
-    wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
+    wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
+    # wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
     unzip libtorch-shared-with-deps-1.11.0+cpu.zip
 fi
 

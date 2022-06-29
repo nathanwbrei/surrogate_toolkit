@@ -55,6 +55,14 @@ export CC=`which gcc`
 export CXX=`which g++`
 ```
 
+Farm machines need the pre-cxx11 ABI version of the precompiled PyTorch. 
+Go into download_deps.sh and comment/uncomment the following lines:
+
+```bash
+#wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
+wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
+```
+
 Finally, you might get an error when trying to run phasm saying that it 
 can't find libtorch.so. In this case, you need to add it to your LD_LIBRARY_PATH
 like so:
