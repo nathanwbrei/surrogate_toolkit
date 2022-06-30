@@ -1,4 +1,12 @@
 #!/bin/bash
+# exit when any command fails in the script
+set -e
+
+# Record the last command
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+# echo the error message given before exiting
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+
 
 # Figure out whether we are on linux or macos
 if [[ "$OSTYPE" == "darwin"* ]]; then
