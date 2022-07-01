@@ -15,6 +15,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   MACOS=0
   echo "Assuming your system is Linux"
+  deps=download_deps.sh
+  if [ -f "$deps" ];
+  then
+    echo "$deps has been found."
+  else
+    echo "deps has not been found"
+  fi
 fi
 
 # Give the user the opportunity to cancel
