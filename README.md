@@ -18,7 +18,7 @@ make install
 
 # To run one of the examples:
 export LD_LIBRARY_PATH=$DEPS/libtorch/lib:$LD_LIBRARY_PATH
-PHASM_CALL_MODE=CaptureAndDump bin/phasm-example-pdesolver
+PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
 
 
 # Build vacuum tool 
