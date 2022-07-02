@@ -19,7 +19,7 @@ else
   if [ -d "$deps" ];
   then
     echo "$deps has been found."
-    echo "$download not continuing"
+    echo "download not continuing."
     exit
   else
     echo "deps has not been found"
