@@ -15,8 +15,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   MACOS=0
   echo "Assuming your system is Linux"
-  deps=deps/
-  if [ -f "$deps" ];
+  deps="deps/"
+  if [ -d "$deps" ];
   then
     echo "$deps has been found."
   else
