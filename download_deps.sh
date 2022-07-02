@@ -15,15 +15,16 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   MACOS=0
   echo "Assuming your system is Linux"
-  deps="deps/"
-  if [ -d "$deps" ];
-  then
-    echo "$deps has been found."
-    echo "download not continuing."
-    exit
-  else
-    echo "deps has not been found"
-  fi
+fi
+
+
+deps="deps/"
+if [ -d "$deps" ]; then
+  echo "$deps has been found."
+  echo "download not continuing."
+  exit
+else
+  echo "deps has not been found"
 fi
 
 # Give the user the opportunity to cancel
