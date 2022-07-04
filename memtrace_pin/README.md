@@ -4,18 +4,28 @@
 
 ## To build:
 
-1. Download Pin from [1]
-2. Set envvar PIN_ROOT=$PATH_TO_PIN [2]
-3. `make`. No CMake support yet. Builds in-source to `obj-intel64` directory
-4. $PIN_ROOT/pin -t obj-intel64/pinatrace.dylib -- ../../cmake-build-debug-local/vacuum_target/vaccum_target
+1. Download Pin from [1] using `download_deps.sh`. 
+2. Set PIN_ROOT envvar: `export PIN_ROOT=$DEPS/pin` [2]
+3. Run `make`. No CMake support yet, probably ever. Builds in-source to `obj-intel64` directory
+4. Run `cmake install` to install the rest of the project
+
+## To run:
+```bash
+# From the phasm install directory
+bin/phasm-memtrace-pin bin/phasm-example-memtrace
+```
+
+## What the run scripts are essentially doing:
 
 ```bash
-export PIN_ROOT=/Users/nbrei/projects/surrogate/Pin/pin-3.22-98547-g7a303a835-clang-mac/
-export VACUUMTARGET=/Users/nbrei/projects/surrogate/surrogate_toolkit/cmake-build-debug-local/vacuum_tool/vacuum_target
-export VACUUMTOOL=/Users/nbrei/projects/surrogate/surrogate_toolkit/vacuum_tool/src/obj-intel64/vacuum_pin_plugin.dylib
-make
+export VACUUMTARGET=`pwd`/../build/examples/memtrace/phasm-example-memtrace
+export VACUUMTOOL=`pwd`/obj-intel64/memtrace_pin_frontend.dylib
+# Note: Should be memtrace_pin_frontend.so on Linux
+
+# To run the vacuum tool against vacuum_target
 $PIN_ROOT/pin -t $VACUUMTOOL -- $VACUUMTARGET
 ```
+
 
 ## Sources
 

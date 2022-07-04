@@ -24,15 +24,15 @@ PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
 # Build vacuum tool 
 # This is tricky because it uses a complicated Makefile thanks to PIN
 cd ..
-cd vacuum_tool/src
-export PIN_ROOT=$DEPS/Pin/pin-3.22-98547-g7a303a835-clang-mac/
+cd memtrace_pin
+export PIN_ROOT=$DEPS/pin
 make
-export VACUUMTARGET=`pwd`/../build/vacuum_target/vacuum_target
-export VACUUMTOOL=`pwd`/obj-intel64/vacuum_pin_plugin.dylib
+cd ../build
+cmake ..        # Now we need to rerun everything from CMake
+make install    # to get the final missing memtrace_pin_frontend.dylib into the cmake install directory
 
-# To run the vacuum tool against vacuum_target
-# $PIN_ROOT/pin -t $VACUUMTOOL -- $VACUUMTARGET
-
+# Run vacuum tool against the example target program
+install/bin/phasm-memtrace-pin install/bin/phasm-example-memtrace
 ```
 
 ## Special directions for building on ifarm

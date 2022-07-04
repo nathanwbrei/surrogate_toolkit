@@ -4,19 +4,19 @@
 if [ -z $PIN_ROOT ]; then PIN_ROOT=@PIN_ROOT@; fi
 
 # Vacuum tool pin plugin lives in same directory as this script
-VACUUM_TOOL_DIR=`dirname $0`
+MEMTRACE_PIN_DIR=`dirname $0`/../lib/
 
 # Resolve confusion over .dylib and .so
-if [ -f "$VACUUM_TOOL_DIR/vacuum_pin_plugin.so" ];
+if [ -f "$MEMTRACE_PIN_DIR/memtrace_pin_frontend.so" ];
 then
-    VACUUM_TOOL="$VACUUM_TOOL_DIR/vacuum_pin_plugin.so"
-elif [ -f "$VACUUM_TOOL_DIR/vacuum_pin_plugin.dylib" ]
+    VACUUM_TOOL="$MEMTRACE_PIN_DIR/memtrace_pin_frontend.so"
+elif [ -f "$MEMTRACE_PIN_DIR/memtrace_pin_frontend.dylib" ]
 then
-    VACUUM_TOOL="$VACUUM_TOOL_DIR/vacuum_pin_plugin.dylib";
+    VACUUM_TOOL="$MEMTRACE_PIN_DIR/memtrace_pin_frontend.dylib";
 else
-    echo "Unable to find vacuum tool plugin. Checked:
-    echo "    $VACUUM_TOOL_DIR/vacuum_pin_plugin.so"
-    echo "    $VACUUM_TOOL_DIR/vacuum_pin_plugin.dylib"
+    echo "Unable to find vacuum tool plugin. Checked:"
+    echo "    $MEMTRACE_PIN_DIR/memtrace_pin_frontend.so"
+    echo "    $MEMTRACE_PIN_DIR/memtrace_pin_frontend.dylib"
     exit 1
 fi
 
