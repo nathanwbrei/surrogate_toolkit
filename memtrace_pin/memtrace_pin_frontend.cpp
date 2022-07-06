@@ -20,54 +20,54 @@ KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "tar
 
 VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("%p: R %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
+        printf("r %p %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
     }
 }
 
 VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("%p: W %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
+        printf("w %p %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
     }
 }
 
 VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     in_target_routine = true;
     target_rbp = (void*) rsp; // This is because record_enter_target_rtn is called before the target routine's prologue
-    printf("%p: Entering target routine %s, target $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
+    printf("et %p: Entering target routine %s, target $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
 }
 
 VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
     in_target_routine = false;
-    printf("%p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
+    printf("xt %p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
 }
 
 VOID record_enter_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("%p: Entering routine %s, $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
+        printf("er %p: Entering routine %s, $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
     }
 }
 
 VOID record_exit_rtn(UINT64 routine_id, VOID* ip) {
     if (in_target_routine) {
-        printf("%p: Exiting routine %s\n", ip, routine_names[routine_id].c_str());
+        printf("xr %p: Exiting routine %s\n", ip, routine_names[routine_id].c_str());
     }
 }
 
 VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
     if (in_target_routine) {
-        printf("%p Malloc request of size %llu\n", ip, size);
+        printf("cm %p Malloc request of size %llu\n", ip, size);
     }
 }
 
 VOID record_malloc_return(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        printf("%p: Malloc returned %llx\n", ip, addr);
+        printf("rm %p: Malloc returned %llx\n", ip, addr);
     }
 }
 
 VOID record_free_first_argument(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        printf("%p: Freeing %llx\n", ip, addr);
+        printf("cf %p: Freeing %llx\n", ip, addr);
     }
 };
 
