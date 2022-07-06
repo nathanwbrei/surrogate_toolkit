@@ -8,6 +8,9 @@
 #include <surrogate_builder.h>
 #include "feedforward_model.h"
 
+constexpr size_t N = 7;
+
+
 template <typename T>
 void zero_matrix(T* arr, int nrows, int ncols) {
     for (int row=0; row<nrows; ++row) {
@@ -103,14 +106,14 @@ int solve_stationary_heat_eqn(double* T, double* f, int n) {
 
 phasm::Surrogate g_stationary_heat_eqn_surrogate = phasm::SurrogateBuilder()
         .set_model(std::make_shared<phasm::FeedForwardModel>())
-        .local_primitive<double>("T", phasm::INOUT)
-        .local_primitive<double>("f", phasm::IN)
-        .local_primitive<int>("n", phasm::IN)
+        .local_primitive<double>("T", phasm::INOUT, {N+2,N+2})
+        .local_primitive<double>("f", phasm::IN, {N,N})
+        // .local_primitive<int>("n", phasm::IN)
         .finish();
 
 void wrapped_stationary_heat_eqn(double* T, double* f, int n) {
     g_stationary_heat_eqn_surrogate
-        .bind_all_callsite_vars(T, f, &n)
+        .bind_all_callsite_vars(T, f)
         .bind_original_function([&](){ return solve_stationary_heat_eqn(T, f, n); })
         .call();
 }
@@ -118,7 +121,6 @@ void wrapped_stationary_heat_eqn(double* T, double* f, int n) {
 
 
 int main() {
-    constexpr size_t N = 7;
 
     double T[(N+2) * (N+2)];
     double f[N * N];
@@ -141,5 +143,7 @@ int main() {
 
     print_matrix(std::cout, T, N+2, N+2);
 
+    // Call one more time
+    wrapped_stationary_heat_eqn(T, f, N);
 }
 
