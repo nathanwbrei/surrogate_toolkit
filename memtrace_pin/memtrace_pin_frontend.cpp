@@ -20,54 +20,56 @@ KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "tar
 
 VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("r %p %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
+        std::cout << "r ip=" << ip << " buf=" << addr << " len=" << len << " bp=" << rbp << " sp=" << rsp << std::endl;
     }
 }
 
 VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("w %p %p [%d bytes], $rbp=%p, $rsp=%p\n", ip, addr, len, (void*) rbp, (void*) rsp);
+        std::cout << "w ip=" << ip << " buf=" << addr << " len=" << len << " bp=" << rbp << " sp=" << rsp << std::endl;
     }
 }
 
 VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     in_target_routine = true;
-    target_rbp = (void*) rsp; // This is because record_enter_target_rtn is called before the target routine's prologue
-    printf("et %p: Entering target routine %s, target $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
+    target_rbp = (void*) rsp;
+    // rsp instead of rbp because record_enter_target_rtn is called before the target routine's prologue
+    // In the prologue, rbp is set to rsp
+    std::cout << "et ip=" << ip << " bp=" << target_rbp << " name=" << routine_names[routine_id] << std::endl;
 }
 
 VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
     in_target_routine = false;
-    printf("xt %p: Exiting target routine %s\n", ip, routine_names[routine_id].c_str());
+    std::cout << "xt ip=" << ip << std::endl;
 }
 
 VOID record_enter_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     if (in_target_routine) {
-        printf("er %p: Entering routine %s, $rbp=%p\n", ip, routine_names[routine_id].c_str(), target_rbp);
+        std::cout << "er ip=" << ip << " bp=" << rsp << " name=" << routine_names[routine_id] << std::endl;
     }
 }
 
 VOID record_exit_rtn(UINT64 routine_id, VOID* ip) {
     if (in_target_routine) {
-        printf("xr %p: Exiting routine %s\n", ip, routine_names[routine_id].c_str());
+        std::cout << "xr ip=" << ip << " name=" << routine_names[routine_id] << std::endl;
     }
 }
 
 VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
     if (in_target_routine) {
-        printf("cm %p Malloc request of size %llu\n", ip, size);
+        std::cout << "cm ip=" << ip << " size=" << size << std::endl;
     }
 }
 
 VOID record_malloc_return(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        printf("rm %p: Malloc returned %llx\n", ip, addr);
+        std::cout << "rm ip=" << ip << " buf=" << addr << std::endl;
     }
 }
 
 VOID record_free_first_argument(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        printf("cf %p: Freeing %llx\n", ip, addr);
+        std::cout << "cf ip=" << ip << " buf=" << addr << std::endl;
     }
 };
 
@@ -118,7 +120,7 @@ void instrument_rtn(RTN rtn, VOID* v) {
 
     // Instrument target routine to set in_target_routine to be true
     if (rtn_name == KnobTargetFunction.Value()) {
-        printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
+        std::cout << "ft id=" << current_routine << " name=" << rtn_name << std::endl;
         target_function_found = true;
 
         RTN_Open(rtn);
