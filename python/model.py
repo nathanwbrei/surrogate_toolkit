@@ -1,4 +1,3 @@
-# First PINN, some of it is tutorial+Doc code
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -11,54 +10,54 @@ N = nn.Sequential(
             nn.Linear(1, 64),
             nn.Tanh(),
             nn.Linear(64, 32),
-            nn.Softmax(),
+            nn.Tanh(),
             nn.Linear(32, 8),
-            nn.Sigmoid(),
+            nn.Tanh(),
             nn.Linear(8, 1),
         )  # Custom Architecture
 A = 0.
 nnf = lambda x: A + x * N(x)  # neural network function
-f = lambda x, Psi: .5 + .5*torch.exp(x.clone().detach().requires_grad_(True)) * (torch.sin(x.clone().detach().requires_grad_(True))- torch.cos(x.clone().detach().requires_grad_(True)))
+f = lambda x: .5 + .5*torch.exp(x.clone().detach().requires_grad_(True)) * (torch.sin(x.clone().detach().requires_grad_(True))- torch.cos(x.clone().detach().requires_grad_(True)))  #actual v_x function
 
 def loss(x):  #loss function
 
     x.requires_grad = True
     outputs = nnf(x)  # outputs from the neural network
-    Psi_t_x = torch.autograd.grad(outputs, x, grad_outputs=torch.ones_like(outputs),
-                        create_graph=True)[0]   # Predicted function
+    calculated_gradients = torch.autograd.grad(outputs, x, grad_outputs=torch.ones_like(outputs),
+                        create_graph=True)[0]   # gradients of predicted function to compare to the actual 
 
-    return  torch.mean( ( Psi_t_x - f(x, outputs) )  ** 2)   # mean squared error
+    return  torch.mean( abs( calculated_gradients - f(x) ))   # absolute value of error
 
 lowerbound=1  #lower bound
 upperbound = 3  #upper bound
-points = 2000  #collaction points
+points = 2000  # number of collaction points being randomly selected
 x = torch.Tensor(np.linspace(lowerbound, upperbound, points)[:, None])  # linear space to test on
-optimizer = torch.optim.LBFGS(N.parameters())
-def closure():   #optimization function
+optimizer = torch.optim.LBFGS(N.parameters())     #used to optimize the different weights 
+def closure():   # function for the optimization
     optimizer.zero_grad()
-    l = loss(x)  # loss
-    l.backward()  #backpropogation
-    print(l)  #print loss
+    l = loss(x)  
+    l.backward()  #backpropogation to optimize
+    print(l)  
     return l
 
-for i in range(16):
+for i in range(9):  
     optimizer.step(closure)
 
 
-linearspace = np.linspace(lowerbound, upperbound, points)[:, None]
+linearspace = np.linspace(lowerbound, upperbound, points)[:, None]   # 
 
 with torch.no_grad():
-    py = nnf(torch.Tensor(linearspace)).numpy()  #predicted y
-ay = .5 + .5*torch.exp(torch.Tensor(linearspace)) * (torch.sin(torch.Tensor(linearspace))- torch.cos(torch.Tensor(linearspace)))
+    pv = nnf(torch.Tensor(linearspace)).numpy()  #predicted values using the neural network 
+av = .5 + .5*torch.exp(torch.Tensor(linearspace)) * (torch.sin(torch.Tensor(linearspace))- torch.cos(torch.Tensor(linearspace)))  #actual values
 
 
 #plot
 fig, ax = plt.subplots(dpi=100)
-ax.plot(linearspace, ay, label='True S')
-ax.plot(linearspace, py, '--', label='NN S')
-ax.set_xlabel('$x$')
-ax.set_ylabel('$Psi(x)$')
+ax.plot(linearspace, av, label='True S')
+ax.plot(linearspace, pv, '--', label='NN S')
+ax.set_xlabel('$t$')
+ax.set_ylabel('$V_x(x)$')
 plt.legend(loc='Best')
-
+# saving the model
 traced_script_module = torch.jit.trace(N, torch.Tensor(linearspace))
 traced_script_module.save("model.pt")
