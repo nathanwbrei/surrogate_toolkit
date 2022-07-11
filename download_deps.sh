@@ -59,7 +59,7 @@ if [[ $MACOS -eq 1 ]]; then
 else
     wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
     tar -xf pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
-    mv pin-3.22-98547-g7a303a835-gcc-linux pin
+    mv pin-3.22-98547-g7a303a835-gcc-linux.tar.gz pin
 fi
 
 # Build and install JANA2
