@@ -55,19 +55,19 @@ VOID record_exit_rtn(UINT64 routine_id, VOID* ip) {
 
 VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
     if (in_target_routine) {
-        printf("cm %p Malloc request of size %lu\n", ip, size);
+        printf("cm %p Malloc request of size %llu\n", ip, size);
     }
 }
 
 VOID record_malloc_return(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        printf("rm %p: Malloc returned %lx\n", ip, addr);
+        printf("rm %p: Malloc returned %llx\n", ip, addr);
     }
 }
 
 VOID record_free_first_argument(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        printf("cf %p: Freeing %lx\n", ip, addr);
+        printf("cf %p: Freeing %llx\n", ip, addr);
     }
 };
 
@@ -118,7 +118,7 @@ void instrument_rtn(RTN rtn, VOID* v) {
 
     // Instrument target routine to set in_target_routine to be true
     if (rtn_name == KnobTargetFunction.Value()) {
-        printf("Instrumenting %s (%lu)\n", rtn_name.c_str(), current_routine);
+        printf("Instrumenting %s (%llu)\n", rtn_name.c_str(), current_routine);
         target_function_found = true;
 
         RTN_Open(rtn);
