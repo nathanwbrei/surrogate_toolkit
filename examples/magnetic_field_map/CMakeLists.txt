@@ -8,6 +8,8 @@ set(MAGNETIC_FIELD_MAP_SOURCES
         magnetic_field_map.cpp
         DMagneticFieldMapFineMesh.cc
         HDEVIO.cc
+        JCalibrationGenerator_TestFixture.cpp
+        JCalibration_TestFixture.cpp
         )
 
 add_executable(phasm-example-magfieldmap ${MAGNETIC_FIELD_MAP_SOURCES})
