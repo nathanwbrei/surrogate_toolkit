@@ -1,6 +1,8 @@
 
 find_package(Torch REQUIRED)
 
+
+set(CMAKE_BUILD_TYPE "Debug")
 set(DIFFUSION_PDE_SOLVER_SOURCES diffusion_pde_solver.cpp)
 add_executable(phasm-example-pdesolver ${DIFFUSION_PDE_SOLVER_SOURCES})
 target_include_directories(phasm-example-pdesolver PRIVATE

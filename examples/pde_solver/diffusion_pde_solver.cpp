@@ -8,7 +8,9 @@
 #include <surrogate_builder.h>
 #include "feedforward_model.h"
 
-constexpr size_t N = 7;
+//constexpr size_t N = 511;  // (from libtorch) you tried to allocate 1099520016400 bytes. Error code 12 (Cannot allocate memory)
+//constexpr size_t N = 127; //  you tried to allocate 2181302280 bytes. Error code 12 (Cannot allocate memory). 1/504 of the above
+constexpr size_t N = 63; // Total iterations: 5536, Residual is 9.99665e-06
 
 
 template <typename T>
@@ -37,11 +39,12 @@ void make_forcing_term(double* f, int n) {
 }
 
 void make_boundary(double* T, int n, double top, double bottom, double right, double left) {
-    for (int i=0; i<n+2; ++i) {
+    int row_dim = n + 2;
+    for (int i=0; i<row_dim; ++i) {
         T[i] = top;
-        T[(n+1)*(n+2)+i] = bottom;
-        T[i*(n+2)] = left;
-        T[i*(n+2)+n+1] = right;
+        T[row_dim * (row_dim - 1) + i] = bottom;
+        T[i * row_dim] = left;
+        T[i * row_dim + row_dim - 1] = right;
     }
 }
 
@@ -83,23 +86,25 @@ int solve_stationary_heat_eqn(double* T, double* f, int n) {
         for (int r=1; r<n+1; ++r) {
             for (int c=1; c<n+1; ++c) {
                 // T[r,c] = -forcing_fn(r,c)/wh + wx*(T[r,c-1] + T[r,c+1]) + wy*(T[r-1,c] + T[r+1,c]);
-                T[r*(n+2)+c] = -f[(r-1)*(n)+(c-1)]/(4.0*w) + (T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c])/4.0;
+                T[r*(n+2)+c] = -f[(r-1)*n+(c-1)]/(4.0*w) + (T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c])/4.0;
             }
         }
-        print_matrix(std::cout, T, n+2, n+2);
+//        print_matrix(std::cout, T, n+2, n+2);
         iters++;
         residual = 0;
         double cell_residual = 0;
         double sum_of_cell_residuals_squared = 0;
-        for (int r=1; r<(n+2)-1; ++r) {
-            for (int c=1; c<(n+2)-1; ++c) {
+        for (int r=1; r< n + 1; ++r) {
+            for (int c=1; c< n + 1; ++c) {
                 cell_residual = -f[(r-1)*n+(c-1)] - 4*w*T[r*(n+2)+c] + w*(T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c]);
                 sum_of_cell_residuals_squared += cell_residual*cell_residual;
             }
         }
         residual = sqrt((1.0/(n*n)) * sum_of_cell_residuals_squared);
-        std::cout << "Residual is " << residual << std::endl;
+//        std::cout << "Residual is " << residual << std::endl;
     }
+    std::cout << "Total iterations: " << iters << std::endl;
+    std::cout << "Residual is " << residual << std::endl;
     return iters;
 }
 
@@ -109,7 +114,7 @@ phasm::Surrogate g_stationary_heat_eqn_surrogate = phasm::SurrogateBuilder()
         .local_primitive<double>("T", phasm::INOUT, {N+2,N+2})
         .local_primitive<double>("f", phasm::IN, {N,N})
         // .local_primitive<int>("n", phasm::IN)
-        .finish();
+        .finish(); // set_model calls PyTorch and brings large overhead
 
 void wrapped_stationary_heat_eqn(double* T, double* f, int n) {
     g_stationary_heat_eqn_surrogate
@@ -117,7 +122,6 @@ void wrapped_stationary_heat_eqn(double* T, double* f, int n) {
         .bind_original_function([&](){ return solve_stationary_heat_eqn(T, f, n); })
         .call();
 }
-
 
 
 int main() {
@@ -131,19 +135,19 @@ int main() {
     // print_matrix(std::cout, f, N, N);
 
     make_boundary(T, N, 0, 0, 0, 0);
-    // print_matrix(std::cout, T, N+2, N+2);
+//    print_matrix(std::cout, T, N+2, N+2);
 
-    wrapped_stationary_heat_eqn(T, f, N);
-    print_matrix(std::cout, T, N+2, N+2);
+    wrapped_stationary_heat_eqn(T, f, N);  // inside a wrapper, does not surrogate
+//    print_matrix(std::cout, T, N+2, N+2);
 
     g_stationary_heat_eqn_surrogate
         .bind_all_callsite_vars(T, f, &N)
         .bind_original_function([&](){ return solve_stationary_heat_eqn(T, f, N); })
         .call_original_and_capture();
 
-    print_matrix(std::cout, T, N+2, N+2);
+//    print_matrix(std::cout, T, N+2, N+2);
 
-    // Call one more time
+//     Call one more time
     wrapped_stationary_heat_eqn(T, f, N);
 }
 
