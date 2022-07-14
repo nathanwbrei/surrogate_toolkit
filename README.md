@@ -9,11 +9,12 @@ cd phasm
 # Install PyTorch, Intel Pin, and JANA2 dependencies
 ./download_deps.sh
 export DEPS=`pwd`/deps
+export LIKWID_DIR=/usr/local/
 
 # Build 
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
+cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" -DLIKWID_DIR="$LIKWID_DIR" ..
 make install
 
 # To run one of the examples:

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <model.h>
+#include <likwid-marker.h>   // likwid
 #include <surrogate_builder.h>
 #include "feedforward_model.h"
 
@@ -81,19 +82,26 @@ int solve_stationary_heat_eqn(double* T, double* f, int n) {
     }
 
     int iters = 0;
+    LIKWID_MARKER_INIT;
 
     while (residual > error_threshold) {
+        // sequential, update the grid
+
+        LIKWID_MARKER_THREADINIT;
+        LIKWID_MARKER_START("original");
         for (int r=1; r<n+1; ++r) {
             for (int c=1; c<n+1; ++c) {
                 // T[r,c] = -forcing_fn(r,c)/wh + wx*(T[r,c-1] + T[r,c+1]) + wy*(T[r-1,c] + T[r+1,c]);
                 T[r*(n+2)+c] = -f[(r-1)*n+(c-1)]/(4.0*w) + (T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c])/4.0;
             }
         }
+        LIKWID_MARKER_STOP("original");
 //        print_matrix(std::cout, T, n+2, n+2);
         iters++;
         residual = 0;
         double cell_residual = 0;
         double sum_of_cell_residuals_squared = 0;
+        // can be parallelized, compute the residual
         for (int r=1; r< n + 1; ++r) {
             for (int c=1; c< n + 1; ++c) {
                 cell_residual = -f[(r-1)*n+(c-1)] - 4*w*T[r*(n+2)+c] + w*(T[r*(n+2)+c-1] + T[r*(n+2)+c+1] + T[(r-1)*(n+2)+c] + T[(r+1)*(n+2)+c]);
@@ -103,6 +111,8 @@ int solve_stationary_heat_eqn(double* T, double* f, int n) {
         residual = sqrt((1.0/(n*n)) * sum_of_cell_residuals_squared);
 //        std::cout << "Residual is " << residual << std::endl;
     }
+
+    LIKWID_MARKER_CLOSE;
     std::cout << "Total iterations: " << iters << std::endl;
     std::cout << "Residual is " << residual << std::endl;
     return iters;
@@ -137,8 +147,14 @@ int main() {
     make_boundary(T, N, 0, 0, 0, 0);
 //    print_matrix(std::cout, T, N+2, N+2);
 
+    // add likwid markers
+//    LIKWID_MARKER_INIT;
+//    LIKWID_MARKER_THREADINIT;
+//    LIKWID_MARKER_START("original");
     wrapped_stationary_heat_eqn(T, f, N);  // inside a wrapper, does not surrogate
 //    print_matrix(std::cout, T, N+2, N+2);
+//    LIKWID_MARKER_STOP("original");
+//    LIKWID_MARKER_CLOSE;
 
     g_stationary_heat_eqn_surrogate
         .bind_all_callsite_vars(T, f, &N)
