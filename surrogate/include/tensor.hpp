@@ -20,12 +20,12 @@ enum class DType { Undefined, UI8, I16, I32, I64, F32, F64 };
 
 template <typename T>
 phasm::DType dtype() {
-    if (std::is_same_v<T, u_int8_t>) return phasm::DType::UI8;
-    if (std::is_same_v<T, int16_t>) return phasm::DType::I16;
-    if (std::is_same_v<T, int32_t>) return phasm::DType::I32;
-    if (std::is_same_v<T, int64_t>) return phasm::DType::I64;
-    if (std::is_same_v<T, float>) return phasm::DType::F32;
-    if (std::is_same_v<T, double>) return phasm::DType::F64;
+    if (std::is_same<T, u_int8_t>()) return phasm::DType::UI8;
+    if (std::is_same<T, int16_t>()) return phasm::DType::I16;
+    if (std::is_same<T, int32_t>()) return phasm::DType::I32;
+    if (std::is_same<T, int64_t>()) return phasm::DType::I64;
+    if (std::is_same<T, float>()) return phasm::DType::F32;
+    if (std::is_same<T, double>()) return phasm::DType::F64;
     return phasm::DType::Undefined;
 }
 
@@ -95,7 +95,7 @@ public:
             numel *= l;
         }
         m_underlying = torch::tensor(at::ArrayRef<T>(consecutive_buffer,numel), torch::dtype<T>());
-        m_underlying = m_underlying.reshape(at::ArrayRef(shape.data(), shape.size()));
+        m_underlying = m_underlying.reshape(at::ArrayRef<int64_t>(shape.data(), shape.size()));
         m_length = numel;
         m_shape = shape;
         m_dtype = dtype<T>();
