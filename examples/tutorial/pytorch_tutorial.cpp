@@ -10,7 +10,7 @@
 #include "torchscript_model.h"
 
 
-phasm::TorchscriptModel model = phasm::TorchscriptModel("~/home/USER/phasm/python/tutorial.pt"); // update PATH depending on the user
+phasm::TorchscriptModel model = phasm::TorchscriptModel("~/home/USER/phasm/python/tutorial.pt"); // update the PATH depending on the user
 
 
 phasm::Surrogate s_surrogate = phasm::SurrogateBuilder()
