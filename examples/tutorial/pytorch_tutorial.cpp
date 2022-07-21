@@ -10,11 +10,11 @@
 #include "torchscript_model.h"
 
 
-phasm::TorchscriptModel model = phasm::TorchscriptModel("~/home/USER/phasm/python/tutorial.pt"); // update the PATH depending on the user
+// phasm::TorchscriptModel model = phasm::TorchscriptModel("~/home/USER/phasm/python/tutorial.pt");  update the PATH depending on the user
 
 
 phasm::Surrogate s_surrogate = phasm::SurrogateBuilder()
-        .set_model(std::make_shared<phasm::TorchscriptModel>(phasm::TorchscriptModel("~/home/coho905/phasm/python/tutorial.pt")))
+        .set_model(std::make_shared<phasm::TorchscriptModel>(phasm::TorchscriptModel("~/home/USER/phasm/python/tutorial.pt"))) //update the PATH depending on the user
         .local_primitive<double>("x", phasm::IN)
         .local_primitive<double>("y", phasm::IN)
         .local_primitive<double>("z", phasm::IN)
