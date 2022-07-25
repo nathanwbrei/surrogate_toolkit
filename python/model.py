@@ -8,7 +8,7 @@ import torchvision
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # checking device to use CUDA
 N = nn.Sequential(
             nn.Linear(1, 64),
-            nn.Tanh(),
+            nn.Sigmoid(),
             nn.Linear(64, 32),
             nn.Tanh(),
             nn.Linear(32, 8),
