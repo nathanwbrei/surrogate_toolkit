@@ -56,7 +56,7 @@ fig, ax = plt.subplots(dpi=100)
 ax.plot(linearspace, av, label='True S')
 ax.plot(linearspace, pv, '--', label='NN S')
 ax.set_xlabel('$t$')
-ax.set_ylabel('$V_x(x)$')
+ax.set_ylabel('$x(t)$')
 plt.legend(loc='Best')
 # saving the model
 traced_script_module = torch.jit.trace(N, torch.Tensor(linearspace))
