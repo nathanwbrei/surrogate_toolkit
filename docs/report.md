@@ -37,7 +37,7 @@ Before creating the neural network, the first step to understand this task was r
 - C++ PDE Solver Implementation 
 	- Using TorchScript to implement Neurodiffeq neural network into PHASM C++ repository
 	- Still needs more work done using PHASM toolkit 
-	- Path: *not yet pushed to PHASM\*
+	- Path: [phasm/examples/pde_solver/pytorch_diffusion_pde_solver.cpp](https://github.com/nathanwbrei/phasm/blob/main/examples/pde_solver/pytorch_diffusion_pde_solver.cpp)
  
 
 ##  Results
