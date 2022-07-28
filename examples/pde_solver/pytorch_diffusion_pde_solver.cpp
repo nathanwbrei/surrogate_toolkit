@@ -9,10 +9,10 @@
 #include "feedforward_model.h"
 #include "torchscript_model.h"
 
-phasm::TorchscriptModel PDE_Solver = phasm::TorchscriptModel("~/phasm/python/PDE_Solver.pt");
+phasm::TorchscriptModel PDE_Solver = phasm::TorchscriptModel("~/phasm/python/pytorch_diffusion_pde_solver.cpp");
 
 phasm::Surrogate s_surrogate = phasm::SurrogateBuilder()
-    .set_model(std::make_shared<phasm::TorchscriptModel>(phasm::TorchscriptModel("~/phasm/python/PDE_Solver.pt")))
+    .set_model(std::make_shared<phasm::TorchscriptModel>(phasm::TorchscriptModel("~/phasm/python/pytorch_diffusion_pde_solver.cpp")))
 
 int main() {
     
