@@ -41,3 +41,10 @@ make install
 echo "If any part of the download process went wrong "
 
 #  IF THIS SCRIPT DOES NOT WORK THEN RUN ALL THESE COMMANDS INDEPENDENTLY IN THE TERMINAL
+# ./download_deps.sh
+# export DEPS=`pwd`/deps
+# mkdir build
+# cd build
+# If using Mac then use:  cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
+# If using Linux then use: cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/$DEPS/pin-3.22-98547-g7a303a835-gcc-linux" ..
+# make install
