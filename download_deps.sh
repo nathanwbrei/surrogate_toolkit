@@ -5,7 +5,7 @@ set -e
 # Record the last command
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo the error message given before exiting
-trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
+trap 'export Failed=1; echo "\"${last_command}\" command filed with exit code $?."' EXIT   # if this fails change to trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 
 # Figure out whether we are on linux or macos
@@ -17,11 +17,11 @@ else
   echo "Assuming your system is Linux"
 fi
 
-
+export testing=0
 deps="deps/"
 if [ -d "$deps" ]; then
   echo "$deps has been found."
-  echo "download not continuing."
+  echo "download not continuing as we are assuming the download was successful.  If that was not the case then delete the deps folder and rerun the ./download_deps.sh command"
   exit
 else
   echo "deps has not been found"
