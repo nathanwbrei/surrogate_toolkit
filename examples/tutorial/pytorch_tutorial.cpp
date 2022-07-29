@@ -22,7 +22,13 @@ phasm::Surrogate s_surrogate = phasm::SurrogateBuilder()
         .finish();
 
 
-
+double surrogate_binder(double x, double y, double z) {
+    double result = 0.0;
+    f_surrogate.bind_original_function([&](){ result = f(x,y,z); })     
+               .bind_all_callsite_vars(&x, &y, &z)                      
+               .call();                                                  
+    return result;
+}
 
 
 
