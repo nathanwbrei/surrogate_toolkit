@@ -12,7 +12,7 @@ git clone https://github.com/nathanwbrei/phasm
 cd phasm
 ```
 
-### Complete all the steps at once
+### Complete all the install steps at once
 ```bash
 ./install.sh
 ```
