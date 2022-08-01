@@ -6,7 +6,7 @@
 ## How to build
 
 
-### Complete all the steps with one shell script
+### Complete all the steps at once
 ```bash
 ./install.sh
 ```
