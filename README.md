@@ -15,6 +15,12 @@ cd phasm
 ### Complete all the install steps at once
 ```bash
 ./install.sh
+
+# To Run a PHASM example: 
+export LD_LIBRARY_PATH=$DEPS/libtorch/lib:$LD_LIBRARY_PATH
+
+# Run the PDE solver example and dump captured data to CSV
+PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
 ```
 
 ### OR if you would prefer to do it manually, follow the steps below
