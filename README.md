@@ -11,7 +11,7 @@
 ./install.sh
 ```
 
-### OR if you would prefer to do it manually follow the steps below
+### OR if you would prefer to do it manually, follow the steps below
 
 ```bash
 git clone https://github.com/nathanwbrei/phasm
