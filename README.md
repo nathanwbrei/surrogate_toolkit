@@ -1,15 +1,21 @@
 
 # Readme
 
+
+
 ## How to build
-```bash
-git clone https://github.com/nathanwbrei/phasm
-cd phasm
+
 
 # Complete all the steps with one shell script
 ./install.sh
 
+
 # OR if you would prefer to do it manually follow the steps below
+
+```bash
+git clone https://github.com/nathanwbrei/phasm
+cd phasm
+
 
 # Install PyTorch, Intel Pin, and JANA2 dependencies
 ./download_deps.sh
