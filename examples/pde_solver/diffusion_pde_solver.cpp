@@ -21,7 +21,7 @@ void zero_matrix(T* arr, int nrows, int ncols) {
     }
 }
 
-constexpr double PI = 3.1415926589793238;
+constexpr double PI = 3.14159265358979323846;
 
 void make_forcing_term(double* f, int n) {
     // Forcing function assumes an n*n grid with (h,h) in top left corner and (n*h,n*h) in bottom right
