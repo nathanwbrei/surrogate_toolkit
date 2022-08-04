@@ -12,7 +12,12 @@
 #include <vector>
 #include <limits>
 #include <ostream>
+
+#if (__cplusplus >= 201703L)
+#include <optional>
+#else
 #include <experimental/optional>
+#endif
 
 #include "tensor.hpp"
 
@@ -25,8 +30,8 @@ enum class RangeType {
 struct Range {
     RangeType rangeType;
 
-    std::experimental::optional<tensor> lower_bound_inclusive;
-    std::experimental::optional<tensor> upper_bound_inclusive;
+    std::optional<tensor> lower_bound_inclusive;
+    std::optional<tensor> upper_bound_inclusive;
     std::unordered_set<tensor> items;
 
     static inline size_t max_samples_in_finite_set = 100;
