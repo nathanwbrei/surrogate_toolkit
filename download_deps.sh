@@ -48,7 +48,7 @@ else
     # In which case try this version instead:
     wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
     # wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
-    unzip libtorch-cxx11-abi-shared-with-deps-1.11.0+cpu.zip
+    unzip libtorch-*-shared-with-deps-1.11.0+cpu.zip
 fi
 
 # Download PIN
