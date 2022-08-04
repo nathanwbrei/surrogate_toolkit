@@ -9,7 +9,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/phasm-memtrace-pin
 if (APPLE)
     set(PINPLUGIN ${CMAKE_CURRENT_SOURCE_DIR}/obj-intel64/memtrace_pin_frontend.dylib)
 else()
-    set(PINPLUGIN ${CMAKE_CURRENT_SOURCE_DIR}/obj-intel64/memtrace_pin_frontend.dylib)
+    set(PINPLUGIN ${CMAKE_CURRENT_SOURCE_DIR}/obj-intel64/memtrace_pin_frontend.so)
 endif()
 
 

@@ -7,11 +7,11 @@
 
 #include <JANA/JApplication.h>
 #include <JANA/Calibrations/JCalibrationManager.h>
-#include <JANA/Calibrations/JCalibrationGeneratorCCDB.h>
 #include "DMagneticFieldMapFineMesh.h"
 #include "surrogate_builder.h"
 #include "torchscript_model.h"
 #include "feedforward_model.h"
+#include "JCalibrationGenerator_TestFixture.hpp"
 
 
 int main() {
@@ -31,25 +31,30 @@ int main() {
             .local_primitive<double>("Bz", Direction::OUT)
             .finish();
 
-    japp = new JApplication;
+    std::map<std::string, std::string> magnet_calib_data;
+    magnet_calib_data["URL_base"] = "https://halldweb.jlab.org/resources";
+    magnet_calib_data["path"] = "Magnets/Solenoid/solenoid_1350A_poisson_20160222";
+    magnet_calib_data["md5"] = "a96263c5e2f3936241b3eadb85e6559f";
+    JCalibration_TestFixture calib;
+    calib.SetCalib("Magnets/Solenoid/solenoid_1350A_poisson_20160222", magnet_calib_data);
     auto calib_man = std::make_shared<JCalibrationManager>();
-    // calib_man->AddCalibrationGenerator(new JCalibrationGeneratorCCDB);
-    // japp->SetParameterValue("jana:calib_url", "mysql://ccdb_user@hallddb.jlab.org/ccdb");
-    japp->SetParameterValue("jana:calib_url", "file:///cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources");
-    japp->SetParameterValue("jana:resource_dir", "/cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources");
+    calib_man->AddCalibrationGenerator(new JCalibrationGenerator_TestFixture(calib));
+    japp = new JApplication;
     japp->ProvideService(calib_man);
-    // DMagneticFieldMapFineMesh mfmfm(japp, 1, "Magnets/Solenoid/solenoid_1350A_poisson_20160222");
-    DMagneticFieldMapFineMesh mfmfm(japp, "/cvmfs/oasis.opensciencegrid.org/gluex/group/halld/www/halldweb/html/resources/Magnets/Solenoid/finemeshes/solenoid_1350A_poisson_20160222.evio");
+
+    DMagneticFieldMapFineMesh mfmfm(japp, 1, "Magnets/Solenoid/solenoid_1350A_poisson_20160222");
 
     double x, y, z, bx, by, bz;
 
     surrogate.bind_original_function([&]() { mfmfm.GetField(x, y, z, bx, by, bz); });
     surrogate.bind_all_callsite_vars(&x, &y, &z, &bx, &by, &bz);
 
-    for (x = 0.0; x < 3.0; x+=.5) {
-        for (y = 0.0; y < 3.0; y+=0.5) {
-            for (z = 0.0; z < 3.0; z+=0.5) {
+    for (x = -20.0; x < 20.0; x+=4.0) {
+        for (y = -20.0; y < 20.0; y+=4.0) {
+            for (z = 0.0; z < 100.0; z+=2.0) {
+                // mfmfm.GetField(x,y,z,bx,by,bz);
                 surrogate.call();
+                std::cout << "x=" << x << ", y=" << y << ", z=" << z << ", Bx=" << bx << ", By=" << by << ", Bz=" << bz << std::endl;
             }
         }
     }
