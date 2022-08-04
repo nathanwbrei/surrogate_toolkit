@@ -1,10 +1,31 @@
 
 # Readme
 
+
+
 ## How to build
+
+
+### Clone the Repo and go to the directory for it
 ```bash
 git clone https://github.com/nathanwbrei/phasm
 cd phasm
+```
+
+### Complete all the install steps at once
+```bash
+./install.sh
+
+# To Run a PHASM example: 
+export LD_LIBRARY_PATH=$DEPS/libtorch/lib:$LD_LIBRARY_PATH
+
+# Run the PDE solver example and dump captured data to CSV
+PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
+```
+
+### OR if you would prefer to do it manually, follow the steps below
+
+```bash
 
 # Install PyTorch, Intel Pin, and JANA2 dependencies
 ./download_deps.sh
