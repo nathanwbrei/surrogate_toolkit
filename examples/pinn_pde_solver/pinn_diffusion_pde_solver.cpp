@@ -19,6 +19,7 @@ Python code change is ignored in this branch.
 */
 
 #include <torch/torch.h>
+#include <ATen/cuda/CUDAContext.h>  // for cuda device properties
 #include <math.h>
 #include <iostream>
 
@@ -39,7 +40,7 @@ const int ADAM_STEPS = 1000;
 const int MAX_STEPS = 5000;
 // criteria for stop training.
 // When loss is at 1.x~e-5, it will stop degrading even the training continues
-const float TARGET_LOSS = 2e-5;
+const float TARGET_LOSS = 5.0e-5;
 
 const int NN_INPUT_SIZE = 2;
 const int NN_OUTPUT_SIZE = 1;
@@ -146,7 +147,7 @@ void get_fterm_dataset_f(float* data) {
         }
 }
 
-torch::Tensor get_pde_loss(torch::Tensor& u, torch::Tensor& X) {
+torch::Tensor get_pde_loss(torch::Tensor& u, torch::Tensor& X, torch::Device& device) {
     /**
      * Get the pde loss based on the NN forward results.
      * Calculate the gradients and the pde terms.
@@ -173,15 +174,15 @@ torch::Tensor get_pde_loss(torch::Tensor& u, torch::Tensor& X) {
     // get constant term f_X
     float f_data[WHOLE_GRID_SIZE];
     get_fterm_dataset_f(f_data);
-    torch::Tensor f_X = -2.0 * PI * PI * torch::from_blob(f_data, {WHOLE_GRID_SIZE});
-//    std::cout << f_X << std::endl;
+    torch::Tensor f_X = -2.0 * PI * PI * torch::from_blob(f_data, {WHOLE_GRID_SIZE}).to(device);
 
     return torch::mse_loss(du_dxx + du_dyy, f_X);
 }
 
 torch::Tensor get_total_loss(
         HeatPINNNet& net,
-        torch::Tensor& X, torch::Tensor& X_train, torch::Tensor& y_train
+        torch::Tensor& X, torch::Tensor& X_train, torch::Tensor& y_train,
+	torch::Device& device
         ) {
     /**
      * Calculate the loss of each step.
@@ -189,7 +190,19 @@ torch::Tensor get_total_loss(
      */
     torch::Tensor u = net->forward(X);
 
-    return torch::mse_loss(net->forward(X_train), y_train) + get_pde_loss(u, X);
+    return torch::mse_loss(net->forward(X_train), y_train) + get_pde_loss(u, X, device);
+}
+
+void print_cuda_device_info(){
+    cudaDeviceProp *cuda_prop = at::cuda::getCurrentDeviceProperties();
+    std::cout << "  CUDA device name: " << cuda_prop->name << std::endl;
+    std::cout << "  CUDA compute capacity: "
+              << cuda_prop->major << "." << cuda_prop->minor << std::endl;
+    std::cout << "  LibTorch version: "
+              << TORCH_VERSION_MAJOR << "."
+              << TORCH_VERSION_MINOR << "."
+              << TORCH_VERSION_PATCH << std::endl;
+    std::cout << std::endl;
 }
 
 int main() {
@@ -203,7 +216,13 @@ int main() {
     auto cuda_available = torch::cuda::is_available();
     auto device_str = cuda_available ? torch::kCUDA : torch::kCPU;
     torch::Device device(device_str);
-    std::cout << (cuda_available ? "CUDA available. Training on GPU.\n" : "Training on CPU.\n") << '\n';
+
+    if (cuda_available) {
+        std::cout << "Using CUDA device 0. Training on GPU." << std::endl;
+        print_cuda_device_info();
+    } else {
+        std::cout << "No CUDA device. Training on CPU.\n" << std::endl;
+    }
 
     auto net = HeatPINNNet(NN_INPUT_SIZE, NN_OUTPUT_SIZE, NN_HIDDEN_SIZE);  // init a network model
     net->to(device);
@@ -214,36 +233,35 @@ int main() {
     // supervised training data set
     torch::Tensor y_train, X_train, X;
     // TODO: seems must choose kFloat32 data type now because of the NN declaration. Check later.
-    torch::TensorOptions options = torch::TensorOptions()
-            .dtype(torch::kFloat32)
-            .layout(torch::kStrided)
-            .device(device_str, -1)
-            .requires_grad(false);  // TODO: manually assign to CPU first
-    y_train = torch::zeros({BD_SIZE, NN_OUTPUT_SIZE}, options);
+    y_train = torch::zeros({BD_SIZE, NN_OUTPUT_SIZE}, device);
     std::cout << "y_train sizes: " << y_train.sizes() << std::endl;
+    std::cout << "y_train.device().type(): " << y_train.device().type() << std::endl;
+    std::cout << "y_train.requires_grad(): " << y_train.requires_grad() << std::endl;
+
 
     float X_train_data[BD_INPUT_SIZE];
     get_bc_dataset_xTrain(X_train_data);
-    X_train = torch::from_blob(X_train_data, {BD_SIZE, NN_INPUT_SIZE}, options);
+    X_train = torch::from_blob(X_train_data, {BD_SIZE, NN_INPUT_SIZE}).to(device);
+    //X_train = torch::from_blob(X_train_data, {BD_SIZE, NN_INPUT_SIZE}, options);
     std::cout << "X_train sizes: " << X_train.sizes() << std::endl;
+    std::cout << "X_train.device().type(): " << X_train.device().type() << std::endl;
+    std::cout << "X_train.requires_grad(): " << X_train.requires_grad() << std::endl;
 
     // whole data set
     float X_data[WHOLE_INPUT_DATA_SIZE];
     get_whole_dataset_X(X_data);
-    options = torch::TensorOptions()
-            .dtype(torch::kFloat32)
-            .layout(torch::kStrided)
-            .device(device_str, -1)
-            .requires_grad(true);  // TODO: check .device for GPU
-    X = torch::from_blob(X_data, {WHOLE_GRID_SIZE, NN_INPUT_SIZE}, options);
-    std::cout << "X sizes: " << X.sizes() << std::endl << std::endl;
+    X = torch::from_blob(X_data, {WHOLE_GRID_SIZE, NN_INPUT_SIZE}, torch::requires_grad()).to(device);
+    std::cout << "X sizes: " << X.sizes() << std::endl;
+    std::cout << "X.device().type(): " << X.device().type() << std::endl;
+    std::cout << "X.requires_grad(): " << X.requires_grad() << std::endl;
 
-    /**
+    /*
      * Training process
      *  The training steps are trying to match the Python script.
      *  First 1000 steps use Adam, and remaining steps use LBFGS.
      */
-    std::cout << "\nTraining started..." << std::endl;
+
+    std::cout << "\n\nTraining started..." << std::endl;
 
     torch::Tensor loss_sum;
     int iter = 1;
@@ -258,7 +276,7 @@ int main() {
     while (iter <= MAX_STEPS) {
         auto closure = [&]() {
             LBFGS_optim.zero_grad();
-            loss_sum = get_total_loss(net, X, X_train, y_train);
+            loss_sum = get_total_loss(net, X, X_train, y_train, device);
             loss_sum.backward();
             return loss_sum;
         };
@@ -271,18 +289,22 @@ int main() {
 
         // print loss info
         if (iter % 100 == 0) {
-            std::cout << "  iter=" << iter << ", loss=" << std::setprecision(21) << loss_sum.item<float>() << std::endl;
+            std::cout << "  iter=" << iter << ", loss=" << std::setprecision(7) << loss_sum.item<float>();
+            std::cout << ", loss.device().type()=" << loss_sum.device().type() << std::endl;
         }
 
         // stop training
-        if (loss_sum.item<float>() < TARGET_LOSS)
+        if (loss_sum.item<float>() < TARGET_LOSS){
+            iter += 1;
             break;
+        }
 
         iter += 1;
     }
 
     std::cout << "\nTraining stopped." << std::endl;
-    std::cout << "Final iter=" << iter << ", res=" << std::setprecision(21) << loss_sum.item<float>() << std::endl;
+    std::cout << "Final iter=" << iter - 1 << ", loss=" << std::setprecision(7) << loss_sum.item<float>();
+    std::cout << ", loss.device().type()=" << loss_sum.device().type() << std::endl;
 
     return 0;
 }
