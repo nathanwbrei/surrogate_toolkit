@@ -14,6 +14,7 @@ cd phasm
 
 ### Complete all the install steps at once
 ```bash
+#scl enable devtoolset-11   # Make sure you are using a recent compiler
 ./install.sh
 
 # To Run a PHASM example: 
