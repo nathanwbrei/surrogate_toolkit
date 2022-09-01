@@ -3,7 +3,6 @@
 #include <map>
 #include <iostream>
 #include "pin.H"
-#include "typename.hpp"
 
 // FILE* trace;
 
@@ -20,13 +19,13 @@ KNOB< std::string > KnobTargetFunction(KNOB_MODE_WRITEONCE, "pintool", "f", "tar
 
 VOID record_read_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
     if (in_target_routine) {
-        std::cout << "r ip=" << ip << " buf=" << addr << " len=" << len << " bp=" << rbp << " sp=" << rsp << std::endl;
+        std::cout << "r " << ip << " " << addr << " " << len << " " << rbp << " " << rsp << std::endl;
     }
 }
 
-VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT rbp, ADDRINT rsp) {
+VOID record_write_ins(VOID* ip, VOID* addr, UINT32 len, ADDRINT bp, ADDRINT sp) {
     if (in_target_routine) {
-        std::cout << "w ip=" << ip << " buf=" << addr << " len=" << len << " bp=" << rbp << " sp=" << rsp << std::endl;
+        std::cout << "w " << ip << " " << addr << " " << len << " " << bp << " " << sp << std::endl;
     }
 }
 
@@ -35,41 +34,41 @@ VOID record_enter_target_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     target_rbp = (void*) rsp;
     // rsp instead of rbp because record_enter_target_rtn is called before the target routine's prologue
     // In the prologue, rbp is set to rsp
-    std::cout << "et ip=" << ip << " bp=" << target_rbp << " name=" << routine_names[routine_id] << std::endl;
+    std::cout << "et " << ip << " " << target_rbp << " " << routine_names[routine_id] << std::endl;
 }
 
 VOID record_exit_target_rtn(UINT64 routine_id, VOID* ip) {
     in_target_routine = false;
-    std::cout << "xt ip=" << ip << std::endl;
+    std::cout << "xt " << ip << std::endl;
 }
 
 VOID record_enter_rtn(UINT64 routine_id, VOID* ip, ADDRINT rsp) {
     if (in_target_routine) {
-        std::cout << "er ip=" << ip << " bp=" << rsp << " name=" << routine_names[routine_id] << std::endl;
+        std::cout << "er " << ip << " " << rsp << " " << routine_names[routine_id] << std::endl;
     }
 }
 
 VOID record_exit_rtn(UINT64 routine_id, VOID* ip) {
     if (in_target_routine) {
-        std::cout << "xr ip=" << ip << " name=" << routine_names[routine_id] << std::endl;
+        std::cout << "xr " << ip << " " << routine_names[routine_id] << std::endl;
     }
 }
 
 VOID record_malloc_first_argument(ADDRINT size, VOID* ip) {
     if (in_target_routine) {
-        std::cout << "cm ip=" << ip << " size=" << size << std::endl;
+        std::cout << "cm " << ip << " " << size << std::endl;
     }
 }
 
 VOID record_malloc_return(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        std::cout << "rm ip=" << ip << " buf=" << addr << std::endl;
+        std::cout << "rm " << ip << " " << addr << std::endl;
     }
 }
 
 VOID record_free_first_argument(ADDRINT addr, VOID* ip) {
     if (in_target_routine) {
-        std::cout << "cf ip=" << ip << " buf=" << addr << std::endl;
+        std::cout << "cf " << ip << " " << addr << std::endl;
     }
 };
 
@@ -112,7 +111,7 @@ VOID instrument_ins(INS ins, VOID* v) {
 // Called every time a new routine is jitted
 void instrument_rtn(RTN rtn, VOID* v) {
 
-    std::string rtn_name = demangle(RTN_Name(rtn));
+    std::string rtn_name = RTN_Name(rtn);
     ADDRINT rtn_address = RTN_Address(rtn);
 
     routine_names.push_back(rtn_name);
