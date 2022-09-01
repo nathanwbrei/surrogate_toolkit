@@ -248,7 +248,7 @@ int main() {
     torch::Tensor loss_sum;
     int iter = 1;
 
-    // optimizer declaration. All parametrs are tring to match Python
+    // optimizer declaration. All parameters are trying to match Python
     torch::optim::Adam adam_optim(net->parameters(), torch::optim::AdamOptions(1e-3));  // default Adam lr
     // Python default value ref: https://pytorch.org/docs/stable/generated/torch.optim.LBFGS.html
     torch::optim::LBFGSOptions LBFGS_optim_options =
