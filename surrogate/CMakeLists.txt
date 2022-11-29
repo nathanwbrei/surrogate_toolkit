@@ -1,7 +1,6 @@
 
 find_package(Torch REQUIRED)
 
-
 set(SURROGATE_LIBRARY_SOURCES
         src/surrogate.cpp
         src/model.cpp
@@ -9,6 +8,7 @@ set(SURROGATE_LIBRARY_SOURCES
         src/tensor.cpp
         src/feedforward_model.cpp
         src/torchscript_model.cpp
+        src/plugin_loader.cc
         )
 
 add_library(phasm-surrogate STATIC ${SURROGATE_LIBRARY_SOURCES})
