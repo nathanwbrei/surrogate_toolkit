@@ -12,7 +12,10 @@ set(SURROGATE_LIBRARY_SOURCES
         )
 
 add_library(phasm-surrogate STATIC ${SURROGATE_LIBRARY_SOURCES})
-target_include_directories(phasm-surrogate PRIVATE include ../memtrace/include ${TORCH_INCLUDE_DIRS})
+target_include_directories(phasm-surrogate
+        PUBLIC include
+        PRIVATE ../memtrace/include ${TORCH_INCLUDE_DIRS})
+
 target_link_libraries(phasm-surrogate ${TORCH_LIBRARIES})
 install(TARGETS phasm-surrogate DESTINATION lib)
 

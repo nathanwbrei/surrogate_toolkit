@@ -12,6 +12,9 @@
 #include <sstream>
 
 class JApplication;
+namespace phasm {
+
+PluginLoader g_plugin_loader;
 
 void PluginLoader::add_plugin(std::string plugin_name) {
     /// Add the specified plugin to the list of plugins to be
@@ -29,7 +32,7 @@ void PluginLoader::add_plugin(std::string plugin_name) {
     ///                    The path to the plugin will be searched
     ///                    from the JANA_PLUGIN_PATH envar.
     ///
-    for (std::string& n : m_plugins_to_include) {
+    for (std::string &n: m_plugins_to_include) {
         if (n == plugin_name) {
             return;
         }
@@ -53,7 +56,7 @@ void PluginLoader::add_plugin_path(std::string path) {
     ///
     /// @param path directory to search for plugins.
     ///
-    for (std::string& n : m_plugin_paths) {
+    for (std::string &n: m_plugin_paths) {
         if (n == path) {
             return;
         }
@@ -77,15 +80,16 @@ void PluginLoader::attach_plugins() {
     while (getline(param_ss, path, ':')) add_plugin_path(path);
 
     // 3. Next we look for plugins in locations specified via environment variable. (Colon-separated)
-    const char* jpp = getenv("JANA_PLUGIN_PATH");
+    const char *jpp = getenv("JANA_PLUGIN_PATH");
     if (jpp) {
         std::stringstream envvar_ss(jpp);
         while (getline(envvar_ss, path, ':')) add_plugin_path(path);
     }
 
     // 4. Finally we look in the plugin directories relative to $JANA_HOME
-    if (const char* jana_home = getenv("JANA_HOME")) {
-        add_plugin_path(std::string(jana_home) + "/plugins/JANA");  // In case we did a system install and want to avoid conflicts.
+    if (const char *jana_home = getenv("JANA_HOME")) {
+        add_plugin_path(std::string(jana_home) +
+                        "/plugins/JANA");  // In case we did a system install and want to avoid conflicts.
         add_plugin_path(std::string(jana_home) + "/plugins");
     }
 
@@ -100,7 +104,7 @@ void PluginLoader::attach_plugins() {
     // until all are attached. (see below)
     auto add_plugins_lamda = [=](std::vector<std::string> &plugins) {
         std::stringstream paths_checked;
-        for (const std::string& plugin : plugins) {
+        for (const std::string &plugin: plugins) {
             // The user might provide a short name like "JTest", or a long name like "JTest.so".
             // We assume that the plugin extension is always ".so". This may pose a problem on macOS
             // where the extension might default to ".dylib".
@@ -109,10 +113,9 @@ void PluginLoader::attach_plugins() {
             if (plugin.substr(plugin.size() - 3) != ".so") {
                 plugin_fullname = plugin + ".so";
                 plugin_shortname = plugin;
-            }
-            else {
+            } else {
                 plugin_fullname = plugin;
-                plugin_shortname = plugin.substr(0, plugin.size()-3);
+                plugin_shortname = plugin.substr(0, plugin.size() - 3);
             }
             if (exclusions.find(plugin_shortname) != exclusions.end() ||
                 exclusions.find(plugin_fullname) != exclusions.end()) {
@@ -123,7 +126,7 @@ void PluginLoader::attach_plugins() {
 
             // Loop over paths
             bool found_plugin = false;
-            for (std::string path : m_plugin_paths) {
+            for (std::string path: m_plugin_paths) {
                 std::string fullpath = path + "/" + plugin_fullname;
                 std::cout << "Looking for '" << fullpath << "' ...." << std::endl;
                 paths_checked << "    " << fullpath << "  =>  ";
@@ -148,8 +151,9 @@ void PluginLoader::attach_plugins() {
             // If we didn't find the plugin, then complain and quit
             if (!found_plugin) {
                 std::cout << "Couldn't load plugin '" << plugin << "'\n" <<
-                             "  Make sure that JANA_HOME and/or JANA_PLUGIN_PATH environment variables are set correctly.\n" <<
-                             "  Paths checked:\n" << paths_checked.str() << std::endl;
+                          "  Make sure that JANA_HOME and/or JANA_PLUGIN_PATH environment variables are set correctly.\n"
+                          <<
+                          "  Paths checked:\n" << paths_checked.str() << std::endl;
                 std::ostringstream oss;
 
                 oss << "Couldn't find plugin '" << plugin << "'";
@@ -161,7 +165,7 @@ void PluginLoader::attach_plugins() {
     // Recursively loop over the list of plugins to ensure new plugins added by ones being
     // attached are also attached.
     uint64_t inext = 0;
-    while(inext < m_plugins_to_include.size() ){
+    while (inext < m_plugins_to_include.size()) {
         std::vector<std::string> myplugins(m_plugins_to_include.begin() + inext, m_plugins_to_include.end());
         inext = m_plugins_to_include.size(); // new plugins will be attached to end of vector
         add_plugins_lamda(myplugins);
@@ -186,22 +190,22 @@ void PluginLoader::attach_plugin(std::string soname) {
     ///
 
     // Open shared object
-    void* handle = dlopen(soname.c_str(), RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
+    void *handle = dlopen(soname.c_str(), RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
     if (!handle) {
         // LOG_DEBUG(m_logger) << dlerror() << LOG_END;
         throw "dlopen failed";
     }
 
     // Look for an InitPlugin symbol
-    typedef void InitPlugin_t();
-    InitPlugin_t* initialize_proc = (InitPlugin_t*) dlsym(handle, "InitPlugin");
-    if (initialize_proc) {
+    // typedef void InitPlugin_t();
+    phasm::PluginGetter *load_plugin = (phasm::PluginGetter *) dlsym(handle, "load_plugin");
+    if (load_plugin) {
         std::cout << "Initializing plugin \"" << soname << "\"" << std::endl;
-        (*initialize_proc)();
-        m_sohandles[soname] = handle;
+        Plugin* plugin = (*load_plugin)();
+        m_loaded_plugins[soname] = {plugin, handle};
     } else {
         dlclose(handle);
-        std::cout << "Plugin \"" << soname << "\" does not have an InitPlugin() function. Ignoring." << std::endl;
+        std::cout << "Plugin \"" << soname << "\" does not have a load_plugin() function. Ignoring." << std::endl;
     }
 }
 
@@ -218,25 +222,35 @@ PluginLoader::PluginLoader() {
     // if (m_verbose) {
     //     The jana:debug_plugin_loading parameter is kept around for backwards compatibility
     //     at least for now
-        // m_logger.level = JLogger::Level::TRACE;
+    // m_logger.level = JLogger::Level::TRACE;
     // }
 }
 
-PluginLoader::~PluginLoader(){
+PluginLoader::~PluginLoader() {
     // Loop over open plugin handles.
     // Call FinalizePlugin if it has one and close it in all cases.
-    typedef void FinalizePlugin_t();
-    for( auto p :m_sohandles ){
+    // typedef void FinalizePlugin_t();
+    for (auto& p: m_loaded_plugins) {
         auto soname = p.first;
-        auto handle = p.second;
-        FinalizePlugin_t* finalize_proc = (FinalizePlugin_t*) dlsym(handle, "FinalizePlugin");
+        auto handle = p.second.second;
+        /*
+        FinalizePlugin_t *finalize_proc = (FinalizePlugin_t *) dlsym(handle, "FinalizePlugin");
         if (finalize_proc) {
             std::cout << "Finalizing plugin \"" << soname << "\"" << std::endl;
             (*finalize_proc)();
         }
+        */
         // Close plugin handle
         dlclose(handle);
     }
 }
 
+Plugin* PluginLoader::get_plugin(const std::string& plugin_name) {
+    auto it = m_loaded_plugins.find(plugin_name);
+    if (it == m_loaded_plugins.end()) {
+        throw std::runtime_error("Plugin not loaded!");
+    }
+    return m_loaded_plugins[plugin_name].first;
+}
 
+} //namespace phasm
