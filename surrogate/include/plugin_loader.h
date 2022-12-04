@@ -24,7 +24,7 @@ public:
 
     void attach_plugins();
 
-    void attach_plugin(std::string plugin_name);
+    Plugin* attach_plugin(std::string plugin_name);
 
     Plugin* get_plugin(const std::string& plugin_name);
 
@@ -36,7 +36,7 @@ private:
     std::vector<std::string> m_plugin_paths;
     std::map<std::string, std::pair<Plugin*, void *>> m_loaded_plugins;
 
-    bool m_verbose = false;
+    // bool m_verbose = false;
     // JLogger m_logger;
 };
 

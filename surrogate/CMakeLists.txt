@@ -16,7 +16,7 @@ target_include_directories(phasm-surrogate
         PUBLIC include
         PRIVATE ../memtrace/include ${TORCH_INCLUDE_DIRS})
 
-target_link_libraries(phasm-surrogate ${TORCH_LIBRARIES})
+target_link_libraries(phasm-surrogate ${TORCH_LIBRARIES} ${CMAKE_DL_LIBS})
 install(TARGETS phasm-surrogate DESTINATION lib)
 
 
@@ -32,6 +32,7 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/optics_tests.cpp
         test/fluent_tests.cpp
         test/tutorial_tests.cpp
+        test/plugin_tests.cc
         )
 add_executable("phasm-surrogate-tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(phasm-surrogate-tests PRIVATE include ../memtrace/include)

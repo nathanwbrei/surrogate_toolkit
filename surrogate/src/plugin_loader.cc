@@ -11,10 +11,9 @@
 #include <set>
 #include <sstream>
 
-class JApplication;
 namespace phasm {
 
-PluginLoader g_plugin_loader;
+// PluginLoader g_plugin_loader;
 
 void PluginLoader::add_plugin(std::string plugin_name) {
     /// Add the specified plugin to the list of plugins to be
@@ -55,7 +54,6 @@ void PluginLoader::add_plugin_path(std::string path) {
     /// may be called if it needs to be done programmatically.
     ///
     /// @param path directory to search for plugins.
-    ///
     for (std::string &n: m_plugin_paths) {
         if (n == path) {
             return;
@@ -86,13 +84,6 @@ void PluginLoader::attach_plugins() {
         while (getline(envvar_ss, path, ':')) add_plugin_path(path);
     }
 
-    // 4. Finally we look in the plugin directories relative to $JANA_HOME
-    if (const char *jana_home = getenv("JANA_HOME")) {
-        add_plugin_path(std::string(jana_home) +
-                        "/plugins/JANA");  // In case we did a system install and want to avoid conflicts.
-        add_plugin_path(std::string(jana_home) + "/plugins");
-    }
-
     // Add plugins specified via PLUGINS configuration parameter
     // (comma separated list).
     std::set<std::string> exclusions(m_plugins_to_exclude.begin(), m_plugins_to_exclude.end());
@@ -102,7 +93,7 @@ void PluginLoader::attach_plugins() {
     // be attached. To accommodate this we wrap the following chunk of code in
     // a lambda function so we can run it over the additional plugins recursively
     // until all are attached. (see below)
-    auto add_plugins_lamda = [=](std::vector<std::string> &plugins) {
+    auto add_plugins_lamda = [=,this](std::vector<std::string> &plugins) {
         std::stringstream paths_checked;
         for (const std::string &plugin: plugins) {
             // The user might provide a short name like "JTest", or a long name like "JTest.so".
@@ -132,13 +123,13 @@ void PluginLoader::attach_plugins() {
                 paths_checked << "    " << fullpath << "  =>  ";
                 if (access(fullpath.c_str(), F_OK) != -1) {
                     std::cout << "Found!" << std::endl;
-                    try {
-                        // jcm->next_plugin(plugin_shortname);
-                        attach_plugin(fullpath.c_str());
+                    Plugin* plugin = attach_plugin(fullpath.c_str());
+                    if (plugin != nullptr) {
                         paths_checked << "Loaded successfully" << std::endl;
                         found_plugin = true;
                         break;
-                    } catch (...) {
+                    }
+                    else {
                         paths_checked << "Loading failure: " << dlerror() << std::endl;
                         std::cout << "Loading failure: " << dlerror() << std::endl;
                         continue;
@@ -173,7 +164,7 @@ void PluginLoader::attach_plugins() {
 }
 
 
-void PluginLoader::attach_plugin(std::string soname) {
+Plugin* PluginLoader::attach_plugin(std::string soname) {
 
     /// Attach a plugin by opening the shared object file and running the
     /// InitPlugin_t(JApplication* app) global C-style routine in it.
@@ -192,27 +183,35 @@ void PluginLoader::attach_plugin(std::string soname) {
     // Open shared object
     void *handle = dlopen(soname.c_str(), RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
     if (!handle) {
-        // LOG_DEBUG(m_logger) << dlerror() << LOG_END;
-        throw "dlopen failed";
+        std::cout << dlerror() << std::endl;
+        return nullptr;
     }
 
     // Look for an InitPlugin symbol
     // typedef void InitPlugin_t();
-    phasm::PluginGetter *load_plugin = (phasm::PluginGetter *) dlsym(handle, "load_plugin");
-    if (load_plugin) {
+    phasm::PluginGetter *get_plugin = (phasm::PluginGetter *) dlsym(handle, "get_plugin");
+    if (get_plugin) {
         std::cout << "Initializing plugin \"" << soname << "\"" << std::endl;
-        Plugin* plugin = (*load_plugin)();
-        m_loaded_plugins[soname] = {plugin, handle};
+        Plugin* plugin = (*get_plugin)();
+        m_loaded_plugins[plugin->get_name()] = {plugin, handle};
+        return plugin;
     } else {
         dlclose(handle);
-        std::cout << "Plugin \"" << soname << "\" does not have a load_plugin() function. Ignoring." << std::endl;
+        std::cout << "Plugin \"" << soname << "\" does not have a get_plugin() function. Ignoring." << std::endl;
+        return nullptr;
     }
 }
 
 
 PluginLoader::PluginLoader() {
-    m_plugin_paths_str = std::getenv("PHASM_PLUGIN_PATH");
-    m_plugin_names_str = std::getenv("PHASM_PLUGINS");
+    char* plugin_path = std::getenv("PHASM_PLUGIN_PATH");
+    if (plugin_path != nullptr) {
+        m_plugin_paths_str = plugin_path;
+    }
+    char* plugin_names = std::getenv("PHASM_PLUGIN_NAMES");
+    if (plugin_names != nullptr) {
+        m_plugin_names_str = std::getenv("PHASM_PLUGINS");
+    }
 
     // params->SetDefaultParameter("plugins", m_plugins_to_include, "Comma-separated list of plugins to load.");
     // params->SetDefaultParameter("plugins_to_ignore", m_plugins_to_exclude, "Comma-separated list of plugins to NOT load, even if they are specified in 'plugins'.");
