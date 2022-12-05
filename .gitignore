@@ -10,3 +10,5 @@ a.out.dSYM
 model.pt
 captures.csv
 *-checkpoint.ipynb
+.DS_Store
+*/.DS_Store
