@@ -3,9 +3,10 @@ find_package(Torch REQUIRED)
 
 set(PINN_DIFFUSION_PDE_SOLVER_SOURCES pinn_diffusion_pde_solver.cpp)
 add_executable(phasm-example-pinn-pdesolver ${PINN_DIFFUSION_PDE_SOLVER_SOURCES})
-target_include_directories(phasm-example-pinn-pdesolver PRIVATE
+target_include_directories(phasm-example-pinn-pdesolver PRIVATE ${TORCH_INCLUDE_DIRS}
 #        ${CMAKE_CURRENT_SOURCE_DIR}/../../surrogate/include
 #        ${CMAKE_CURRENT_SOURCE_DIR}/../../memtrace/include
         )
+target_compile_definitions(phasm-example-pinn-pdesolver PUBLIC PHASM_USE_CUDA=${USE_CUDA})
 target_link_libraries(phasm-example-pinn-pdesolver ${TORCH_LIBRARIES} )
 install(TARGETS phasm-example-pinn-pdesolver DESTINATION bin)
