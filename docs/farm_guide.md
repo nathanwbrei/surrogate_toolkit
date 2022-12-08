@@ -150,7 +150,7 @@ bash-4.2$ mv pin-3.22-98547-g7a303a835-gcc-linux.tar.gz pin
 ### Build and install `JANA2`
 
 ```bash
-bash-4.2$ git clone http://github.com/JeffersonLab/JANA2
+bash-4.2$ git clone http://github.com/JeffersonLab/JANA2 --branch=v2.0.6  # lock to a specific version first
 bash-4.2$ mkdir JANA2/install
 bash-4.2$ mkdir JANA2/build
 bash-4.2$ cd JANA2/build
