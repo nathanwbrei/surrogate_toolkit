@@ -5,6 +5,8 @@
 #pragma once
 #include <memory>
 
+#include "model.h"
+
 namespace phasm {
 
 struct Plugin {
@@ -13,8 +15,8 @@ struct Plugin {
     // We don't use the filename as the plugin name anymore because normalizing the filename is more trouble than it's worth.
     virtual std::string get_name() = 0;
     virtual void print_hello() = 0;
-    // Eventually make_model(std::string modeltype, std::string modelname)
-    // Eventually make_tensor(...)
+    virtual phasm::Model make_model(std::string modeltype, std::string modelname) = 0;
+    // virtual phasm::tensor make_tensor() = 0;
 };
 
 using PluginGetter = Plugin*();

@@ -2,6 +2,7 @@
 #include "plugin.h"
 #include <iostream>
 #include <memory>
+#include "feedforward_model.h"
 
 struct TorchPlugin : public phasm::Plugin {
 
@@ -11,6 +12,10 @@ struct TorchPlugin : public phasm::Plugin {
 
     std::string get_name() {
         return "phasm-torch-plugin";
+    }
+
+    phasm::Model make_model(std::string modeltype, std::string modelname) override {
+        return phasm::FeedForwardModel();
     }
 };
 
