@@ -1,38 +1,44 @@
-FROM centos:centos7.7.1908
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 USER root
 RUN mkdir /app
 WORKDIR /app
 
-# Install ssh so that we can remote from CLion
+# Install basic development environment
+RUN apt update -y \
+ && apt install -y gdb valgrind cmake wget unzip vim libasan6 less exa bat git zlib1g-dev
 
-RUN yum install -y openssh-server
-RUN echo 'root:password' | chpasswd
-RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN ssh-keygen -A -f /etc/ssh/ssh_host
-EXPOSE 22
+# Install libtorch
+ADD "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip" libtorch.zip
+RUN unzip libtorch.zip
 
+# Install libdwarf
+ADD "https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz" libdwarf.tar.xz
+RUN tar -xf libdwarf.tar.xz \
+ && mv libdwarf-0.3.4 libdwarf \
+ && mkdir libdwarf/build \
+ && mkdir libdwarf/installdir \
+ && cd libdwarf/build \
+ && cmake .. -DCMAKE_INSTALL_PREFIX=/app/libdwarf/installdir \
+ && make install
 
-# Add newer versions of GDB so that CLion lets us remote debug
+# Install Intel PIN
+ADD "https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz" pin.tar.gz
+RUN tar -xf pin.tar.gz \
+ && mv pin-3.22-98547-g7a303a835-gcc-linux pin
 
-RUN yum install -y centos-release-scl \
- && yum-config-manager --enable rhel-server-rhscl-7-rpms \
- && yum install -y devtoolset-11
-# To use: `scl enable devtoolset-11 bash`
+# Install JANA (Do this last because we are more likely to upgrade!)
+RUN git clone -b v2.0.6 http://github.com/JeffersonLab/JANA2 \
+ && mkdir JANA2/install \
+ && mkdir JANA2/build \
+ && cd JANA2/build \
+ && cmake .. -DCMAKE_INSTALL_PREFIX=/app/JANA2/install \
+ && make -j8 install
 
-
-# Install development environment ala CUE
-
-RUN yum install -y epel-release && \
-    yum install -y \
-		bzip2-devel cmake3 file gcc-c++ gcc-gfortran gdb git make python python-devel protobuf-c-devel \
-		sudo czmq tree wget which vim libtool valgrind libasan.so.0.0.0 \
-	&& ln -s /usr/bin/cmake3 /usr/local/bin/cmake \
-	&& rm -rf /var/cache/yum
-
-# Install PyTorch
-RUN wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip && \
-    unzip libtorch-shared-with-deps-latest.zip
+ENV JANA_HOME=/app/JANA2/install
+ENV PATH="$PATH:/app/JANA2/install/bin"
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/app/JANA2/install/plugins"
+ENV PIN_ROOT="/app/pin"
 
 CMD /bin/bash
 
