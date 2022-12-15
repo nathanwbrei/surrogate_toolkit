@@ -71,9 +71,9 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
     cmake .. -DCMAKE_INSTALL_PREFIX=../install
     make -j16 install
 
-    # clean apt lists and install packages
+    # clean apt lists and install/build packages
     apt-get clean
-    rm -rf /deps/*.xz /deps/*.gz /deps/libtorch-*.zip
+    rm -rf /deps/*.xz /deps/*.gz /deps/libtorch-*.zip /deps/JANA2/build /deps/libdwarf/build
     rm -rf /var/lib/apt/lists/*
 
 %environment
@@ -97,7 +97,7 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
     export JANA_HOME="${DEPS}/JANA2/install"
     export PATH=${JANA_HOME}/bin:${PATH}
 
-    # add cmake-specific
+    # add cmake-specific configurations
     export CC=`which gcc`
     export CXX=`which g++`
 

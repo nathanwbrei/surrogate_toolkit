@@ -24,7 +24,7 @@ Once the building is completed, you can pull it to the farm.
    singularity pull library://<your_syslab_img_path_and_tag>
    ```
 
-   You need to register to use the service, and the building process takes for 1 hour.
+   You need to register to use the service, and the building process takes 1 hour.
 
 By default, the singularity cache is at `${HOME}/.singularity/cache`. This must be
 reset on the farm due to limited `${HOME}` space. Update `SINGULARITY_CACHEDIR`

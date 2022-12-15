@@ -1,7 +1,7 @@
 # Running PHASM on Farm GPU Nodes
 
 ## Within a singularity container
-[A singularity definition file](../containers/singularity/cu-dev.def) is provided to build 
+[A singularity definition file](../containers/libtorch_cuda/cu-dev.def) is provided to build
 a container running PHASM codebase on the farm GPUs.
 
 Clone the PHASM repo to the farm other than your `/home`.
@@ -23,15 +23,15 @@ module load singularity
 singularity run <singularity_container_name>.sif
 ```
 
-On the login node, launch the container with the above command. Inside the container, each line bengins with
+On the login node, launch the container with the above command. Inside the container, each line begins with
 `Singularity> `.
 
-Build PHASM as below. Though there is no GPU no the login node, the building process
+Build PHASM as below. Though there is no GPU on the login node, the building process
 should be successful.
 
 ```bash
 Singularity> mkdir build && cd build
-Singularity> cmake cmake -DCMAKE_PREFIX_PATH="/deps/libtorch;/deps/JANA2/install" -DLIBDWARF_DIR="/deps/libdwarf/installdir" -DPIN_ROOT="/deps/pin" ..
+Singularity> cmake -DCMAKE_PREFIX_PATH="/deps/libtorch;/deps/JANA2/install" -DLIBDWARF_DIR="/deps/libdwarf/installdir" -DPIN_ROOT="/deps/pin" ..
 Singularity> make -j32 install
 ```
 
@@ -71,12 +71,8 @@ Run model on CUDA device 0.
 
 ## Bare-metal environment
 
-Running PHASM on farm nodes bare-metal is a bit tricky. We create this guide to walk through the building process.
-
-We assume you are already on the farm login node (`ifarmxxxx.jlab.org`).
-Clone the `phasm` folder repo to the farm group repo `/work/<group_name>/<user_account>/`.
-Do not use your `/home` space since it is only of 5GB and will be insufficient for installing the dependencies.
-
+The full building and installation process is given as below. We recommend running
+PHASM within a container to reduce your effort.
 
 ### 1. Load `cmake`, `gcc` and `cuda` modules
 PHASM requires `C++14` and `cmake 3.9+`, and the farm default setting does not satisfy. Reload the modules as below.
@@ -169,13 +165,14 @@ bash-4.2$ mkdir deps
 bash-4.2$ cd deps
 ```
 
-Export the current path and take down it as `<DEPS_PATH>`.
- For example, my `<DEPS_PATH>` is `/work/epsci/xmei/phasm/deps`.
+Export the current path and take down it as `<DEP_PATH>`.
+ For example, my `<DEP_PATH>` is `/work/epsci/xmei/phasm/deps`.
 ```bash
 bash-4.2$ export DEPS=`pwd`
 ```
 
-We need to install the dependencies of `libtorch`, `cuDNN` (`libtorch`'s CUDA dependencies), `libdwarf`, `pin` and `JANA2`. The below sub-steps are of arbitrary sequence.
+We need to install the dependencies of `libtorch`, `cuDNN` (`libtorch`'s CUDA dependencies),
+`libdwarf`, `pin` and `JANA2`. The below sub-steps are of arbitrary sequence.
 
 #### Install `cuDNN`
 If you want to install `libtorch` with CUDA, `cuDNN` is required. 
@@ -254,7 +251,8 @@ Go to the parent folder and build PHASM following the below steps.
 ```bash
 bash-4.2$ mkdir build
 bash-4.2$ cd build/
-bash-4.2$ cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/cudnn;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
+bash-4.2$ cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/cudnn;$DEPS/JANA2/install" \
+-DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
 bash-4.2$ make -j32 install
 ```
 
@@ -274,10 +272,10 @@ CUDA available. Training on GPU.
 #### The libtorch version
 
 According to libtorch [installation guide](https://pytorch.org/get-started/locally/), the `cxx11 ABI` version should fit the farm node better.
- But when I compiled the code with `cxx11 ABI` `libtorch`, a `glibc` link error occured as below, indicating an old `glibc` (`glibc 2.27` is required but `glibc 2.17` is provided).
+ But when I compiled the code with `cxx11 ABI` `libtorch`, a `glibc` link error occurred as below, indicating an old `glibc` (`glibc 2.27` is required but `glibc 2.17` is provided).
  Reinstalling the `glibc 2.27` also failed but `glibc 2.23` succeeded.
- Though including the `glibc 2.23` to the path, the probolem is unsolved.
- Thus I switched to the old `Pre-cxx11 ABI` `libtorch`.
+ Though including the `glibc 2.23` to the path, the problem is unsolved.
+ Thus, I switched to the old `Pre-cxx11 ABI` `libtorch`.
 
 ```bash
 /work/epsci/xmei/phasm/deps/libtorch/lib/libtorch_cpu.so: undefined reference to `powf@GLIBC_2.27'
