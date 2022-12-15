@@ -88,7 +88,7 @@ if [[ -d "JANA2" ]]; then
 fi
 if [[ $DOWNLOAD_JANA -eq 1 ]]; then
     echo "Downloading JANA2"
-    git clone http://github.com/JeffersonLab/JANA2
+    git clone http://github.com/JeffersonLab/JANA2 --branch=v2.0.6
     mkdir JANA2/install
     export JANA_HOME=`pwd`/JANA2/install
     mkdir JANA2/build

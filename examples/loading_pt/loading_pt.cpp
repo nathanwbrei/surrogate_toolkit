@@ -2,11 +2,11 @@
 // Created by Xinxin Mei on 12/2/22.
 //
 
-/*
+/**
  * This example is trying to load a DNN model (*.pt) originally trained and saved in Python with C++.
  * It is based on the libtorch tutorial at https://pytorch.org/tutorials/advanced/cpp_export.html
  *
- * Usage: ./phasm-example-loading-pt <path-to-pt-file>
+ * Usage: ./phasm-example-loading-pt <path/to/lstm-model.pt>
  * The test model is taken from https://github.com/cissieAB/gluex-tracking-pytorch-lstm.
  * CUDA device is required. The test input tensor is of dimension (1256, 7, 6).
  */

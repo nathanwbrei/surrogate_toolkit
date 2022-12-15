@@ -49,7 +49,7 @@ install/bin/phasm-memtrace-pin install/bin/phasm-example-memtrace
 
 ## Special directions for building on ifarm
 
-We use ifarm GPU nodes to run the CUDA version of the code base. 
-
-For a step-by-step guide, go to the [farm building guide](./docs/farm_guide.md).
+We use ifarm GPU nodes to run the CUDA version of the code base. Please refer to
+the [farm building guide](./docs/farm_guide.md) for either a containerized environment
+or a bare-metal one.
 

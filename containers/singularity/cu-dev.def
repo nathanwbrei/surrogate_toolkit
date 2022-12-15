@@ -1,0 +1,113 @@
+# This is a singularity definition file
+# On your OWN MACHINE, build it with `sudo singularity build <sif_name>.sif <def_name>.def`
+#
+# In JLAB network, there would be SSL problem during the building process.
+# No problem with singularity remote GUI build.
+#
+# Ref: https://docs.sylabs.io/guides/3.7/user-guide/definition_files.html
+
+BootStrap: docker
+From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+
+%post
+    # install general software
+    apt-get update && \
+    apt-get -y install --no-install-recommends \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
+        software-properties-common \
+        wget \
+        git \
+        build-essential \
+        libtool \
+        autoconf \
+        unzip \
+        vim \
+        curl \
+        gdb \
+        zlib1g-dev  # zlib for pin or libdwarf
+
+    echo "check_certificate = off" >> ~/.wgetrc
+
+    # installing latest cmake, easy to trigger error
+    apt-get -y install libssl3  # version must >1.1.1
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc > kitware.key
+    apt-key add kitware.key # depreciated command apt-key here
+    apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ jammy main'
+    apt-get -y install cmake
+
+    # install libtorch
+    # root dir
+    mkdir deps
+    cd deps
+    wget https://download.pytorch.org/libtorch/cu117/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcu117.zip
+    unzip libtorch-*.zip
+    echo "libtorch version: " `cat /deps/libtorch/build-version`
+
+    # install pin
+    cd /deps
+    wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
+    tar -xf pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
+    mv pin-3.22-98547-g7a303a835-gcc-linux pin
+
+    # build and install libdwarf
+    cd /deps
+    wget https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
+    tar -xf libdwarf-0.3.4.tar.xz
+    mv libdwarf-0.3.4 libdwarf
+    cd libdwarf
+    mkdir build installdir
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=../installdir
+    make -j16 install
+
+    # build and install JANA locked to v2.0.6
+    cd /deps
+    git clone http://github.com/JeffersonLab/JANA2 --branch=v2.0.6
+    cd JANA2
+    mkdir build install
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=../install
+    make -j16 install
+
+    # clean apt lists and install packages
+    apt-get clean
+    rm -rf /deps/*.xz /deps/*.gz /deps/libtorch-*.zip
+    rm -rf /var/lib/apt/lists/*
+
+%environment
+    # CUDA path
+    export CUDA_INSTALL_PATH=/usr/local/cuda
+    export LD_LIBRARY_PATH=${CUDA_INSTALL_PATH}/lib64:${CUDA_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
+
+    # cudnn path
+    export CUDNN_LIB_PATH=/usr/lib/x86_64-linux-gnu
+    export CUDNN_INCLUDE_PATH=/usr/include/x86_64-linux-gnu/
+    export LD_LIBRARY_PATH=${CUDNN_LIB_PATH}:${LD_LIBRARY_PATH}
+
+    # export deps path
+    export DEPS=/deps
+
+    # add libtorch library path
+    export LIBTORCH_INSTALL_PATH=${DEPS}/libtorch
+    export LD_LIBRARY_PATH=${LIBTORCH_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
+
+    # add JANA2 path
+    export JANA_HOME="${DEPS}/JANA2/install"
+    export PATH=${JANA_HOME}/bin:${PATH}
+
+    # add cmake-specific
+    export CC=`which gcc`
+    export CXX=`which g++`
+
+%labels
+    Author xmei@jlab.org
+    Version v0.0.1
+    MyLabel dev
+
+%help
+    A container built upon dokcer://nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+    which has cudnn8.6, cuda11.8, python3.10, gcc11.3, ldd2.35, make4.3 etc preinstalled.
+    Then this definition file installed cmake3.25, and libtorch1.13+cu11.7, pin, dwarf etc at /deps.
+    The built container is about 7GB.

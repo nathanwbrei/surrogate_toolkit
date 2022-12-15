@@ -1,12 +1,84 @@
 # Running PHASM on Farm GPU Nodes
 
-Running PHASM on farm nodes is a bit tricky. We create this guide to walk through the building process.
+## Within a singularity container
+[A singularity definition file](../containers/singularity/cu-dev.def) is provided to build 
+a container running PHASM codebase on the farm GPUs.
+
+Clone the PHASM repo to the farm other than your `/home`.
+
+### 1. Load the singularity module
+
+Place the singularity container under your PHASM repo. If you pull the singularity container from
+[sylabs](https://cloud.sylabs.io/)
+library, remember to reset the singularity cache environment variable `SINGULARITY_CACHEDIR`.
+
+```bash
+# module use /apps/modulefiles
+module load singularity
+```
+
+### 2. Build PHASM without GPU
+
+```bash
+singularity run <singularity_container_name>.sif
+```
+
+On the login node, launch the container with the above command. Inside the container, each line bengins with
+`Singularity> `.
+
+Build PHASM as below. Though there is no GPU no the login node, the building process
+should be successful.
+
+```bash
+Singularity> mkdir build && cd build
+Singularity> cmake cmake -DCMAKE_PREFIX_PATH="/deps/libtorch;/deps/JANA2/install" -DLIBDWARF_DIR="/deps/libdwarf/installdir" -DPIN_ROOT="/deps/pin" ..
+Singularity> make -j32 install
+```
+
+Run the pinn-pde-example, it will show that the CPU is doing
+the training work.
+
+```bash
+Singularity> ./install/bin/phasm-example-pinn-pdesolver 
+####### A cpp torch example with PINN heat equation. #######
+
+No CUDA device. Training on CPU.
+
+y_train sizes: [260, 1]
+y_train.device().type(): cpu
+...
+```
+
+### 3. Run PHASM with a GPU
+
+Ask for a GPU node and run the container with option `--nv`.
+
+```bash
+# on the login node
+srun --gres gpu:A100:1 -p gpu --cpus-per-task=4 --mem-per-cpu=8000 --pty bash  # ask for more memory here
+
+# on the GPU node
+singularity run --nv <singularity_container_name>.sif
+# run the loading-pt example with GPU
+Singularity> ./install/bin/phasm-example-loading-pt /work/epsci/shared_pkg/lstm_model.pt 
+Loading gluex-tracking-lstm pt model.................... succeed
+
+Run model on CUDA device 0.
+  CUDA device name: NVIDIA A100 80GB PCIe
+  CUDA compute capacity: 8.0
+  LibTorch version: 1.13.0
+```
+
+## Bare-metal environment
+
+Running PHASM on farm nodes bare-metal is a bit tricky. We create this guide to walk through the building process.
 
 We assume you are already on the farm login node (`ifarmxxxx.jlab.org`).
- Clone the `phasm` folder repo to the farm group repo `/work/<group_name>/<user_account>/`.
- Do not use your `/home` space since it is only of 5GB and will be insufficient for installing the dependencies.
+Clone the `phasm` folder repo to the farm group repo `/work/<group_name>/<user_account>/`.
+Do not use your `/home` space since it is only of 5GB and will be insufficient for installing the dependencies.
 
-## 1. Load `cmake`, `gcc` and `cuda`
+
+### 1. Load `cmake`, `gcc` and `cuda` modules
 PHASM requires `C++14` and `cmake 3.9+`, and the farm default setting does not satisfy. Reload the modules as below.
 
 ```bash
@@ -47,7 +119,7 @@ Note that you can either load these modules before or after logging to the compu
 bash-4.2$ source /etc/profile.d/modules.sh
 ```
 
-## 2. Ask for a GPU node
+### 2. Ask for a GPU node
 
 Use the below Slurm command to ask for one GPU node under `gpu` partition.
  Here I am asking for a Tesla T4 GPU.
@@ -88,8 +160,7 @@ bash-4.2$ export CC=`which gcc`
 bash-4.2$ export CXX=`which g++`
 ```
 
-
-## 3. Get the PHASM dependencies
+### 3. Get the PHASM dependencies
 
 Create a folder `deps` under the phasm parent folder and go into it. 
 
@@ -106,7 +177,7 @@ bash-4.2$ export DEPS=`pwd`
 
 We need to install the dependencies of `libtorch`, `cuDNN` (`libtorch`'s CUDA dependencies), `libdwarf`, `pin` and `JANA2`. The below sub-steps are of arbitrary sequence.
 
-### Install `cuDNN`
+#### Install `cuDNN`
 If you want to install `libtorch` with CUDA, `cuDNN` is required. 
 
 `cuDNN` is available at NVIDIA official site [here](https://developer.nvidia.com/rdp/cudnn-download), but it will ask you to sign in first.
@@ -126,7 +197,7 @@ bash-4.2$ tar -xf /work/epsci/shared_pkg/cudnn-linux-x86_64-8.4.1.50_cuda11.6-ar
 bash-4.2$ mv cudnn-linux-x86_64-8.4.1.50_cuda11.6-archive/ cudnn
 ```
 
-### Install `libtorch`
+#### Install `libtorch`
 
 Farm does not allow you to access the online `libtorch` download path.
  You have to download it to **YOUR OWN DEVICE** and `scp` it.
@@ -139,7 +210,7 @@ bash-4.2$ unzip /work/epsci/shared_pkg/libtorch-shared-with-deps-1.12.0+cu113.zi
 Note this step requires `cmake`. You must configure the newer `cmake` and `gcc` module/path beforehand. 
 
 
-### Install `pin`
+#### Install `pin`
 
 ```bash
 bash-4.2$ wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
@@ -147,10 +218,10 @@ bash-4.2$ tar -xf pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
 bash-4.2$ mv pin-3.22-98547-g7a303a835-gcc-linux.tar.gz pin
 ```
 
-### Build and install `JANA2`
+#### Build and install `JANA2`
 
 ```bash
-bash-4.2$ git clone http://github.com/JeffersonLab/JANA2
+bash-4.2$ git clone http://github.com/JeffersonLab/JANA2 --branch=v2.0.6  # lock to a specific version first
 bash-4.2$ mkdir JANA2/install
 bash-4.2$ mkdir JANA2/build
 bash-4.2$ cd JANA2/build
@@ -159,7 +230,7 @@ bash-4.2$ make -j8 install
 bash-4.2$ cd ../..
 ```
 
-### Build and install `libdwarf`
+#### Build and install `libdwarf`
 ```bash
 bash-4.2$ wget https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
 bash-4.2$ tar -xf libdwarf-0.3.4.tar.xz
@@ -170,7 +241,7 @@ bash-4.2$ cmake .. -DCMAKE_INSTALL_PREFIX=../installdir
 bash-4.2$ make install
 ```
 
-## 4. Build and run PHASM
+### 4. Build and run PHASM
 Add `libtorch` to the path.
 
 ```bash
@@ -183,12 +254,11 @@ Go to the parent folder and build PHASM following the below steps.
 ```bash
 bash-4.2$ mkdir build
 bash-4.2$ cd build/
-bash-4.2$ cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/cudnn" ..
-# bash-4.2$ cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/cudnn;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
-bash-4.2$ make
+bash-4.2$ cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/cudnn;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf-0.3.4/installdir" -DPIN_ROOT="$DEPS/pin" ..
+bash-4.2$ make -j32 install
 ```
 
-### Run the examples
+#### Run the examples
 - The pinn-pde-solver is a stand-alone example only utilizes `libtorch`. 
 You can run this example to verify whether `libtorch` is configured appropriately.
 
@@ -200,8 +270,8 @@ CUDA available. Training on GPU.
 ...
 ```
 
-## Notes
-### The libtorch version
+### Notes
+#### The libtorch version
 
 According to libtorch [installation guide](https://pytorch.org/get-started/locally/), the `cxx11 ABI` version should fit the farm node better.
  But when I compiled the code with `cxx11 ABI` `libtorch`, a `glibc` link error occured as below, indicating an old `glibc` (`glibc 2.27` is required but `glibc 2.17` is provided).
@@ -226,7 +296,7 @@ ldd (GNU libc) 2.17
 ../configure --prefix=/work/epsci/xmei/phasm/deps/glibc-2.27/install --disable-werror
 ```
 
-### Select GPU or CPU to run PINN
+#### Select GPU or CPU to run PINN
 Now the PINN example can run either on (one) GPU or CPU without changes
  in the code. But we do need to switch the `libtorch` libraries.
 
