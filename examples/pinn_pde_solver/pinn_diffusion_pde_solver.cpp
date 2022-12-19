@@ -19,9 +19,7 @@ Python code change is ignored in this branch.
 */
 
 #include <torch/torch.h>
-#if PHASM_USE_CUDA
 #include <ATen/cuda/CUDAContext.h>  // for cuda device properties
-#endif
 #include <math.h>
 #include <iostream>
 
@@ -196,7 +194,6 @@ torch::Tensor get_total_loss(
 }
 
 void print_cuda_device_info(){
-#if PHASM_USE_CUDA
     cudaDeviceProp *cuda_prop = at::cuda::getCurrentDeviceProperties();
     std::cout << "  CUDA device name: " << cuda_prop->name << std::endl;
     std::cout << "  CUDA compute capacity: "
@@ -206,11 +203,6 @@ void print_cuda_device_info(){
               << TORCH_VERSION_MINOR << "."
               << TORCH_VERSION_PATCH << std::endl;
     std::cout << std::endl;
-#else
-    std::cout << "No CUDA information because this was compiled without CUDA support!" << std::endl;
-    std::cout << "Set USE_CUDA=On during CMake config to enable." << std::endl;
-    std::cout << std::endl;
-#endif
 }
 
 int main() {
