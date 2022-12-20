@@ -36,6 +36,12 @@ int main(int argc, const char *argv[]) {
         return -1;
     }
 
+    auto cuda_available = torch::cuda::is_available();
+    if (not cuda_available) {
+        std::cout << "CUDA device is required for this application!" << std::endl;
+        return -1;
+    }
+
     torch::jit::script::Module module;
     try {
         // Deserialize the ScriptModule from a file using torch::jit::load().
@@ -49,11 +55,6 @@ int main(int argc, const char *argv[]) {
 
     /** Test feed-forward computation with an input tensor **/
     std::cout << "Run model on CUDA device 0." << std::endl;
-    auto cuda_available = torch::cuda::is_available();
-    if (not cuda_available) {
-        std::cout << "CUDA device is required to do the computation!" << std::endl;
-        return -1;
-    }
     print_cuda_device_info();
     auto device_str = torch::kCUDA;
     torch::Device device(device_str);
