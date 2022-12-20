@@ -35,6 +35,8 @@ public:
     inline SurrogateBuilder& set_model(std::shared_ptr<Model> model) { m_model = model; return *this; }
     inline SurrogateBuilder& set_callmode(CallMode callmode) { m_callmode = callmode; return *this; }
 
+    SurrogateBuilder& set_model(std::string plugin_name, std::string model_name);
+
     template <typename T>
     Cursor<T> local(std::string name);
 

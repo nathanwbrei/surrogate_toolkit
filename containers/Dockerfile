@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+FROM ubuntu:latest
 
 USER root
 RUN mkdir /app
@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install basic development environment
 RUN apt update -y \
- && apt install -y gdb valgrind cmake wget unzip vim libasan6 less exa bat git zlib1g-dev
+ && apt install -y build-essential gdb valgrind cmake wget unzip vim libasan6 less exa bat git zlib1g-dev
 
 # Install libtorch
 ADD "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip" libtorch.zip
@@ -14,7 +14,8 @@ RUN unzip libtorch.zip
 
 # Install libdwarf
 ADD "https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz" libdwarf.tar.xz
-RUN tar -xf libdwarf.tar.xz \
+RUN apt install -y xz-utils \
+ && tar -xvf libdwarf.tar.xz \
  && mv libdwarf-0.3.4 libdwarf \
  && mkdir libdwarf/build \
  && mkdir libdwarf/installdir \

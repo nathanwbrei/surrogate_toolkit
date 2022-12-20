@@ -3,8 +3,14 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include "surrogate_builder.h"
+#include "plugin_loader.h"
 
 namespace phasm {
+
+SurrogateBuilder& SurrogateBuilder::set_model(std::string plugin_name, std::string model_name) {
+    m_model = g_plugin_loader.get_plugin(plugin_name)->make_model(model_name);
+    return *this;
+}
 
 
 std::vector<std::shared_ptr<CallSiteVariable>> SurrogateBuilder::get_callsite_vars() const {

@@ -13,7 +13,7 @@
 
 namespace phasm {
 
-// PluginLoader g_plugin_loader;
+PluginLoader g_plugin_loader;
 
 void PluginLoader::add_plugin(std::string plugin_name) {
     /// Add the specified plugin to the list of plugins to be

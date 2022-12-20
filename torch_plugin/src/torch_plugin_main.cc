@@ -14,8 +14,8 @@ struct TorchPlugin : public phasm::Plugin {
         return "phasm-torch-plugin";
     }
 
-    phasm::Model make_model(std::string modeltype, std::string modelname) override {
-        return phasm::FeedForwardModel();
+    std::shared_ptr<phasm::Model> make_model(std::string model_name) override {
+        return std::make_shared<phasm::FeedForwardModel>();
     }
 };
 
