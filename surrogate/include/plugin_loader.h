@@ -24,10 +24,7 @@ private:
     Plugin* load_plugin(const std::string& exact_plugin_name);
 
     std::vector<std::string> m_plugin_paths;
-    std::map<std::string, std::pair<Plugin*, void *>> m_loaded_plugins;
-
-    // bool m_verbose = false;
-    // JLogger m_logger;
+    std::map<std::string, Plugin*> m_loaded_plugins;
 };
 
 extern PluginLoader g_plugin_loader;

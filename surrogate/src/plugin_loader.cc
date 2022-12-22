@@ -37,16 +37,19 @@ PluginLoader::~PluginLoader() {
     // typedef void FinalizePlugin_t();
     for (auto& p: m_loaded_plugins) {
         auto soname = p.first;
-        auto handle = p.second.second;
-        /*
-        FinalizePlugin_t *finalize_proc = (FinalizePlugin_t *) dlsym(handle, "FinalizePlugin");
-        if (finalize_proc) {
-            std::cout << "Finalizing plugin \"" << soname << "\"" << std::endl;
-            (*finalize_proc)();
-        }
-        */
-        // Close plugin handle
+        auto handle = p.second->dl_handle;
+        std::cout << "PHASM: Closing plugin '" << p.first << "'" << std::endl;
+
+        // For now the Plugin is static, so DO NOT DELETE.
         dlclose(handle);
+
+        // It is tempting to give ownership of the handle to the Plugin so that the Plugin
+        // dlcloses() itself automatically. However, the handle exists potentially before
+        // the Plugin is created, and is required to live _at_least_ as long as the Plugin
+        // but possibly longer. So really, if dl were object-oriented, Handle should own Plugin.
+        // Thus PluginLoader owns the handle. The handle "owns" the Plugin in the sense that the
+        // Plugin is static so it gets disposed when the handle gets dlclosed().
+
     }
 }
 
@@ -78,7 +81,7 @@ Plugin* PluginLoader::get_or_load_plugin(const std::string& plugin_name) {
     auto it = m_loaded_plugins.find(plugin_name);
     if (it != m_loaded_plugins.end()) {
         // We found it in cache
-        return m_loaded_plugins[plugin_name].first;
+        return m_loaded_plugins[plugin_name];
     }
 
     // Search for file in m_plugin_paths
@@ -90,7 +93,7 @@ Plugin* PluginLoader::get_or_load_plugin(const std::string& plugin_name) {
         throw std::runtime_error("Unable to attach plugin!");
     }
 
-
+    m_loaded_plugins[plugin->get_name()] = plugin;
     return plugin;
 }
 
@@ -99,17 +102,17 @@ std::string PluginLoader::find_plugin(const std::string& short_plugin_name) {
     for (std::string path: m_plugin_paths) {
         std::string fullpath = path + "/" + short_plugin_name + ".so";
         if (access(fullpath.c_str(), F_OK) != -1) {
-            std::cout << "Checking '" << fullpath << "' ... Found!" << std::endl;
+            std::cout << "PHASM: Checking '" << fullpath << "' ... Found!" << std::endl;
             return fullpath;
         }
         else {
-            std::cout << "Checking '" << fullpath << "' ... Not found" << std::endl;
+            std::cout << "PHASM: Checking '" << fullpath << "' ... Not found" << std::endl;
         }
     }
 
     // If we didn't find the plugin, then complain and quit
     std::stringstream oss;
-    oss << "Couldn't find plugin '" << short_plugin_name << "' on $PHASM_PLUGIN_PATH" << std::endl;
+    oss << "PHASM: Couldn't find plugin '" << short_plugin_name << "' on $PHASM_PLUGIN_PATH" << std::endl;
 
     std::cout << oss.str();
     throw std::runtime_error(oss.str());
@@ -127,18 +130,13 @@ Plugin* PluginLoader::load_plugin(const std::string& exact_plugin_name) {
     phasm::PluginGetter *get_plugin = (phasm::PluginGetter *) dlsym(handle, "get_plugin");
 
     if (get_plugin) {
-        std::cout << "Initializing plugin \"" << exact_plugin_name << "\"" << std::endl;
+        std::cout << "PHASM: Opening plugin \"" << exact_plugin_name << "\"" << std::endl;
         Plugin* plugin = (*get_plugin)();
-
-        m_loaded_plugins[plugin->get_name()] = {plugin, handle};
-        // It's a little bit weird to cache the plugin here, but otherwise we lose the handle.
-        // The alternative is to return std::pair<Plugin*, void*>, or to put the handle inside
-        // the Plugin object. I'm leaning towards the latter.
-
+        plugin->dl_handle = handle;
         return plugin;
     } else {
         dlclose(handle);
-        std::cout << "Plugin \"" << exact_plugin_name << "\" does not have a get_plugin() function. Ignoring." << std::endl;
+        std::cout << "PHASM: Plugin \"" << exact_plugin_name << "\" does not have a get_plugin() function. Ignoring." << std::endl;
         return nullptr;
     }
 }

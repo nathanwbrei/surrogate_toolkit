@@ -17,6 +17,8 @@ struct Plugin {
     virtual void print_hello() = 0;
     virtual std::shared_ptr<phasm::Model> make_model(std::string model_name) = 0;
     // virtual phasm::tensor make_tensor() = 0;
+
+    void* dl_handle = nullptr;
 };
 
 using PluginGetter = Plugin*();
