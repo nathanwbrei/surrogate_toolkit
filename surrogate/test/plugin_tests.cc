@@ -7,9 +7,7 @@
 
 TEST_CASE("PluginLoader basics") {
     phasm::PluginLoader pl;
-    pl.add_plugin("phasm-torch-plugin");
-    pl.attach_plugins();
-    auto* plugin = pl.get_plugin("phasm-torch-plugin");
+    auto* plugin = pl.get_or_load_plugin("phasm-torch-plugin");
     plugin->print_hello();
 }
 

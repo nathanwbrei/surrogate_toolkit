@@ -15,24 +15,14 @@ class PluginLoader {
 
 public:
     PluginLoader();
-
     ~PluginLoader();
-
-    void add_plugin(std::string plugin_name);
-
     void add_plugin_path(std::string path);
-
-    void attach_plugins();
-
-    Plugin* attach_plugin(std::string plugin_name);
-
-    Plugin* get_plugin(const std::string& plugin_name);
+    Plugin* get_or_load_plugin(const std::string& plugin_name);
 
 private:
-    std::string m_plugin_paths_str;
-    std::string m_plugin_names_str;
-    std::vector<std::string> m_plugins_to_include;
-    std::vector<std::string> m_plugins_to_exclude;
+    std::string find_plugin(const std::string& short_plugin_name);
+    Plugin* load_plugin(const std::string& exact_plugin_name);
+
     std::vector<std::string> m_plugin_paths;
     std::map<std::string, std::pair<Plugin*, void *>> m_loaded_plugins;
 

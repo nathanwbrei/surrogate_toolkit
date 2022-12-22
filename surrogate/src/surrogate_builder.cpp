@@ -8,7 +8,7 @@
 namespace phasm {
 
 SurrogateBuilder& SurrogateBuilder::set_model(std::string plugin_name, std::string model_name) {
-    m_model = g_plugin_loader.get_plugin(plugin_name)->make_model(model_name);
+    m_model = g_plugin_loader.get_or_load_plugin(plugin_name)->make_model(model_name);
     return *this;
 }
 
