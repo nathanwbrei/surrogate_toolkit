@@ -26,6 +26,11 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
         vim \
         curl \
         gdb \
+        libasan6 \
+        less \
+        exa \
+        bat \
+        valgrind \
         zlib1g-dev  # zlib for pin or libdwarf
 
     echo "check_certificate = off" >> ~/.wgetrc
@@ -110,4 +115,4 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
     A container built upon dokcer://nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
     which has cudnn8.6, cuda11.8, python3.10, gcc11.3, ldd2.35, make4.3 etc preinstalled.
     Then this definition file installed cmake3.25, and libtorch1.13+cu11.7, pin, dwarf etc at /deps.
-    The built container is about 7GB.
+    The built container is about 6.5 GB.

@@ -11,9 +11,9 @@ cd phasm
 
 #### CUDA containers (libtorch_cuda)
 CUDA containers did not pass the macOS-hostOS test. Therefore, we limit
-ourselves to the Linux machines and farm GPUs.
+ourselves to the Linux machines and ifarm GPUs.
 
-Follow [this guide](docs/farm_guide.md) to compile PHASM inside the singularity container on farm.
+Follow [this guide](docs/farm_guide.md) to compile PHASM inside the singularity container on ifarm.
 All the examples, including the CUDA and non-CUDA ones should be built successfully.
 
 #### CPU containers (libtorch_cpu)
