@@ -12,16 +12,13 @@
  */
 
 #include <torch/script.h>
-#if PHASM_USE_CUDA
 #include <ATen/cuda/CUDAContext.h>  // for cuda device properties
-#endif
 #include <torch/torch.h>
 
 #include <iostream>
 #include <memory>
 
 void print_cuda_device_info() {
-#if PHASM_USE_CUDA
     cudaDeviceProp *cuda_prop = at::cuda::getCurrentDeviceProperties();
     std::cout << "  CUDA device name: " << cuda_prop->name << std::endl;
     std::cout << "  CUDA compute capacity: "
@@ -31,16 +28,17 @@ void print_cuda_device_info() {
               << TORCH_VERSION_MINOR << "."
               << TORCH_VERSION_PATCH << std::endl;
     std::cout << std::endl;
-#else
-    std::cout << "No CUDA information because this was compiled without CUDA support!" << std::endl;
-    std::cout << "Set USE_CUDA=On during CMake config to enable." << std::endl;
-    std::cout << std::endl;
-#endif
 }
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
         std::cerr << "usage: phasm-example-loading-pt <path-to-exported-script-module>\n";
+        return -1;
+    }
+
+    auto cuda_available = torch::cuda::is_available();
+    if (not cuda_available) {
+        std::cout << "CUDA device is required for this application!" << std::endl;
         return -1;
     }
 
@@ -57,11 +55,6 @@ int main(int argc, const char *argv[]) {
 
     /** Test feed-forward computation with an input tensor **/
     std::cout << "Run model on CUDA device 0." << std::endl;
-    auto cuda_available = torch::cuda::is_available();
-    if (not cuda_available) {
-        std::cout << "CUDA device is required to do the computation!" << std::endl;
-        return -1;
-    }
     print_cuda_device_info();
     auto device_str = torch::kCUDA;
     torch::Device device(device_str);
