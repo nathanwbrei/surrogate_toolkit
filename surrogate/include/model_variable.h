@@ -27,6 +27,11 @@ struct ModelVariable {
     tensor inference_output;
     Range range;
 
+    ModelVariable() = default;
+    ~ModelVariable() {
+        delete accessor;
+    }
+
     std::vector<int64_t> shape() const {
         if (accessor == nullptr) {
             std::ostringstream oss;

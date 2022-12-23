@@ -156,7 +156,7 @@ Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &
     auto child = new TensorIso<HeadT>(std::move(shape));
     child->name = name;
     child->is_leaf = true;
-    current_callsite_var->optics_tree.push_back(child);
+    current_callsite_var->optics_tree.push_back(child->clone());
 
     auto mv = std::make_shared<ModelVariable>();
     mv->name = name;
