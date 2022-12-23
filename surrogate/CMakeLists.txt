@@ -18,7 +18,6 @@ install(TARGETS phasm-surrogate DESTINATION lib)
 
 
 set(SURROGATE_LIBRARY_TEST_SOURCES
-        test/experiment_tests.cpp
         test/capturing_tests.cpp
         test/sampling_tests.cpp
         test/sampling_tests.cpp
@@ -26,11 +25,9 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/pytorch_tests.cpp
         test/range_tests.cpp
         test/memorizing_tests.cpp
-        test/visitor_tests.cpp
         test/prism_tests.cpp
         test/optics_tests.cpp
         test/fluent_tests.cpp
-        test/fluent_experiments.cpp
         test/tutorial_tests.cpp
         )
 add_executable("phasm-surrogate-tests" ${SURROGATE_LIBRARY_TEST_SOURCES})

@@ -3,6 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 
+#define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 #include "feedforward_model.h"
 #include "surrogate.h"
