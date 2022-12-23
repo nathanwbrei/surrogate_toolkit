@@ -38,7 +38,7 @@ struct ToyMagFieldMap {
         s_surrogate.bind_all_callsite_vars(&x, &y, &z, &Bx, &By, &Bz);
         s_surrogate.call();
     }
-    void getFieldOriginal(double x, double y, double z, double& Bx, double& By, double& Bz) {
+    void getFieldOriginal(double x, double /*y*/, double /*z*/, double& Bx, double& By, double& Bz) {
         Bx = 2;
         By = x + 3;
         Bz = x * x;
