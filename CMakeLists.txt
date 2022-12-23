@@ -37,11 +37,19 @@ if (${USE_ASAN})
 else()
     message(STATUS "USE_ASAN    Off")
 endif()
+
+option(USE_CUDA "Compile with CUDA support" ON)
+if (${USE_CUDA})
+    message(STATUS "USE_CUDA    On")
+else()
+    message(STATUS "USE_CUDA    Off")
+endif()
+
 message(STATUS "-----------------------")
 
 include_directories(external)
 
-#add_subdirectory(examples)
+add_subdirectory(examples)
 add_subdirectory(surrogate)
 #add_subdirectory(memtrace)
 #add_subdirectory(memtrace_pin)

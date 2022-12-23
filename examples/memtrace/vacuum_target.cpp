@@ -107,7 +107,7 @@ void test_target6() {
     delete retval;
 }
 
-int main(int argc, char** argv) {
+int main(/*int argc, char** argv*/) {
     test_target1();
     test_target2();
     test_target3();
