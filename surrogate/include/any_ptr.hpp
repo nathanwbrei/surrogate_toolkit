@@ -23,6 +23,13 @@ public:
 
     any_ptr(const any_ptr& other) : m_p(other.m_p), m_t(other.m_t), m_typename(other.m_typename) {};
 
+    any_ptr& operator=(const phasm::any_ptr& other) {
+        m_p = other.m_p;
+        m_t = other.m_t;
+        m_typename = other.m_typename;
+        return *this;
+    }
+
     template <typename T>
     void set(T* p) {
         auto tt = std::type_index(typeid(T));
