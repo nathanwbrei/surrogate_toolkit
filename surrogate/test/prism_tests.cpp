@@ -115,11 +115,9 @@ struct Converter {
 
     template <typename U>
     Converter<S, U> compose(Converter<T,U> c) {
-        return Converter<S,U>([=](S s){
-            T t = this->convert(s);
-            U u = c.convert(t);
-            return u;
-            });
+        auto f = this->convert;
+        auto g = c.convert;
+        return Converter<S,U>([f,g](S s){ return g(f(s)); });
     }
 };
 
