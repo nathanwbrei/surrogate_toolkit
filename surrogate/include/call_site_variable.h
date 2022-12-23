@@ -18,7 +18,15 @@ struct CallSiteVariable {
     std::vector<OpticBase*> optics_tree;
     std::vector<std::shared_ptr<ModelVariable>> model_vars;
 
+
     CallSiteVariable(std::string name, any_ptr binding) : name(name), binding(binding) {}
+
+    // TODO: If CallSiteVariable owns the optics tree (and is responsible for its integrity), it shouldn't be a struct
+    ~CallSiteVariable() {
+        for (auto* optic : optics_tree) {
+            delete optic;
+        }
+    }
 
     inline void captureAllTrainingInputs() {
         for (const auto& model_var : model_vars) {

@@ -25,28 +25,33 @@ endif()
 
 message(STATUS "Installing to ${CMAKE_INSTALL_PREFIX}")
 
-
-option(USE_ASAN "Compile with address sanitizer" OFF)
-if (${USE_ASAN})
-    add_compile_options(-fsanitize=address)
-    add_link_options(-fsanitize=address)
-endif()
-
 message(STATUS "-----------------------")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
+
+option(USE_ASAN "Compile with address sanitizer" OFF)
 if (${USE_ASAN})
     message(STATUS "USE_ASAN    On")
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
 else()
     message(STATUS "USE_ASAN    Off")
 endif()
+
+option(USE_CUDA "Compile with CUDA support" ON)
+if (${USE_CUDA})
+    message(STATUS "USE_CUDA    On")
+else()
+    message(STATUS "USE_CUDA    Off")
+endif()
+
 message(STATUS "-----------------------")
 
 include_directories(external)
 
 add_subdirectory(examples)
 add_subdirectory(surrogate)
-add_subdirectory(memtrace)
+#add_subdirectory(memtrace)
 #add_subdirectory(memtrace_pin)
-add_subdirectory(gpu_perf_tester)
+#add_subdirectory(gpu_perf_tester)
 

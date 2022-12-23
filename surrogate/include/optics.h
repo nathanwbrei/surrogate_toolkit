@@ -30,6 +30,13 @@ struct OpticBase {
     std::string consumes;
     bool is_leaf = false;
 
+    OpticBase() = default;
+    virtual ~OpticBase() {
+        for (auto* child : children) {
+            delete child;
+        }
+    }
+
     virtual std::vector<int64_t> shape() {return {};}; // Torch uses int64_t instead of size_t for its indices and offsets
 
     void unsafe_attach(OpticBase* optic) {
