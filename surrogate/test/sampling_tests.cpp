@@ -16,6 +16,9 @@ phasm::tensor scalar_to_tensor(T scalar) {
     return tensor(&scalar, 1);
 }
 
+
+// TODO: Re-work this
+#if 0
 TEST_CASE("Basic GridSampler") {
 
     int x = 100;
@@ -41,8 +44,10 @@ TEST_CASE("Basic GridSampler") {
     REQUIRE(result == true); // Wraps around
     REQUIRE(x == 3);
 }
+#endif
 
-
+// TODO: Re-work this.
+#if 0
 TEST_CASE("Basic FiniteSetSampler") {
     auto v = SurrogateBuilder().local_primitive<int>("x", INOUT).get_model_vars()[0];
     v->range.items.insert(scalar_to_tensor(7));
@@ -71,5 +76,6 @@ TEST_CASE("Basic FiniteSetSampler") {
     REQUIRE(result == true); // Wraps around
     REQUIRE(x == 7);
 }
+#endif
 
 } // namespace phasm::test::sampling_tests
