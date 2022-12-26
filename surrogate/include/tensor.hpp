@@ -6,10 +6,11 @@
 #ifndef SURROGATE_TOOLKIT_TENSOR_HPP
 #define SURROGATE_TOOLKIT_TENSOR_HPP
 
-#include <torch/torch.h>
+#include <vector>
+#include <cstdint>
+#include <cstddef>
 
 namespace phasm {
-
 
 
 enum class DType { Undefined, UI8, I16, I32, I64, F32, F64 };
@@ -20,7 +21,7 @@ enum class DType { Undefined, UI8, I16, I32, I64, F32, F64 };
 
 template <typename T>
 phasm::DType dtype() {
-    if (std::is_same<T, u_int8_t>()) return phasm::DType::UI8;
+    if (std::is_same<T, uint8_t>()) return phasm::DType::UI8;
     if (std::is_same<T, int16_t>()) return phasm::DType::I16;
     if (std::is_same<T, int32_t>()) return phasm::DType::I32;
     if (std::is_same<T, int64_t>()) return phasm::DType::I64;
@@ -29,6 +30,7 @@ phasm::DType dtype() {
     return phasm::DType::Undefined;
 }
 
+/*
 inline phasm::DType get_dtype(torch::Dtype t) {
     if (t == torch::kUInt8) return phasm::DType::UI8;
     if (t == torch::kInt16) return phasm::DType::I16;
@@ -38,6 +40,7 @@ inline phasm::DType get_dtype(torch::Dtype t) {
     if (t == torch::kFloat64) return phasm::DType::F64;
     return phasm::DType::Undefined;
 }
+*/
 
 
 
@@ -65,63 +68,57 @@ inline phasm::DType get_dtype(torch::Dtype t) {
 /// 4. Eventually we probably want to support variable length tensors as well
 ///
 class tensor {
-    torch::Tensor m_underlying;
+
+    void* m_underlying;
     size_t m_length;
-    std::vector<int64_t> m_shape;
+    std::vector<size_t> m_shape;
     DType m_dtype;
 
 public:
-    explicit inline tensor(torch::Tensor underlying = {}):
-        m_underlying(underlying),
-        m_length(underlying.numel()),
-        m_dtype(phasm::get_dtype(underlying.dtype().toScalarType()))
-    {
-        auto dims = underlying.dim();
-        for (int64_t d = 0; d<dims; ++d) {
-            m_shape.push_back(underlying.size(d));
-        }
-    };
 
     template <typename T> explicit tensor(T* consecutive_buffer, size_t length) {
-        m_underlying = torch::tensor(at::ArrayRef<T>(consecutive_buffer,length), torch::dtype<T>());
+        T* buffer = new T[length];
+        for (size_t i=0; i<length; ++i) buffer[i] = consecutive_buffer[i];
+
+        m_underlying = buffer; // Throw away the type information here!
         m_length = length;
-        m_shape = {(int64_t)length};
+        m_shape = {length};
         m_dtype = dtype<T>();
     }
 
-    template <typename T> explicit tensor(T* consecutive_buffer, std::vector<int64_t> shape) {
-        size_t numel = 1;
+    template <typename T> explicit tensor(T* consecutive_buffer, std::vector<size_t> shape) {
+        m_length = 1;
         for (size_t l : shape) {
-            numel *= l;
+            m_length *= l;
         }
-        m_underlying = torch::tensor(at::ArrayRef<T>(consecutive_buffer,numel), torch::dtype<T>());
-        m_underlying = m_underlying.reshape(at::ArrayRef<int64_t>(shape.data(), shape.size()));
-        m_length = numel;
+        T* buffer = new T[m_length];
+        for (size_t i=0; i<m_length; ++i) buffer[i] = consecutive_buffer[i];
+        m_underlying = buffer;
         m_shape = shape;
         m_dtype = dtype<T>();
     }
 
-    inline torch::Tensor& get_underlying() {  return m_underlying; }
+    // inline torch::Tensor& get_underlying() {  return m_underlying; }
     inline size_t get_length() const { return m_length; }
     inline DType get_dtype() const { return m_dtype; }
+    inline std::vector<size_t> get_shape() const { return m_shape; }
 
-    inline bool operator==(const tensor& rhs) const { return this->m_underlying.equal(rhs.m_underlying); }
+    bool operator==(const tensor& rhs) const;
 
     template <typename T>
     T* get() {
-        return m_underlying.data_ptr<T>();
+        return static_cast<T*>(m_underlying);
     }
 
     template <typename T>
     const T* get() const {
-        return m_underlying.data_ptr<T>();
+        return static_cast<T*>(m_underlying);
     }
 };
 
 
-tensor stack(std::vector<tensor>&);
-std::vector<tensor> unstack(tensor&);
-tensor flatten(tensor& t);
+tensor stack(const std::vector<tensor>&);
+std::vector<tensor> unstack(const tensor&);
 
 
 inline size_t combineHashes(size_t hash1, size_t hash2) {
@@ -132,8 +129,6 @@ inline size_t combineHashes(size_t hash1, size_t hash2) {
 
 template <typename T>
 size_t hashTensorOfDType(const phasm::tensor& t) {
-    // TODO: This only works on consecutive tensors. Need to figure
-    //       out how to iterate over non-consecutive tensors efficiently
     size_t len = t.get_length();
     if (len == 0) return 0;
     std::hash<T> hash;
