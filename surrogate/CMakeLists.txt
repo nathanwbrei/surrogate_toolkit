@@ -6,8 +6,6 @@ set(SURROGATE_LIBRARY_SOURCES
         src/model.cpp
         src/surrogate_builder.cpp
         src/tensor.cpp
-        src/feedforward_model.cpp
-        src/torchscript_model.cpp
         src/plugin_loader.cc
         )
 
@@ -35,7 +33,7 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         )
 add_executable("phasm-surrogate-tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(phasm-surrogate-tests PRIVATE include ../memtrace/include)
-target_link_libraries(phasm-surrogate-tests phasm-surrogate ${TORCH_LIBRARIES})
+target_link_libraries(phasm-surrogate-tests phasm-surrogate)
 
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/

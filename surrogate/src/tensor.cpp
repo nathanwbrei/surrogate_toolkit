@@ -55,7 +55,7 @@ inline tensor stack_typed(const std::vector<tensor>& tensors) {
     size_t original_length = tensors[0].get_length();
     size_t stacked_tensor_count = tensors.size();
     size_t stacked_length = original_length * stacked_tensor_count;
-    std::vector<size_t> stacked_shape;
+    std::vector<int64_t> stacked_shape;
     stacked_shape.push_back(stacked_length);
     for (size_t dim_length : tensors[0].get_shape()) {
         stacked_shape.push_back(dim_length);
@@ -71,7 +71,7 @@ inline tensor stack_typed(const std::vector<tensor>& tensors) {
     return tensor(buffer, stacked_shape);
 }
 
-tensor stack(std::vector<tensor>& tensors) {
+tensor stack(const std::vector<tensor>& tensors) {
     auto stacked_dtype = tensors[0].get_dtype();
     switch (stacked_dtype) {
         case DType::UI8: return stack_typed<uint8_t>(tensors);
@@ -92,7 +92,7 @@ std::vector<tensor> unstack_typed(const tensor& tensor) {
     size_t split_count = tensor.get_shape()[0];
     assert(combined_length % split_count == 0);
     size_t split_length = combined_length/split_count;
-    std::vector<size_t> split_shape = tensor.get_shape();
+    std::vector<int64_t> split_shape = tensor.get_shape();
     split_shape.erase(split_shape.begin());
 
     std::vector<phasm::tensor> results;
@@ -121,6 +121,45 @@ std::vector<tensor> unstack(const tensor& tensor) {
             throw std::runtime_error("Tensor has unknown dtype");
     }
 }
+
+void print_dtype(std::ostream& os, phasm::DType dtype) {
+    switch (dtype) {
+        case DType::Undefined: os << "Undefined"; break;
+        case DType::UI8: os << "UI8"; break;
+        case DType::I16: os << "I16"; break;
+        case DType::I32: os << "I32"; break;
+        case DType::I64: os << "I64"; break;
+        case DType::F32: os << "F32"; break;
+        case DType::F64: os << "F64"; break;
+    }
+}
+
+template <typename T>
+inline void print_typed(std::ostream& os, const tensor& t) {
+    size_t full_len = t.get_length();
+    bool show_full = (full_len > 10);
+    size_t max_len = show_full ? full_len: 10;
+
+    const T* data = t.get<T>();
+    for (size_t i=0; i<max_len; ++i) {
+        os << data[i] << " ";
+    }
+
+    if (!show_full) os << "... (" << full_len << " items total)" << std::endl;
+}
+
+void tensor::print(std::ostream& os) {
+    switch (m_dtype) {
+        case DType::UI8: print_typed<uint8_t>(os, *this); break;
+        case DType::I16: print_typed<int16_t>(os, *this); break;
+        case DType::I32: print_typed<int32_t>(os, *this); break;
+        case DType::I64: print_typed<int64_t>(os, *this); break;
+        case DType::F32: print_typed<float>(os, *this); break;
+        case DType::F64: print_typed<double>(os, *this); break;
+        case DType::Undefined: os << "(Tensor data is undefined)"; break;
+    }
+}
+
 
 } // namespace phasm
 

@@ -18,6 +18,9 @@ struct Sampler {
     virtual bool next() = 0;
 };
 
+// TODO: Re-enable me. Needs a lot of work which doesn't relate to the project milestones
+#if 0
+
 class GridSampler : public Sampler {
 
     tensor current_sample;
@@ -34,7 +37,7 @@ public:
         initial_sample = var->range.lower_bound_inclusive.value();
         final_sample = var->range.upper_bound_inclusive.value();
         current_sample = initial_sample;
-        sample_delta = tensor((final_sample.get_underlying() - current_sample.get_underlying()) / nsteps);
+        double sample_delta = tensor((final_sample.get_underlying() - current_sample.get_underlying()) / nsteps);
     }
 
     bool next() override {
@@ -49,6 +52,7 @@ public:
     }
 };
 
+#endif
 
 template<typename T>
 class CartesianProductSampler : public Sampler {

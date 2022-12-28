@@ -216,15 +216,6 @@ TEST_CASE("Capture void(int)") {
     REQUIRE(get_captured_input<int>(m, "x", 0) == 3);
 }
 
-TEST_CASE("Flattening") {
-    double x = 22.2;
-    tensor t(&x, 1);
-    tensor f = flatten(t);
-    REQUIRE(t.get_length() == 1);
-    REQUIRE(t.get_dtype() == DType::F64);
-    REQUIRE(f.get_length() == 1);
-    REQUIRE(f.get_dtype() == DType::F64);
-}
 
 } // namespace phasm::tests::capturing_tests
 

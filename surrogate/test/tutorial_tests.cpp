@@ -5,7 +5,6 @@
 
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
-#include "feedforward_model.h"
 #include "surrogate.h"
 #include "surrogate_builder.h"
 
@@ -15,7 +14,7 @@
 
 using namespace phasm;
 static Surrogate s_surrogate = SurrogateBuilder()
-        .set_model(std::make_shared<FeedForwardModel>())
+        .set_model("phasm-torch-plugin", "")
         .set_callmode(phasm::CallMode::CaptureAndDump)
         .local_primitive<double>("x", IN)
         .local_primitive<double>("y", IN)

@@ -3,7 +3,6 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include <catch.hpp>
-#include "feedforward_model.h"
 
 #include "surrogate_builder.h"
 
@@ -17,9 +16,8 @@ double square(double x) {
 TEST_CASE("Can we build against pytorch at all?") {
 
 
-    auto m = std::make_shared<FeedForwardModel>();
     auto s = SurrogateBuilder()
-            .set_model(m)
+            .set_model("phasm-torch-plugin", "")
             .local_primitive<double>("x", IN)
             .local_primitive<double>("y", OUT)
             .finish();

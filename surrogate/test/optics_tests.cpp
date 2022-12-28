@@ -4,6 +4,7 @@
 
 
 #include <catch.hpp>
+#include <iostream>
 #include "optics.h"
 
 using namespace phasm;
@@ -24,7 +25,7 @@ TEST_CASE("Demonstrate two-way binding of a primitive") {
     TensorIso<int> p;
     auto t = p.to(&x);
 
-    std::cout << t.get_underlying().dtype();
+    print_dtype(std::cout, t.get_dtype());
     int32_t *tp = t.get<int>();
     REQUIRE(*tp == 22);
 
@@ -36,26 +37,15 @@ TEST_CASE("Demonstrate two-way binding of a primitive") {
     REQUIRE(x == 33);
 }
 
-TEST_CASE("Pytorch simplest possible tensor") {
-    float x = 22.2;
-    auto t = torch::tensor(at::ArrayRef(&x, 1), torch::TensorOptions().dtype(torch::kFloat32));
-    REQUIRE(t.size(0) == 1);
-    REQUIRE(t.dim() == 1);
-    auto tt = torch::tensor({22.2});
-    float y = *(t[0].data_ptr<float>());
-    REQUIRE(x == y);
-}
+TEST_CASE("Basic use of TensorIso") {
+    double mat[2][3] = {{1,2,3},{4,5,6}};
+    auto p = TensorIso<double>({2, 3});
+    auto t = p.to(mat[0]);
 
-TEST_CASE("PyTorch tensor operations") {
-
-    /*
-     float arr[9] = {1.2,2,3,4,5,6,7,8,9};
-     std::vector<size_t> shape {3,3};
-     std::vector<size_t> strides {1,3};
-     auto t = torch::tensor({arr, 9});
-     std::cout << t << std::endl;
-     // auto t = torch::from_blob(arr);// , shape, strides).clone();
-     */
+    auto firstitem = *(t.get<double>());
+    REQUIRE(firstitem == 1.0);
+    REQUIRE(t.get_shape()[0] == 2);
+    REQUIRE(t.get_shape()[1] == 3);
 }
 
 struct MyStruct {
@@ -113,8 +103,8 @@ TEST_CASE("Array of structs") {
     auto array_traversal = ArrayTraversal<MyStruct>(&inner_lens, 5);
 
     auto t = array_traversal.to(aos);
-    std::cout << t.get_underlying() << std::endl;
-    REQUIRE(t.get_underlying().size(0) == 5);
+    t.print(std::cout);
+    REQUIRE(t.get_shape()[0] == 5);
 }
 
 
@@ -127,7 +117,14 @@ TEST_CASE("1-D Array of TensorIso produces same Tensor as TensorIsoArray") {
     auto t1 = array_trav.to(xs);
     auto t2 = primitive_array_iso.to(xs);
 
-    REQUIRE(*torch::all(t1.get_underlying() == t2.get_underlying()).data_ptr<bool>() == true);
+    bool is_equal = true;
+    int* t1_data = t1.get<int>();
+    int* t2_data = t2.get<int>();
+    for (size_t i=0; i<t1.get_length(); ++i) {
+        is_equal &= (t1_data[i] == t2_data[i]);
+    }
+
+    REQUIRE(is_equal == true);
 }
 
 TEST_CASE("Iterate over std::vector") {
@@ -142,8 +139,8 @@ TEST_CASE("Iterate over std::vector") {
     auto vector_traversal = Traversal<std::vector<MyStruct>, MyStruct, IterT>(&inner_lens, 5);
 
     auto t = vector_traversal.to(&aos);
-    std::cout << t.get_underlying() << std::endl;
-    REQUIRE(t.get_underlying().size(0) == 5);
+    t.print(std::cout);
+    REQUIRE(t.get_shape()[0] == 5);
 }
 
 struct MyOrderableStruct {

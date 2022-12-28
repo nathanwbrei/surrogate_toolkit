@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include <cstddef>
+#include <ostream>
 
 namespace phasm {
 
@@ -30,18 +31,7 @@ phasm::DType dtype() {
     return phasm::DType::Undefined;
 }
 
-/*
-inline phasm::DType get_dtype(torch::Dtype t) {
-    if (t == torch::kUInt8) return phasm::DType::UI8;
-    if (t == torch::kInt16) return phasm::DType::I16;
-    if (t == torch::kInt32) return phasm::DType::I32;
-    if (t == torch::kInt64) return phasm::DType::I64;
-    if (t == torch::kFloat32) return phasm::DType::F32;
-    if (t == torch::kFloat64) return phasm::DType::F64;
-    return phasm::DType::Undefined;
-}
-*/
-
+void print_dtype(std::ostream& os, phasm::DType dtype);
 
 
 /// Tensor is a lightweight wrapper over torch::Tensor or similar.
@@ -71,10 +61,12 @@ class tensor {
 
     void* m_underlying;
     size_t m_length;
-    std::vector<size_t> m_shape;
+    std::vector<int64_t> m_shape;
     DType m_dtype;
 
 public:
+
+    tensor() : m_length(0), m_shape({}), m_dtype(DType::Undefined) {}
 
     template <typename T> explicit tensor(T* consecutive_buffer, size_t length) {
         T* buffer = new T[length];
@@ -82,11 +74,14 @@ public:
 
         m_underlying = buffer; // Throw away the type information here!
         m_length = length;
-        m_shape = {length};
+        m_shape = {static_cast<long>(length)};
+        // TODO: Clean up this mix of size_t's and int64_t's. Why is it this way?
+        //   1. Torch uses _signed_ int64's for indices instead of size_t or ptrdiff_t
+        //   2. PIN is very confused about size_t, long, and long long
         m_dtype = dtype<T>();
     }
 
-    template <typename T> explicit tensor(T* consecutive_buffer, std::vector<size_t> shape) {
+    template <typename T> explicit tensor(T* consecutive_buffer, const std::vector<int64_t> shape) {
         m_length = 1;
         for (size_t l : shape) {
             m_length *= l;
@@ -101,7 +96,7 @@ public:
     // inline torch::Tensor& get_underlying() {  return m_underlying; }
     inline size_t get_length() const { return m_length; }
     inline DType get_dtype() const { return m_dtype; }
-    inline std::vector<size_t> get_shape() const { return m_shape; }
+    inline std::vector<int64_t> get_shape() const { return m_shape; }
 
     bool operator==(const tensor& rhs) const;
 
@@ -114,11 +109,14 @@ public:
     const T* get() const {
         return static_cast<T*>(m_underlying);
     }
+
+    void print(std::ostream& os);
+
 };
 
 
-tensor stack(const std::vector<tensor>&);
-std::vector<tensor> unstack(const tensor&);
+phasm::tensor stack(const std::vector<phasm::tensor>&);
+std::vector<tensor> unstack(const phasm::tensor&);
 
 
 inline size_t combineHashes(size_t hash1, size_t hash2) {

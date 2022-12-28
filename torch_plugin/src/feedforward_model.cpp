@@ -3,7 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include "feedforward_model.h"
-
+#include "torch_tensor_utils.h"
 
 phasm::FeedForwardModel::~FeedForwardModel() {
 }
@@ -39,16 +39,16 @@ bool phasm::FeedForwardModel::infer() {
     std::vector<torch::Tensor> input_tensors;
 
     for (const auto& input_model_var : m_inputs) {
-        input_tensors.push_back(input_model_var->inference_input.get_underlying());
+        input_tensors.push_back(to_torch_tensor(input_model_var->inference_input));
     }
 
     torch::Tensor input = flatten_and_join(input_tensors);
     torch::Tensor output = m_network->forward(input);
-    std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output);
+    std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
 
     size_t i = 0;
     for (const auto& output_model_var : m_outputs) {
-        output_model_var->inference_output = phasm::tensor(input_tensors[i++]);
+        output_model_var->inference_output = to_phasm_tensor(input_tensors[i++]);
     }
     return true;
 }
@@ -64,13 +64,13 @@ void phasm::FeedForwardModel::train_from_captures() {
     for (size_t i=0; i<get_capture_count(); ++i) {
         std::vector<torch::Tensor> sample_inputs;
         for (auto input : m_inputs) {
-            sample_inputs.push_back(input->training_inputs[i].get_underlying());
+            sample_inputs.push_back(to_torch_tensor(input->training_inputs[i]));
         }
         auto sample_input = flatten_and_join(std::move(sample_inputs));
 
         std::vector<torch::Tensor> sample_outputs;
         for (auto output : m_outputs) {
-            sample_outputs.push_back(output->training_outputs[i].get_underlying());
+            sample_outputs.push_back(to_torch_tensor(output->training_outputs[i]));
         }
         auto sample_output = flatten_and_join(std::move(sample_outputs));
 
@@ -113,25 +113,6 @@ torch::Tensor phasm::FeedForwardModel::FeedForwardNetwork::forward(torch::Tensor
     x = torch::relu(m_middle_layer->forward(x));
     x = torch::relu(m_output_layer->forward(x));
     return x;
-}
-
-torch::Tensor phasm::FeedForwardModel::flatten_and_join(std::vector<torch::Tensor> inputs) {
-    for (auto& input : inputs) {
-        input = input.flatten(0, -1).toType(c10::ScalarType::Float);
-    }
-    auto result = torch::cat(inputs);
-    return result;
-}
-
-std::vector<torch::Tensor> phasm::FeedForwardModel::split_and_unflatten_outputs(torch::Tensor output) const {
-    std::vector<torch::Tensor> outputs;
-    int64_t start = 0;
-    for (size_t i=0; i<m_output_lengths.size(); ++i) {
-        torch::Tensor o = output.slice(0, start, start+m_output_lengths[i]).reshape(m_output_shapes[i]);
-        outputs.push_back(o);
-        start += m_output_lengths[i];
-    }
-    return outputs;
 }
 
 

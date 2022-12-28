@@ -80,7 +80,7 @@ void Model::dump_captures_to_csv(std::ostream &os) {
     // print body
     for (size_t i = 0; i < m_captured_rows; ++i) {
         for (size_t j = 0; j < m_inputs.size(); ++j) {
-            auto t = flatten(m_inputs[j]->training_inputs[i]);
+            auto t = m_inputs[j]->training_inputs[i];
             for (size_t k = 0; k < t.get_length(); ++k) {
                 switch (t.get_dtype()) {
                     case DType::UI8: os << *(t.get<uint8_t>() + k); break;
@@ -95,7 +95,7 @@ void Model::dump_captures_to_csv(std::ostream &os) {
             }
         }
         for (size_t j = 0; j < m_outputs.size(); ++j) {
-            auto t = flatten(m_outputs[j]->training_outputs[i]);
+            auto t = m_outputs[j]->training_outputs[i];
             for (size_t k = 0; k < t.get_length(); ++k) {
                 switch (t.get_dtype()) {
                     case DType::UI8: os << *(t.get<uint8_t>() + k); break;

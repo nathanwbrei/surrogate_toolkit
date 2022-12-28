@@ -9,6 +9,28 @@
 using namespace phasm;
 namespace phasm::tests::pytorch_tests {
 
+TEST_CASE("Pytorch simplest possible tensor") {
+    float x = 22.2;
+    auto t = torch::tensor(at::ArrayRef(&x, 1), torch::TensorOptions().dtype(torch::kFloat32));
+    REQUIRE(t.size(0) == 1);
+    REQUIRE(t.dim() == 1);
+    auto tt = torch::tensor({22.2});
+    float y = *(t[0].data_ptr<float>());
+    REQUIRE(x == y);
+}
+
+/*
+TEST_CASE("PyTorch tensor operations") {
+
+ float arr[9] = {1.2,2,3,4,5,6,7,8,9};
+ std::vector<size_t> shape {3,3};
+ std::vector<size_t> strides {1,3};
+ auto t = torch::tensor({arr, 9});
+ std::cout << t << std::endl;
+ // auto t = torch::from_blob(arr);// , shape, strides).clone();
+}
+ */
+
 TEST_CASE("Getting a multidimensional array into a Torch tensor") {
 
     double mat[2][3] = {{1,2,3},{4,5,6}};
@@ -57,15 +79,5 @@ TEST_CASE("Getting a multidimensional array out of a Torch tensor with arbitrary
 }
 
 
-TEST_CASE("Using tensors with optics") {
-    double mat[2][3] = {{1,2,3},{4,5,6}};
-    auto p = TensorIso<double>({2, 3});
-    auto t = p.to(mat[0]);
-
-    auto firstitem = t.get_underlying()[0][0].item<double>();
-    REQUIRE(firstitem == 1.0);
-    REQUIRE(t.get_underlying().size(0) == 2);
-    REQUIRE(t.get_underlying().size(1) == 3);
-}
 
 }

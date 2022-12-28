@@ -9,19 +9,15 @@
 #include <JANA/Calibrations/JCalibrationManager.h>
 #include "DMagneticFieldMapFineMesh.h"
 #include "surrogate_builder.h"
-#include "torchscript_model.h"
-#include "feedforward_model.h"
 #include "JCalibrationGenerator_TestFixture.hpp"
 
 
 int main() {
 
     using phasm::SurrogateBuilder, phasm::Direction, phasm::CallMode;
-    // auto model = std::make_shared<phasm::TorchscriptModel>("model.pt");
-    auto model = std::make_shared<phasm::FeedForwardModel>();
 
     phasm::Surrogate surrogate = SurrogateBuilder()
-            .set_model(model)
+            .set_model("phasm-torch-plugin", "")
             .set_callmode(CallMode::CaptureAndDump)
             .local_primitive<double>("x", Direction::IN)
             .local_primitive<double>("y", Direction::IN)
