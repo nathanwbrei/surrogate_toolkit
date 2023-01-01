@@ -7,7 +7,6 @@
 #define SURROGATE_TOOLKIT_RANGE_H
 
 #include <unordered_set>
-#include <torch/torch.h>
 #include <map>
 #include <vector>
 #include <limits>

@@ -8,7 +8,7 @@ add_library(phasm-torch-plugin SHARED
         src/torchscript_model.cpp
         )
 
-target_include_directories(phasm-torch-plugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(phasm-torch-plugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${TORCH_INCLUDE_DIRS})
 
 target_link_libraries(phasm-torch-plugin
         ${TORCH_LIBRARIES}
@@ -18,4 +18,14 @@ target_link_libraries(phasm-torch-plugin
 set_target_properties(phasm-torch-plugin PROPERTIES PREFIX "" SUFFIX ".so")
 
 install(TARGETS phasm-torch-plugin DESTINATION plugins)
+
+
+set(PHASM_TORCH_PLUGIN_TEST_SOURCES
+        test/pytorch_model_tests.cpp
+        test/pytorch_tests.cpp
+    )
+
+add_executable("phasm-torch-plugin-tests" ${PHASM_TORCH_PLUGIN_TEST_SOURCES})
+target_include_directories(phasm-torch-plugin-tests PRIVATE include ../memtrace/include ${TORCH_INCLUDE_DIRS})
+target_link_libraries(phasm-torch-plugin-tests ${TORCH_LIBRARIES} phasm-surrogate phasm-torch-plugin)
 

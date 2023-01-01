@@ -4,6 +4,8 @@
 
 #include "surrogate_builder.h"
 #include "plugin_loader.h"
+#include <iostream>
+#include <string>
 
 namespace phasm {
 

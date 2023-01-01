@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <cstdarg>  // For va_start, etc
+#include <cstring> // For strcmp
 
 #include "model.h"
 

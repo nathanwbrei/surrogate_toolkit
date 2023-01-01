@@ -9,6 +9,8 @@
 #include "typename.hpp"
 #include "any_ptr.hpp"
 #include "tensor.hpp"
+#include <numeric>
+#include <functional>
 // #include <concepts>
 
 // These aren't really optics yet (will they ever be?), but they are operational at least
@@ -185,7 +187,7 @@ public:
     tensor to(T* source) override {
         std::vector<tensor> tensors;
         for (int i=0; i<m_length; ++i) {
-            tensors.emplace_back(m_optic->to(source+i));
+            tensors.push_back(m_optic->to(source+i));
         }
         return stack(tensors);
     }

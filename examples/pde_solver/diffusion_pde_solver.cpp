@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <model.h>
 #include <surrogate_builder.h>
+#include <cmath> // sin, sqrt
 
 constexpr size_t N = 7;
 

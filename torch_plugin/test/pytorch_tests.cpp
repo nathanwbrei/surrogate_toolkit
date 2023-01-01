@@ -2,6 +2,7 @@
 // Copyright 2022, Jefferson Science Associates, LLC.
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
+#define CATCH_CONFIG_MAIN
 #include <catch.hpp>
 #include <optics.h>
 #include <torch/torch.h>

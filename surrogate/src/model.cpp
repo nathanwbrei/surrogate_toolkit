@@ -4,7 +4,7 @@
 
 #include "model.h"
 #include "surrogate.h"
-#include <iostream>
+#include <fstream>
 
 namespace phasm {
 

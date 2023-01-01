@@ -1,6 +1,4 @@
 
-find_package(Torch REQUIRED)
-
 set(SURROGATE_LIBRARY_SOURCES
         src/surrogate.cpp
         src/model.cpp
@@ -17,9 +15,9 @@ target_compile_definitions(phasm-surrogate PRIVATE PHASM_PLUGIN_DIR=${CMAKE_INST
 # Note that the environment variable always takes precedence.
 
 target_include_directories(phasm-surrogate
-        PUBLIC include ../memtrace/include ${TORCH_INCLUDE_DIRS})
+        PUBLIC include ../memtrace/include)
 
-target_link_libraries(phasm-surrogate ${TORCH_LIBRARIES} ${CMAKE_DL_LIBS})
+target_link_libraries(phasm-surrogate ${CMAKE_DL_LIBS})
 install(TARGETS phasm-surrogate DESTINATION lib)
 
 
@@ -27,8 +25,6 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/capturing_tests.cpp
         test/sampling_tests.cpp
         test/sampling_tests.cpp
-        test/pytorch_model_tests.cpp
-        test/pytorch_tests.cpp
         test/range_tests.cpp
         test/memorizing_tests.cpp
         test/prism_tests.cpp
