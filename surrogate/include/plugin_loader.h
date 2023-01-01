@@ -19,6 +19,8 @@ public:
     void add_plugin_path(std::string path);
     Plugin* get_or_load_plugin(const std::string& plugin_name);
 
+    static PluginLoader& get_singleton();
+
 private:
     std::string find_plugin(const std::string& short_plugin_name);
     Plugin* load_plugin(const std::string& exact_plugin_name);
@@ -27,6 +29,5 @@ private:
     std::map<std::string, Plugin*> m_loaded_plugins;
 };
 
-extern PluginLoader g_plugin_loader;
 
 } // namespace phasm

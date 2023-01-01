@@ -10,6 +10,12 @@ set(SURROGATE_LIBRARY_SOURCES
         )
 
 add_library(phasm-surrogate STATIC ${SURROGATE_LIBRARY_SOURCES})
+
+target_compile_definitions(phasm-surrogate PRIVATE PHASM_PLUGIN_DIR=${CMAKE_INSTALL_PREFIX}/plugins)
+# We pass PHASM_PLUGIN_DIR as a preprocessor arg so that PHASM can intelligently guess where
+# to find plugins without requiring the user to set $PHASM_PLUGIN_DIR environment variable all the time.
+# Note that the environment variable always takes precedence.
+
 target_include_directories(phasm-surrogate
         PUBLIC include ../memtrace/include ${TORCH_INCLUDE_DIRS})
 

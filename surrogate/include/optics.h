@@ -185,7 +185,7 @@ public:
     tensor to(T* source) override {
         std::vector<tensor> tensors;
         for (int i=0; i<m_length; ++i) {
-            tensors.push_back(m_optic->to(source+i));
+            tensors.emplace_back(m_optic->to(source+i));
         }
         return stack(tensors);
     }

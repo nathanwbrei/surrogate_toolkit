@@ -11,13 +11,26 @@
 #include <set>
 #include <sstream>
 
+
+
 namespace phasm {
 
-PluginLoader g_plugin_loader;
-
+PluginLoader& PluginLoader::get_singleton() {
+    /// We allow Surrogates to be declared as static globals. This is because the surrogate needs to
+    /// have a lifetime that matches or exceeds that of the function being surrogated. However, this
+    /// poses problems with the plugin loader, which should also be a global or static for the same reasons.
+    /// C++ won't get the static initialization order right, so the constructor for a global Surrogate
+    /// will see a zero-initialized global PluginLoader whose constructor hasn't been called yet.
+    /// We remediate this situation by forcing the PluginLoader ctor to be called via an accessor function.
+    /// Note: I'm not convinced we won't run into other problems stemming from C++'s static initialization order fiasco
+    ///       so we may end up revisiting this approach.
+    static PluginLoader g_plugin_loader;
+    return g_plugin_loader;
+}
 
 PluginLoader::PluginLoader() {
 
+    std::cout << "PHASM: Instantiating plugin loader" << std::endl;
     // Obtain the search paths from colon-separated PHASM_PLUGIN_PATH environment variable
     char* envvar = std::getenv("PHASM_PLUGIN_PATH");
     if (envvar != nullptr) {
@@ -27,7 +40,11 @@ PluginLoader::PluginLoader() {
     }
 
     // Check in the current directory as well, but give this the lowest priority
-    add_plugin_path(".");
+#define XSTR(a) STR(a)
+#define STR(a) #a
+#define ADD_PLUGIN_PATH( x ) add_plugin_path(XSTR(x));
+    ADD_PLUGIN_PATH(PHASM_PLUGIN_DIR);
+#undef ADD_PLUGIN_PATH
 }
 
 
@@ -67,6 +84,7 @@ void PluginLoader::add_plugin_path(std::string path) {
     for (std::string &n: m_plugin_paths) {
         if (n == path) { return; }
     }
+    std::cout << "PHASM: Adding plugin search path: '" << path << "'" << std::endl;
     m_plugin_paths.push_back(path);
 }
 
@@ -112,7 +130,11 @@ std::string PluginLoader::find_plugin(const std::string& short_plugin_name) {
 
     // If we didn't find the plugin, then complain and quit
     std::stringstream oss;
-    oss << "PHASM: Couldn't find plugin '" << short_plugin_name << "' on $PHASM_PLUGIN_PATH" << std::endl;
+    oss << "PHASM: Couldn't find plugin '" << short_plugin_name << "' on $PHASM_PLUGIN_PATH=";
+    for (auto path : m_plugin_paths) {
+        oss << "'" << path << "',";
+    }
+    oss << std::endl;
 
     std::cout << oss.str();
     throw std::runtime_error(oss.str());
@@ -130,13 +152,13 @@ Plugin* PluginLoader::load_plugin(const std::string& exact_plugin_name) {
     phasm::PluginGetter *get_plugin = (phasm::PluginGetter *) dlsym(handle, "get_plugin");
 
     if (get_plugin) {
-        std::cout << "PHASM: Opening plugin \"" << exact_plugin_name << "\"" << std::endl;
+        std::cout << "PHASM: Opening plugin '" << exact_plugin_name << "'" << std::endl;
         Plugin* plugin = (*get_plugin)();
         plugin->dl_handle = handle;
         return plugin;
     } else {
         dlclose(handle);
-        std::cout << "PHASM: Plugin \"" << exact_plugin_name << "\" does not have a get_plugin() function. Ignoring." << std::endl;
+        std::cout << "PHASM: Plugin '" << exact_plugin_name << "' does not have a get_plugin() function. Ignoring." << std::endl;
         return nullptr;
     }
 }

@@ -66,8 +66,10 @@ class tensor {
 
 public:
 
-    tensor() : m_length(0), m_shape({}), m_dtype(DType::Undefined) {}
+    // Construct "Empty" tensor
+    tensor() : m_underlying(nullptr), m_length(0), m_shape({}), m_dtype(DType::Undefined)  {}
 
+    // Construct tensor from buffer
     template <typename T> explicit tensor(T* consecutive_buffer, size_t length) {
         T* buffer = new T[length];
         for (size_t i=0; i<length; ++i) buffer[i] = consecutive_buffer[i];
@@ -81,6 +83,7 @@ public:
         m_dtype = dtype<T>();
     }
 
+    // Construct tensor from buffer with shape information, e.g. a _contiguous_ tensor
     template <typename T> explicit tensor(T* consecutive_buffer, const std::vector<int64_t> shape) {
         m_length = 1;
         for (size_t l : shape) {
@@ -92,6 +95,14 @@ public:
         m_shape = shape;
         m_dtype = dtype<T>();
     }
+
+    ~tensor();
+
+    tensor(const tensor& other) noexcept;
+    tensor& operator=(const tensor& other) noexcept;
+
+    tensor(tensor&& other) noexcept;
+    tensor& operator=(tensor&& other) noexcept;
 
     // inline torch::Tensor& get_underlying() {  return m_underlying; }
     inline size_t get_length() const { return m_length; }

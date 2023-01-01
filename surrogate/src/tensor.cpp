@@ -11,6 +11,76 @@
 namespace phasm {
 
 template <typename T>
+T* copy_typed(void* source_untyped, size_t length) {
+    T* dest = new T[length];
+    T* source = static_cast<T*>(source_untyped);
+    for (size_t i=0; i<length; ++i) {
+        dest[i] = source[i];
+    }
+    return dest;
+}
+
+tensor::tensor(const tensor& other) noexcept {
+    m_dtype = other.m_dtype;
+    m_length = other.m_length;
+    m_shape = other.m_shape;
+    switch (m_dtype) {
+        case DType::UI8: m_underlying = copy_typed<uint8_t>(other.m_underlying, other.m_length); break;
+        case DType::I16: m_underlying = copy_typed<int16_t>(other.m_underlying, other.m_length); break;
+        case DType::I32: m_underlying = copy_typed<int32_t>(other.m_underlying, other.m_length); break;
+        case DType::I64: m_underlying = copy_typed<int64_t>(other.m_underlying, other.m_length); break;
+        case DType::F32: m_underlying = copy_typed<float>(other.m_underlying, other.m_length); break;
+        case DType::F64: m_underlying = copy_typed<double>(other.m_underlying, other.m_length); break;
+        default: break;
+    }
+}
+
+tensor& tensor::operator=(const tensor& other) noexcept {
+    if (this != &other) return *this;
+    m_dtype = other.m_dtype;
+    m_length = other.m_length;
+    m_shape = other.m_shape;
+    m_underlying = other.m_underlying;
+    switch (m_dtype) {
+        case DType::UI8: m_underlying = copy_typed<uint8_t>(other.m_underlying, other.m_length); break;
+        case DType::I16: m_underlying = copy_typed<int16_t>(other.m_underlying, other.m_length); break;
+        case DType::I32: m_underlying = copy_typed<int32_t>(other.m_underlying, other.m_length); break;
+        case DType::I64: m_underlying = copy_typed<int64_t>(other.m_underlying, other.m_length); break;
+        case DType::F32: m_underlying = copy_typed<float>(other.m_underlying, other.m_length); break;
+        case DType::F64: m_underlying = copy_typed<double>(other.m_underlying, other.m_length); break;
+        default: break;
+    }
+    return *this;
+}
+tensor::tensor(tensor &&other) noexcept {
+    m_dtype = other.m_dtype;
+    m_length = other.m_length;
+    m_shape = other.m_shape;
+    m_underlying = other.m_underlying;
+}
+
+tensor& tensor::operator=(tensor&& other) noexcept {
+    if (this != &other) return *this;
+    m_dtype = other.m_dtype;
+    m_length = other.m_length;
+    m_shape = other.m_shape;
+    m_underlying = other.m_underlying;
+    return *this;
+}
+
+tensor::~tensor() {
+    switch (m_dtype) {
+        case DType::UI8: delete[] static_cast<uint8_t*>(m_underlying); break;
+        case DType::I16: delete[] static_cast<int16_t*>(m_underlying); break;
+        case DType::I32: delete[] static_cast<int32_t*>(m_underlying); break;
+        case DType::I64: delete[] static_cast<int64_t*>(m_underlying); break;
+        case DType::F32: delete[] static_cast<float*>(m_underlying); break;
+        case DType::F64: delete[] static_cast<double*>(m_underlying); break;
+        default: break;
+    }
+};
+
+template <typename T>
 inline bool equals_typed(const tensor& lhs, const tensor& rhs) {
     size_t length = lhs.get_length();
     for (size_t i=0; i<length; ++i) {
@@ -75,11 +145,11 @@ tensor stack(const std::vector<tensor>& tensors) {
     auto stacked_dtype = tensors[0].get_dtype();
     switch (stacked_dtype) {
         case DType::UI8: return stack_typed<uint8_t>(tensors);
-        case DType::I16: return stack_typed<uint8_t>(tensors);
-        case DType::I32: return stack_typed<uint8_t>(tensors);
-        case DType::I64: return stack_typed<uint8_t>(tensors);
-        case DType::F32: return stack_typed<uint8_t>(tensors);
-        case DType::F64: return stack_typed<uint8_t>(tensors);
+        case DType::I16: return stack_typed<int16_t>(tensors);
+        case DType::I32: return stack_typed<int32_t>(tensors);
+        case DType::I64: return stack_typed<int64_t>(tensors);
+        case DType::F32: return stack_typed<float>(tensors);
+        case DType::F64: return stack_typed<double>(tensors);
         default:
             throw std::runtime_error("Tensor has unknown dtype");
     }
@@ -137,7 +207,7 @@ void print_dtype(std::ostream& os, phasm::DType dtype) {
 template <typename T>
 inline void print_typed(std::ostream& os, const tensor& t) {
     size_t full_len = t.get_length();
-    bool show_full = (full_len > 10);
+    bool show_full = (full_len < 10);
     size_t max_len = show_full ? full_len: 10;
 
     const T* data = t.get<T>();
