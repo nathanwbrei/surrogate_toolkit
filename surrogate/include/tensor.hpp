@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cassert>
 #include <ostream>
+#include <memory>
 
 namespace phasm {
 
@@ -70,11 +71,11 @@ public:
     // Construct "Empty" tensor
     tensor() : m_data(nullptr), m_length(0), m_shape({}), m_dtype(DType::Undefined)  {}
 
-    // Construct tensor from buffer
-    template <typename T> explicit tensor(T* consecutive_buffer, size_t length) {
+    // Construct tensor from buffer _without_ taking ownership. This performs a potentially expensive copy.
+    template <typename T> explicit tensor(T* data, size_t length) {
         assert(length > 0);
         T* buffer = new T[length];
-        for (size_t i=0; i<length; ++i) buffer[i] = consecutive_buffer[i];
+        for (size_t i=0; i<length; ++i) buffer[i] = data[i];
 
         m_data = buffer; // Throw away the type information here!
         m_length = length;
@@ -85,16 +86,38 @@ public:
         m_dtype = dtype<T>();
     }
 
+    // Construct tensor from buffer, taking ownership. This does NOT perform a copy.
+    template <typename T> explicit tensor(std::unique_ptr<T[]>&& data, size_t length) {
+        assert(length > 0);
+        m_data = data.release();
+        m_length = length;
+        m_shape = {static_cast<long>(length)};
+        m_dtype = dtype<T>();
+    }
+
+
     // Construct tensor from buffer with shape information, e.g. a _contiguous_ tensor
-    template <typename T> explicit tensor(T* consecutive_buffer, const std::vector<int64_t>& shape) {
+    template <typename T> explicit tensor(T* data, const std::vector<int64_t>& shape) {
         // TODO: Normalize shape so that e.g. {5,1,1} => {5}, {1} => {}
         m_length = 1;
         for (size_t l : shape) {
             m_length *= l;
         }
         T* buffer = new T[m_length];
-        for (size_t i=0; i<m_length; ++i) buffer[i] = consecutive_buffer[i];
+        for (size_t i=0; i<m_length; ++i) buffer[i] = data[i];
         m_data = buffer;
+        m_shape = shape;
+        m_dtype = dtype<T>();
+    }
+
+    // Construct tensor from buffer with shape information, e.g. a _contiguous_ tensor
+    template <typename T> explicit tensor(std::unique_ptr<T[]>&& consecutive_buffer, const std::vector<int64_t>& shape) {
+        // TODO: Normalize shape so that e.g. {5,1,1} => {5}, {1} => {}
+        m_length = 1;
+        for (size_t l : shape) {
+            m_length *= l;
+        }
+        m_data = consecutive_buffer.release();
         m_shape = shape;
         m_dtype = dtype<T>();
     }

@@ -170,8 +170,7 @@ inline tensor stack_typed(const std::vector<tensor>& tensors) {
             buffer[j*original_length + i] = original_data[i];
         }
     }
-    tensor result = tensor(buffer, stacked_shape);
-    delete[] buffer; // TODO: Create a tensor ctor that takes ownership of a buffer
+    tensor result = tensor(std::unique_ptr<T[]>(buffer), stacked_shape);
     return result;
 }
 
