@@ -6,10 +6,6 @@
 
 struct TorchPlugin : public phasm::Plugin {
 
-    void print_hello() override {
-        std::cout << "Grüß Gott" << std::endl;
-    }
-
     std::string get_name() {
         return "phasm-torch-plugin";
     }

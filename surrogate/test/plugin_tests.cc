@@ -8,6 +8,6 @@
 TEST_CASE("PluginLoader basics") {
     phasm::PluginLoader pl;
     auto* plugin = pl.get_or_load_plugin("phasm-torch-plugin");
-    plugin->print_hello();
+    REQUIRE(plugin->get_name() == "phasm-torch-plugin");
 }
 

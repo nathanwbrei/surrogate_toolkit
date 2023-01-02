@@ -41,6 +41,7 @@ ENV PATH="$PATH:/app/JANA2/install/bin"
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/app/JANA2/install/plugins"
 ENV PIN_ROOT="/app/pin"
 
+RUN apt install -y curl
 CMD /bin/bash
 
 
