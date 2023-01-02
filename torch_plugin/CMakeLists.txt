@@ -8,6 +8,11 @@ add_library(phasm-torch-plugin SHARED
         src/torchscript_model.cpp
         )
 
+set_target_properties(phasm-torch-plugin PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+# phasm-torch-plugin.so's (install) rpath should include libtorch, so that we don't have to edit our LD_LIBRARY_PATH
+# all the time. We assume that this is neither in the build tree, nor in the system libs. For more details, see
+# https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
+
 target_include_directories(phasm-torch-plugin PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${TORCH_INCLUDE_DIRS})
 
 target_link_libraries(phasm-torch-plugin
