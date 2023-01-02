@@ -16,14 +16,14 @@ template<typename T>
 T get_captured_input(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
     auto param = model->get_model_var(param_name);
     tensor result = param->training_inputs[sample_index];
-    return *result.get<T>();
+    return *result.get_data<T>();
 }
 
 template<typename T>
 T get_captured_output(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
     auto param = model->get_model_var(param_name);
     tensor result = param->training_outputs[sample_index];
-    return *result.get<T>();
+    return *result.get_data<T>();
 }
 
 int mult(int x, int y) {
@@ -216,15 +216,6 @@ TEST_CASE("Capture void(int)") {
     REQUIRE(get_captured_input<int>(m, "x", 0) == 3);
 }
 
-TEST_CASE("Flattening") {
-    double x = 22.2;
-    tensor t(&x, 1);
-    tensor f = flatten(t);
-    REQUIRE(t.get_length() == 1);
-    REQUIRE(t.get_dtype() == DType::F64);
-    REQUIRE(f.get_length() == 1);
-    REQUIRE(f.get_dtype() == DType::F64);
-}
 
 } // namespace phasm::tests::capturing_tests
 

@@ -9,6 +9,8 @@
 #include "typename.hpp"
 #include "any_ptr.hpp"
 #include "tensor.hpp"
+#include <numeric>
+#include <functional>
 // #include <concepts>
 
 // These aren't really optics yet (will they ever be?), but they are operational at least
@@ -115,7 +117,7 @@ public:
         return phasm::tensor(source, m_shape);
     }
     void from(tensor source, T* dest) override {
-        T* ptr = source.get<T>();
+        T* ptr = source.get_data<T>();
         for (size_t i=0; i<m_length; ++i) {
             dest[i] = ptr[i];
         }

@@ -31,10 +31,6 @@ public:
 
     bool infer() override;
 
-    torch::Tensor flatten_and_join(std::vector<torch::Tensor> inputs);
-
-    std::vector<torch::Tensor> split_and_unflatten_outputs(torch::Tensor output) const;
-
 };
 
 } // namespace phasm

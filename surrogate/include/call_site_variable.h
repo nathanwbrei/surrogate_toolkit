@@ -8,6 +8,7 @@
 #include "model_variable.h"
 #include "optics.h"
 #include "any_ptr.hpp"
+#include <memory>
 
 namespace phasm {
 

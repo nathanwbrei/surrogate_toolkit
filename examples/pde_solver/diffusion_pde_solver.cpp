@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <model.h>
 #include <surrogate_builder.h>
-#include "feedforward_model.h"
+#include <cmath> // sin, sqrt
 
 constexpr size_t N = 7;
 
@@ -105,7 +105,7 @@ int solve_stationary_heat_eqn(double* T, double* f, int n) {
 
 
 phasm::Surrogate g_stationary_heat_eqn_surrogate = phasm::SurrogateBuilder()
-        .set_model(std::make_shared<phasm::FeedForwardModel>())
+        .set_model("phasm-torch-plugin", "")
         .local_primitive<double>("T", phasm::INOUT, {N+2,N+2})
         .local_primitive<double>("f", phasm::IN, {N,N})
         // .local_primitive<int>("n", phasm::IN)

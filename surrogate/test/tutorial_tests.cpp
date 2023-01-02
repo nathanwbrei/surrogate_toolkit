@@ -5,7 +5,6 @@
 
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
-#include "feedforward_model.h"
 #include "surrogate.h"
 #include "surrogate_builder.h"
 
@@ -15,7 +14,7 @@
 
 using namespace phasm;
 static Surrogate s_surrogate = SurrogateBuilder()
-        .set_model(std::make_shared<FeedForwardModel>())
+        .set_model("phasm-torch-plugin", "")
         .set_callmode(phasm::CallMode::CaptureAndDump)
         .local_primitive<double>("x", IN)
         .local_primitive<double>("y", IN)
@@ -70,6 +69,6 @@ TEST_CASE("Toy magnetic field map") {
     model->dump_captures_to_csv(std::cout);
 
     REQUIRE(model->get_capture_count() == 3);
-    REQUIRE(model->get_model_var("x")->training_inputs[0].get<double>()[0] == 1);
-    REQUIRE(model->get_model_var("Bz")->training_outputs[1].get<double>()[0] == 4);
+    REQUIRE(model->get_model_var("x")->training_inputs[0].get_data<double>()[0] == 1);
+    REQUIRE(model->get_model_var("Bz")->training_outputs[1].get_data<double>()[0] == 4);
 }

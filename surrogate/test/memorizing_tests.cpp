@@ -26,14 +26,14 @@ public:
         for (size_t i = 0; i<get_capture_count(); ++i) {
             tensor x = xs[i];
             tensor y = ys[i];
-            double xx = *x.get<double>();
+            double xx = *x.get_data<double>();
             memorized_data[xx] = y;
         }
     }
 
     bool infer() override {
         tensor x_val = m_model_vars[0]->inference_input;
-        double xx = *x_val.get<double>();
+        double xx = *x_val.get_data<double>();
 
         auto pair = memorized_data.find(xx);
         if (pair != memorized_data.end()) {

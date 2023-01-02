@@ -4,6 +4,7 @@
 
 
 #include <catch.hpp>
+#include <iostream>
 #include "surrogate_builder.h"
 using namespace phasm;
 

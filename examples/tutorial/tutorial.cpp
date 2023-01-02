@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <surrogate_builder.h>
-#include <feedforward_model.h>
 
 #define CATCH_CONFIG_MAIN
 #include <catch.hpp>
@@ -27,7 +26,7 @@ double f(double x, double y, double z) {
 // We create a surrogate model for f like so:
 
 phasm::Surrogate f_surrogate = phasm::SurrogateBuilder()                  // [1]
-        .set_model(std::make_shared<phasm::FeedForwardModel>())           // [2]
+        .set_model("phasm-torch-plugin", "")                              // [2]
         .local_primitive<double>("x", phasm::IN)                          // [3]
         .local_primitive<double>("y", phasm::IN)
         .local_primitive<double>("z", phasm::IN)
@@ -213,7 +212,7 @@ TEST_CASE("Surrogates with array input data") {
 
     using namespace phasm;
     Surrogate zero_top_right_surrogate = SurrogateBuilder()
-            .set_model(std::make_shared<FeedForwardModel>())
+            .set_model("phasm-torch-plugin", "")
             .local_primitive<float>("m", INOUT, {4, 5})
             .finish();
 
