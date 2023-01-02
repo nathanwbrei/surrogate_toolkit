@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include <cstddef>
+#include <cassert>
 #include <ostream>
 
 namespace phasm {
@@ -71,6 +72,7 @@ public:
 
     // Construct tensor from buffer
     template <typename T> explicit tensor(T* consecutive_buffer, size_t length) {
+        assert(length > 0);
         T* buffer = new T[length];
         for (size_t i=0; i<length; ++i) buffer[i] = consecutive_buffer[i];
 
@@ -85,6 +87,7 @@ public:
 
     // Construct tensor from buffer with shape information, e.g. a _contiguous_ tensor
     template <typename T> explicit tensor(T* consecutive_buffer, const std::vector<int64_t> shape) {
+        // TODO: Normalize shape so that e.g. {5,1,1} => {5}, {1} => {}
         m_length = 1;
         for (size_t l : shape) {
             m_length *= l;

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <cassert>
+#include <iostream>
 
 namespace phasm {
 
@@ -36,18 +37,30 @@ tensor::tensor(const tensor& other) noexcept {
 }
 
 tensor& tensor::operator=(const tensor& other) noexcept {
-    if (this != &other) return *this;
+    if (this == &other) return *this;
     m_dtype = other.m_dtype;
     m_length = other.m_length;
     m_shape = other.m_shape;
-    m_underlying = other.m_underlying;
     switch (m_dtype) {
-        case DType::UI8: m_underlying = copy_typed<uint8_t>(other.m_underlying, other.m_length); break;
-        case DType::I16: m_underlying = copy_typed<int16_t>(other.m_underlying, other.m_length); break;
-        case DType::I32: m_underlying = copy_typed<int32_t>(other.m_underlying, other.m_length); break;
-        case DType::I64: m_underlying = copy_typed<int64_t>(other.m_underlying, other.m_length); break;
-        case DType::F32: m_underlying = copy_typed<float>(other.m_underlying, other.m_length); break;
-        case DType::F64: m_underlying = copy_typed<double>(other.m_underlying, other.m_length); break;
+        case DType::UI8:
+            delete[] static_cast<uint8_t *>(m_underlying);
+            m_underlying = copy_typed<uint8_t>(other.m_underlying, other.m_length);
+            break;
+        case DType::I16:
+            delete[] static_cast<int16_t *>(m_underlying);
+            m_underlying = copy_typed<int16_t>(other.m_underlying, other.m_length); break;
+        case DType::I32:
+            delete[] static_cast<int32_t *>(m_underlying);
+            m_underlying = copy_typed<int32_t>(other.m_underlying, other.m_length); break;
+        case DType::I64:
+            delete[] static_cast<int64_t *>(m_underlying);
+            m_underlying = copy_typed<int64_t>(other.m_underlying, other.m_length); break;
+        case DType::F32:
+            delete[] static_cast<float *>(m_underlying);
+            m_underlying = copy_typed<float>(other.m_underlying, other.m_length); break;
+        case DType::F64:
+            delete[] static_cast<double *>(m_underlying);
+            m_underlying = copy_typed<double>(other.m_underlying, other.m_length); break;
         default: break;
     }
     return *this;
@@ -57,14 +70,28 @@ tensor::tensor(tensor &&other) noexcept {
     m_length = other.m_length;
     m_shape = other.m_shape;
     m_underlying = other.m_underlying;
+    other.m_underlying = nullptr;
+    other.m_dtype = DType::Undefined;
+    other.m_length = 0;
+    other.m_shape = {};
 }
 
 tensor& tensor::operator=(tensor&& other) noexcept {
-    if (this != &other) return *this;
+    if (this == &other) return *this;
     m_dtype = other.m_dtype;
     m_length = other.m_length;
     m_shape = other.m_shape;
+    switch (m_dtype) {
+        case DType::UI8: delete[] static_cast<uint8_t *>(m_underlying); break;
+        case DType::I16: delete[] static_cast<int16_t *>(m_underlying); break;
+        case DType::I32: delete[] static_cast<int32_t *>(m_underlying); break;
+        case DType::I64: delete[] static_cast<int64_t *>(m_underlying); break;
+        case DType::F32: delete[] static_cast<float *>(m_underlying); break;
+        case DType::F64: delete[] static_cast<double *>(m_underlying); break;
+        default: break;
+    }
     m_underlying = other.m_underlying;
+    other.m_underlying = nullptr;
     return *this;
 }
 
@@ -76,7 +103,12 @@ tensor::~tensor() {
         case DType::I64: delete[] static_cast<int64_t*>(m_underlying); break;
         case DType::F32: delete[] static_cast<float*>(m_underlying); break;
         case DType::F64: delete[] static_cast<double*>(m_underlying); break;
-        default: break;
+        default:
+            if (m_length > 0) {
+                std::cout << "PHASM: Memory leak due to invalid (corrupt?) tensor dtype" << std::endl;
+                std::terminate();
+            }
+            break;
     }
 };
 
@@ -138,7 +170,9 @@ inline tensor stack_typed(const std::vector<tensor>& tensors) {
             buffer[j*original_length + i] = original_data[i];
         }
     }
-    return tensor(buffer, stacked_shape);
+    tensor result = tensor(buffer, stacked_shape);
+    delete[] buffer; // TODO: Create a tensor ctor that takes ownership of a buffer
+    return result;
 }
 
 tensor stack(const std::vector<tensor>& tensors) {
