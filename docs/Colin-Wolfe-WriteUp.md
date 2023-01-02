@@ -293,7 +293,7 @@ Updated code:
 
 ```
 # made it ArrayRef<int64_t> instead of just ArrayRef
-m_underlying = m_underlying.reshape(at::ArrayRef<int64_t>(shape.data(), shape.size()));   
+m_data = m_data.reshape(at::ArrayRef<int64_t>(shape.data(), shape.size()));   
 ```
 
 ### Range.h  (phasm/surrogate/include/range.h)

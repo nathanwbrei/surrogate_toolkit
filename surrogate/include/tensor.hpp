@@ -60,7 +60,7 @@ void print_dtype(std::ostream& os, phasm::DType dtype);
 ///
 class tensor {
 
-    void* m_underlying;
+    void* m_data;
     size_t m_length;
     std::vector<int64_t> m_shape;
     DType m_dtype;
@@ -68,7 +68,7 @@ class tensor {
 public:
 
     // Construct "Empty" tensor
-    tensor() : m_underlying(nullptr), m_length(0), m_shape({}), m_dtype(DType::Undefined)  {}
+    tensor() : m_data(nullptr), m_length(0), m_shape({}), m_dtype(DType::Undefined)  {}
 
     // Construct tensor from buffer
     template <typename T> explicit tensor(T* consecutive_buffer, size_t length) {
@@ -76,7 +76,7 @@ public:
         T* buffer = new T[length];
         for (size_t i=0; i<length; ++i) buffer[i] = consecutive_buffer[i];
 
-        m_underlying = buffer; // Throw away the type information here!
+        m_data = buffer; // Throw away the type information here!
         m_length = length;
         m_shape = {static_cast<long>(length)};
         // TODO: Clean up this mix of size_t's and int64_t's. Why is it this way?
@@ -86,7 +86,7 @@ public:
     }
 
     // Construct tensor from buffer with shape information, e.g. a _contiguous_ tensor
-    template <typename T> explicit tensor(T* consecutive_buffer, const std::vector<int64_t> shape) {
+    template <typename T> explicit tensor(T* consecutive_buffer, const std::vector<int64_t>& shape) {
         // TODO: Normalize shape so that e.g. {5,1,1} => {5}, {1} => {}
         m_length = 1;
         for (size_t l : shape) {
@@ -94,7 +94,7 @@ public:
         }
         T* buffer = new T[m_length];
         for (size_t i=0; i<m_length; ++i) buffer[i] = consecutive_buffer[i];
-        m_underlying = buffer;
+        m_data = buffer;
         m_shape = shape;
         m_dtype = dtype<T>();
     }
@@ -115,13 +115,13 @@ public:
     bool operator==(const tensor& rhs) const;
 
     template <typename T>
-    T* get() {
-        return static_cast<T*>(m_underlying);
+    T* get_data() {
+        return static_cast<T*>(m_data);
     }
 
     template <typename T>
-    const T* get() const {
-        return static_cast<T*>(m_underlying);
+    const T* get_data() const {
+        return static_cast<T*>(m_data);
     }
 
     void print(std::ostream& os);
@@ -144,7 +144,7 @@ size_t hashTensorOfDType(const phasm::tensor& t) {
     size_t len = t.get_length();
     if (len == 0) return 0;
     std::hash<T> hash;
-    const T* ptr = t.get<T>();
+    const T* ptr = t.get_data<T>();
     size_t seed = hash(ptr[0]);
     for (size_t i=1; i<len; ++i) {
         seed = combineHashes(seed, hash(ptr[i]));

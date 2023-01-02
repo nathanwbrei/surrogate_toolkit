@@ -83,12 +83,12 @@ void Model::dump_captures_to_csv(std::ostream &os) {
             auto t = m_inputs[j]->training_inputs[i];
             for (size_t k = 0; k < t.get_length(); ++k) {
                 switch (t.get_dtype()) {
-                    case DType::UI8: os << *(t.get<uint8_t>() + k); break;
-                    case DType::I16: os << *(t.get<int16_t>() + k); break;
-                    case DType::I32: os << *(t.get<int32_t>() + k); break;
-                    case DType::I64: os << *(t.get<int64_t>() + k); break;
-                    case DType::F32: os << *(t.get<float>() + k); break;
-                    case DType::F64: os << *(t.get<double>() + k); break;
+                    case DType::UI8: os << *(t.get_data<uint8_t>() + k); break;
+                    case DType::I16: os << *(t.get_data<int16_t>() + k); break;
+                    case DType::I32: os << *(t.get_data<int32_t>() + k); break;
+                    case DType::I64: os << *(t.get_data<int64_t>() + k); break;
+                    case DType::F32: os << *(t.get_data<float>() + k); break;
+                    case DType::F64: os << *(t.get_data<double>() + k); break;
                     default: os << "?, "; break;
                 }
                 os << ", ";
@@ -98,12 +98,12 @@ void Model::dump_captures_to_csv(std::ostream &os) {
             auto t = m_outputs[j]->training_outputs[i];
             for (size_t k = 0; k < t.get_length(); ++k) {
                 switch (t.get_dtype()) {
-                    case DType::UI8: os << *(t.get<uint8_t>() + k); break;
-                    case DType::I16: os << *(t.get<int16_t>() + k); break;
-                    case DType::I32: os << *(t.get<int32_t>() + k); break;
-                    case DType::I64: os << *(t.get<int64_t>() + k); break;
-                    case DType::F32: os << *(t.get<float>() + k); break;
-                    case DType::F64: os << *(t.get<double>() + k); break;
+                    case DType::UI8: os << *(t.get_data<uint8_t>() + k); break;
+                    case DType::I16: os << *(t.get_data<int16_t>() + k); break;
+                    case DType::I32: os << *(t.get_data<int32_t>() + k); break;
+                    case DType::I64: os << *(t.get_data<int64_t>() + k); break;
+                    case DType::F32: os << *(t.get_data<float>() + k); break;
+                    case DType::F64: os << *(t.get_data<double>() + k); break;
                     default: os << "?"; break;
                 }
                 bool last_col = (j == m_outputs.size() - 1) && (k == t.get_length() - 1);

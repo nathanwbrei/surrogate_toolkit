@@ -7,7 +7,7 @@ namespace phasm {
 
 template <typename T>
 torch::Tensor to_torch_tensor_typed(const phasm::tensor& t) {
-    const T* data = t.get<T>();
+    const T* data = t.get_data<T>();
     int64_t length = t.get_length();
     auto result = torch::tensor(at::ArrayRef<T>(data,length));
     result = result.reshape(t.get_shape());

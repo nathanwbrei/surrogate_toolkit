@@ -26,7 +26,7 @@ TEST_CASE("Demonstrate two-way binding of a primitive") {
     auto t = p.to(&x);
 
     print_dtype(std::cout, t.get_dtype());
-    int32_t *tp = t.get<int>();
+    int32_t *tp = t.get_data<int>();
     REQUIRE(*tp == 22);
 
     // Modify the tensor
@@ -42,7 +42,7 @@ TEST_CASE("Basic use of TensorIso") {
     auto p = TensorIso<double>({2, 3});
     auto t = p.to(mat[0]);
 
-    auto firstitem = *(t.get<double>());
+    auto firstitem = *(t.get_data<double>());
     REQUIRE(firstitem == 1.0);
     REQUIRE(t.get_shape()[0] == 2);
     REQUIRE(t.get_shape()[1] == 3);
@@ -66,7 +66,7 @@ TEST_CASE("Composition of a Field lens with a TensorIso") {
 
     // Should extract y and stick it in a tensor
     auto t = field_lens.to(&s);
-    float *tp = t.get<float>();
+    float *tp = t.get_data<float>();
     REQUIRE(*tp == (float) 7.6);
 
 }
@@ -87,7 +87,7 @@ TEST_CASE("Composition of two structs") {
     auto outer_lens = Lens<OtherStruct, MyStruct>(&inner_lens, getMs);
 
     auto t = outer_lens.to(&os);
-    float *tp = t.get<float>();
+    float *tp = t.get_data<float>();
     REQUIRE(*tp == (float) 2.0);
 }
 
@@ -118,8 +118,8 @@ TEST_CASE("1-D Array of TensorIso produces same Tensor as TensorIsoArray") {
     auto t2 = primitive_array_iso.to(xs);
 
     bool is_equal = true;
-    int* t1_data = t1.get<int>();
-    int* t2_data = t2.get<int>();
+    int* t1_data = t1.get_data<int>();
+    int* t2_data = t2.get_data<int>();
     for (size_t i=0; i<t1.get_length(); ++i) {
         is_equal &= (t1_data[i] == t2_data[i]);
     }

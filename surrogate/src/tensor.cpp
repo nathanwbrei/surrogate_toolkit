@@ -26,12 +26,12 @@ tensor::tensor(const tensor& other) noexcept {
     m_length = other.m_length;
     m_shape = other.m_shape;
     switch (m_dtype) {
-        case DType::UI8: m_underlying = copy_typed<uint8_t>(other.m_underlying, other.m_length); break;
-        case DType::I16: m_underlying = copy_typed<int16_t>(other.m_underlying, other.m_length); break;
-        case DType::I32: m_underlying = copy_typed<int32_t>(other.m_underlying, other.m_length); break;
-        case DType::I64: m_underlying = copy_typed<int64_t>(other.m_underlying, other.m_length); break;
-        case DType::F32: m_underlying = copy_typed<float>(other.m_underlying, other.m_length); break;
-        case DType::F64: m_underlying = copy_typed<double>(other.m_underlying, other.m_length); break;
+        case DType::UI8: m_data = copy_typed<uint8_t>(other.m_data, other.m_length); break;
+        case DType::I16: m_data = copy_typed<int16_t>(other.m_data, other.m_length); break;
+        case DType::I32: m_data = copy_typed<int32_t>(other.m_data, other.m_length); break;
+        case DType::I64: m_data = copy_typed<int64_t>(other.m_data, other.m_length); break;
+        case DType::F32: m_data = copy_typed<float>(other.m_data, other.m_length); break;
+        case DType::F64: m_data = copy_typed<double>(other.m_data, other.m_length); break;
         default: break;
     }
 }
@@ -43,24 +43,24 @@ tensor& tensor::operator=(const tensor& other) noexcept {
     m_shape = other.m_shape;
     switch (m_dtype) {
         case DType::UI8:
-            delete[] static_cast<uint8_t *>(m_underlying);
-            m_underlying = copy_typed<uint8_t>(other.m_underlying, other.m_length);
+            delete[] static_cast<uint8_t *>(m_data);
+            m_data = copy_typed<uint8_t>(other.m_data, other.m_length);
             break;
         case DType::I16:
-            delete[] static_cast<int16_t *>(m_underlying);
-            m_underlying = copy_typed<int16_t>(other.m_underlying, other.m_length); break;
+            delete[] static_cast<int16_t *>(m_data);
+            m_data = copy_typed<int16_t>(other.m_data, other.m_length); break;
         case DType::I32:
-            delete[] static_cast<int32_t *>(m_underlying);
-            m_underlying = copy_typed<int32_t>(other.m_underlying, other.m_length); break;
+            delete[] static_cast<int32_t *>(m_data);
+            m_data = copy_typed<int32_t>(other.m_data, other.m_length); break;
         case DType::I64:
-            delete[] static_cast<int64_t *>(m_underlying);
-            m_underlying = copy_typed<int64_t>(other.m_underlying, other.m_length); break;
+            delete[] static_cast<int64_t *>(m_data);
+            m_data = copy_typed<int64_t>(other.m_data, other.m_length); break;
         case DType::F32:
-            delete[] static_cast<float *>(m_underlying);
-            m_underlying = copy_typed<float>(other.m_underlying, other.m_length); break;
+            delete[] static_cast<float *>(m_data);
+            m_data = copy_typed<float>(other.m_data, other.m_length); break;
         case DType::F64:
-            delete[] static_cast<double *>(m_underlying);
-            m_underlying = copy_typed<double>(other.m_underlying, other.m_length); break;
+            delete[] static_cast<double *>(m_data);
+            m_data = copy_typed<double>(other.m_data, other.m_length); break;
         default: break;
     }
     return *this;
@@ -69,8 +69,8 @@ tensor::tensor(tensor &&other) noexcept {
     m_dtype = other.m_dtype;
     m_length = other.m_length;
     m_shape = other.m_shape;
-    m_underlying = other.m_underlying;
-    other.m_underlying = nullptr;
+    m_data = other.m_data;
+    other.m_data = nullptr;
     other.m_dtype = DType::Undefined;
     other.m_length = 0;
     other.m_shape = {};
@@ -82,27 +82,27 @@ tensor& tensor::operator=(tensor&& other) noexcept {
     m_length = other.m_length;
     m_shape = other.m_shape;
     switch (m_dtype) {
-        case DType::UI8: delete[] static_cast<uint8_t *>(m_underlying); break;
-        case DType::I16: delete[] static_cast<int16_t *>(m_underlying); break;
-        case DType::I32: delete[] static_cast<int32_t *>(m_underlying); break;
-        case DType::I64: delete[] static_cast<int64_t *>(m_underlying); break;
-        case DType::F32: delete[] static_cast<float *>(m_underlying); break;
-        case DType::F64: delete[] static_cast<double *>(m_underlying); break;
+        case DType::UI8: delete[] static_cast<uint8_t *>(m_data); break;
+        case DType::I16: delete[] static_cast<int16_t *>(m_data); break;
+        case DType::I32: delete[] static_cast<int32_t *>(m_data); break;
+        case DType::I64: delete[] static_cast<int64_t *>(m_data); break;
+        case DType::F32: delete[] static_cast<float *>(m_data); break;
+        case DType::F64: delete[] static_cast<double *>(m_data); break;
         default: break;
     }
-    m_underlying = other.m_underlying;
-    other.m_underlying = nullptr;
+    m_data = other.m_data;
+    other.m_data = nullptr;
     return *this;
 }
 
 tensor::~tensor() {
     switch (m_dtype) {
-        case DType::UI8: delete[] static_cast<uint8_t*>(m_underlying); break;
-        case DType::I16: delete[] static_cast<int16_t*>(m_underlying); break;
-        case DType::I32: delete[] static_cast<int32_t*>(m_underlying); break;
-        case DType::I64: delete[] static_cast<int64_t*>(m_underlying); break;
-        case DType::F32: delete[] static_cast<float*>(m_underlying); break;
-        case DType::F64: delete[] static_cast<double*>(m_underlying); break;
+        case DType::UI8: delete[] static_cast<uint8_t*>(m_data); break;
+        case DType::I16: delete[] static_cast<int16_t*>(m_data); break;
+        case DType::I32: delete[] static_cast<int32_t*>(m_data); break;
+        case DType::I64: delete[] static_cast<int64_t*>(m_data); break;
+        case DType::F32: delete[] static_cast<float*>(m_data); break;
+        case DType::F64: delete[] static_cast<double*>(m_data); break;
         default:
             if (m_length > 0) {
                 std::cout << "PHASM: Memory leak due to invalid (corrupt?) tensor dtype" << std::endl;
@@ -116,7 +116,7 @@ template <typename T>
 inline bool equals_typed(const tensor& lhs, const tensor& rhs) {
     size_t length = lhs.get_length();
     for (size_t i=0; i<length; ++i) {
-        if (lhs.get<T>()[i] != rhs.get<T>()[i]) {
+        if (lhs.get_data<T>()[i] != rhs.get_data<T>()[i]) {
             return false;
         }
     }
@@ -126,8 +126,8 @@ inline bool equals_typed(const tensor& lhs, const tensor& rhs) {
 template <typename T>
 inline bool fequals_typed(const tensor& lhs, const tensor& rhs) {
     size_t length = lhs.get_length();
-    const T* lhs_ptr = lhs.get<T>();
-    const T* rhs_ptr = rhs.get<T>();
+    const T* lhs_ptr = lhs.get_data<T>();
+    const T* rhs_ptr = rhs.get_data<T>();
     for (size_t i=0; i<length; ++i) {
         if (std::abs(lhs_ptr[i]-rhs_ptr[i]) > std::abs(lhs_ptr[i]*std::numeric_limits<T>::epsilon())) {
             return false;
@@ -165,7 +165,7 @@ inline tensor stack_typed(const std::vector<tensor>& tensors) {
 
     T* buffer = new T[stacked_length];
     for (size_t j = 0; j<stacked_tensor_count; ++j) {
-        const T* original_data = tensors[j].get<T>();
+        const T* original_data = tensors[j].get_data<T>();
         for (size_t i = 0; i<original_length; ++i) {
             buffer[j*original_length + i] = original_data[i];
         }
@@ -200,7 +200,7 @@ std::vector<tensor> unstack_typed(const tensor& tensor) {
     split_shape.erase(split_shape.begin());
 
     std::vector<phasm::tensor> results;
-    const T* original_buffer = tensor.get<T>();
+    const T* original_buffer = tensor.get_data<T>();
     for (size_t j=0; j<split_count; ++j) {
 
         T* split_buffer = new T[split_length];
@@ -244,7 +244,7 @@ inline void print_typed(std::ostream& os, const tensor& t) {
     bool show_full = (full_len < 10);
     size_t max_len = show_full ? full_len: 10;
 
-    const T* data = t.get<T>();
+    const T* data = t.get_data<T>();
     for (size_t i=0; i<max_len; ++i) {
         os << data[i] << " ";
     }

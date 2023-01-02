@@ -4035,7 +4035,7 @@ namespace Generators {
         }
 
         T const& get() const override {
-            return m_generators[m_current].get();
+            return m_generators[m_current].get_data();
         }
 
         bool next() override {
@@ -4082,7 +4082,7 @@ namespace Generators {
     // Note: The type after -> is weird, because VS2015 cannot parse
     //       the expression used in the typedef inside, when it is in
     //       return type. Yeah.
-    auto generate( StringRef generatorName, SourceLineInfo const& lineInfo, L const& generatorExpression ) -> decltype(std::declval<decltype(generatorExpression())>().get()) {
+    auto generate( StringRef generatorName, SourceLineInfo const& lineInfo, L const& generatorExpression ) -> decltype(std::declval<decltype(generatorExpression())>().get_data()) {
         using UnderlyingType = typename decltype(generatorExpression())::type;
 
         IGeneratorTracker& tracker = acquireGeneratorTracker( generatorName, lineInfo );
@@ -4091,7 +4091,7 @@ namespace Generators {
         }
 
         auto const& generator = static_cast<IGenerator<UnderlyingType> const&>( *tracker.getGenerator() );
-        return generator.get();
+        return generator.get_data();
     }
 
 } // namespace Generators

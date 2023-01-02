@@ -16,14 +16,14 @@ template<typename T>
 T get_captured_input(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
     auto param = model->get_model_var(param_name);
     tensor result = param->training_inputs[sample_index];
-    return *result.get<T>();
+    return *result.get_data<T>();
 }
 
 template<typename T>
 T get_captured_output(std::shared_ptr<Model> model, std::string param_name, size_t sample_index) {
     auto param = model->get_model_var(param_name);
     tensor result = param->training_outputs[sample_index];
-    return *result.get<T>();
+    return *result.get_data<T>();
 }
 
 int mult(int x, int y) {

@@ -69,6 +69,6 @@ TEST_CASE("Toy magnetic field map") {
     model->dump_captures_to_csv(std::cout);
 
     REQUIRE(model->get_capture_count() == 3);
-    REQUIRE(model->get_model_var("x")->training_inputs[0].get<double>()[0] == 1);
-    REQUIRE(model->get_model_var("Bz")->training_outputs[1].get<double>()[0] == 4);
+    REQUIRE(model->get_model_var("x")->training_inputs[0].get_data<double>()[0] == 1);
+    REQUIRE(model->get_model_var("Bz")->training_outputs[1].get_data<double>()[0] == 4);
 }
