@@ -86,6 +86,7 @@ struct Optic : public OpticBase {
 /// composition chain becomes an Iso<T, Tensor>.
 /// TODO: Restrict T to _actual_ primitives
 /// TODO: Add the ability to choose a different dtype for the tensor other than T.
+/// TODO: This assumes that tensors are always consecutive
 /// This does a byte-for-byte copy of a multidimensional C++ array into a Torch tensor. It assumes that the data is
 /// contiguous both in the array and in the tensor, and also that we don't have to worry about row-major
 /// vs column-major ordering because the neural net won't care as long as we are consistent.
@@ -100,6 +101,7 @@ template <typename T>
 class TensorIso : public Optic<T> {
     const std::vector<int64_t> m_shape;
     const size_t m_length;
+    // const DType m_dtype_to_write; // TensorIso will accept any dtype when reading and convert to T
 
 public:
     explicit TensorIso(std::vector<int64_t> shape = {}) :
@@ -117,11 +119,49 @@ public:
         return phasm::tensor(source, m_shape);
     }
     void from(tensor source, T* dest) override {
-        T* ptr = source.get_data<T>();
-        for (size_t i=0; i<m_length; ++i) {
-            dest[i] = ptr[i];
+        if (source.get_length() != m_length) {
+            throw std::runtime_error("TensorIso::from: Tensor has wrong length!");
         }
-        // TODO: This only works if the tensor is consecutive. Find a clever way to fix this problem
+        switch (source.get_dtype()) {
+            case DType::UI8: {
+                auto *ui8ptr = source.get_data<uint8_t>();
+                for (size_t i = 0; i < m_length; ++i) {
+                    dest[i] = ui8ptr[i];  // Converts from uint8_t to T
+                }
+            } break;
+            case DType::I16: {
+                auto *i16ptr = source.get_data<int16_t>();
+                for (size_t i = 0; i < m_length; ++i) {
+                    dest[i] = i16ptr[i];
+                }
+            } break;
+            case DType::I32: {
+                auto *i32ptr = source.get_data<int32_t>();
+                for (size_t i = 0; i < m_length; ++i) {
+                    dest[i] = i32ptr[i];
+                }
+            } break;
+            case DType::I64: {
+                auto *i64ptr = source.get_data<int64_t>();
+                for (size_t i = 0; i < m_length; ++i) {
+                    dest[i] = i64ptr[i];
+                }
+            } break;
+            case DType::F32: {
+                auto *f32ptr = source.get_data<float>();
+                for (size_t i = 0; i < m_length; ++i) {
+                    dest[i] = f32ptr[i];
+                }
+            } break;
+            case DType::F64: {
+                auto *f64ptr = source.get_data<double>();
+                for (size_t i = 0; i < m_length; ++i) {
+                    dest[i] = f64ptr[i];
+                }
+            } break;
+            default:
+                throw std::runtime_error("tensor is undefined");
+        };
     }
     TensorIso* clone() override {
         return new TensorIso<T>(*this);
