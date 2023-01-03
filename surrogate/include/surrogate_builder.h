@@ -81,8 +81,8 @@ struct Cursor<HeadT> {
     SurrogateBuilder* builder = nullptr;
 
     Cursor(OpticBase* o, std::shared_ptr<CallSiteVariable> csv, SurrogateBuilder* builder);
-    Cursor<HeadT> primitive(std::string name, Direction dir=Direction::IN);
-    Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN);
+    Cursor<HeadT> primitive(std::string name, Direction dir=Direction::IN, DType dtype= default_dtype<HeadT>());
+    Cursor<HeadT> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN, DType dtype= default_dtype<HeadT>());
     Cursor<HeadT> array(size_t size);
     SurrogateBuilder& end();
 
@@ -98,8 +98,8 @@ struct Cursor {
     SurrogateBuilder* builder = nullptr;
 
     Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, SurrogateBuilder* builder);
-    Cursor<HeadT, RestTs...> primitive(std::string name, Direction dir=Direction::IN);
-    Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN);
+    Cursor<HeadT, RestTs...> primitive(std::string name, Direction dir=Direction::IN, DType dtype= default_dtype<HeadT>());
+    Cursor<HeadT, RestTs...> primitives(std::string name, std::vector<int64_t>&& shape, Direction dir=Direction::IN, DType dtype= default_dtype<HeadT>());
     Cursor<HeadT, RestTs...> array(size_t size);
     Cursor<RestTs...> end();
 
@@ -149,13 +149,13 @@ template<typename HeadT>
 Cursor<HeadT>::Cursor(OpticBase*, std::shared_ptr<CallSiteVariable> c, SurrogateBuilder *b) : current_callsite_var(c), builder(b) {}
 
 template<typename HeadT>
-Cursor<HeadT> Cursor<HeadT>::primitive(std::string name, Direction dir) {
-    return primitives(name, {}, dir);
+Cursor<HeadT> Cursor<HeadT>::primitive(std::string name, Direction dir, DType dtype) {
+    return primitives(name, {}, dir, dtype);
 }
 
 template<typename HeadT>
-Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &&shape, Direction dir) {
-    auto child = new TensorIso<HeadT>(std::move(shape));
+Cursor<HeadT> Cursor<HeadT>::primitives(std::string name, std::vector<int64_t> &&shape, Direction dir, DType dtype) {
+    auto child = new TensorIso<HeadT>(std::move(shape), dtype);
     child->name = name;
     child->is_leaf = true;
     current_callsite_var->optics_tree.push_back(child->clone());
@@ -199,13 +199,13 @@ Cursor<HeadT, RestTs...>::Cursor(OpticBase* focus, std::shared_ptr<CallSiteVaria
 : focus(focus), current_callsite_var(callsite_var), builder(builder) {}
 
 template <typename HeadT, typename... RestTs>
-Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitive(std::string name, Direction dir) {
-    return primitives(name, {}, dir);
+Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitive(std::string name, Direction dir, DType dtype) {
+    return primitives(name, {}, dir, dtype);
 }
 
 template <typename HeadT, typename... RestTs>
-Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitives(std::string name, std::vector<int64_t>&& shape, Direction dir) {
-    auto child = new TensorIso<HeadT>(std::move(shape));
+Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitives(std::string name, std::vector<int64_t>&& shape, Direction dir, DType dtype) {
+    auto child = new TensorIso<HeadT>(std::move(shape), dtype);
     child->name = name;
     child->is_leaf = true;
     focus->unsafe_attach(child);
