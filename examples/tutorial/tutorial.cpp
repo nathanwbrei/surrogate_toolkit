@@ -106,11 +106,11 @@ TEST_CASE("Calling f_surrogate") {
 
 
 // We can create a wrapper function for f like so:
-#if 0
+
 double f_wrapper(double x, double y, double z) {
     double result = 0.0;
     f_surrogate.bind_original_function([&](){ result = f(x,y,z); })      // [5]
-               .bind_all_callsite_vars(&x, &y, &z)                       // [6]
+               .bind_all_callsite_vars(&x, &y, &z, &result)              // [6]
                .call();                                                  // [7]
     return result;
 }
@@ -232,8 +232,5 @@ TEST_CASE("Surrogates with array input data") {
 
 }
 
-
 // Global variables
 // Arrays of structs of structs of arrays of data
-
-#endif
