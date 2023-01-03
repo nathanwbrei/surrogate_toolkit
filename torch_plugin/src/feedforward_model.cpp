@@ -48,7 +48,7 @@ bool phasm::FeedForwardModel::infer() {
 
     size_t i = 0;
     for (const auto& output_model_var : m_outputs) {
-        output_model_var->inference_output = to_phasm_tensor(input_tensors[i++]);
+        output_model_var->inference_output = to_phasm_tensor(output_tensors[i++]);
     }
     return true;
 }

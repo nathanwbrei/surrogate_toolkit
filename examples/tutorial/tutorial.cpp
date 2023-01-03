@@ -68,7 +68,7 @@ TEST_CASE("Calling f_surrogate") {
 
     f_surrogate
         .bind_original_function([&](){ result = f(x,y,z); })      // [6]
-        .bind_all_callsite_vars(&x, &y, &z);                      // [7]
+        .bind_all_callsite_vars(&x, &y, &z, &result);                      // [7]
 
     x = 1; y = 1; z = 1;
     f_surrogate.call_original_and_capture();
@@ -106,7 +106,7 @@ TEST_CASE("Calling f_surrogate") {
 
 
 // We can create a wrapper function for f like so:
-
+#if 0
 double f_wrapper(double x, double y, double z) {
     double result = 0.0;
     f_surrogate.bind_original_function([&](){ result = f(x,y,z); })      // [5]
@@ -188,7 +188,6 @@ void zero_top_right(T* arr, int nrows, int ncols) {
 }
 
 
-
 TEST_CASE("Surrogates with array input data") {
 
     float matrix[] = { 1,  2,  3,  4,  5,
@@ -236,3 +235,5 @@ TEST_CASE("Surrogates with array input data") {
 
 // Global variables
 // Arrays of structs of structs of arrays of data
+
+#endif
