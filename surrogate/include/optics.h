@@ -101,12 +101,13 @@ template <typename T>
 class TensorIso : public Optic<T> {
     const std::vector<int64_t> m_shape;
     const size_t m_length;
-    // const DType m_dtype_to_write; // TensorIso will accept any dtype when reading and convert to T
+    const DType m_dtype_to_write;
 
 public:
-    explicit TensorIso(std::vector<int64_t> shape = {}) :
+    explicit TensorIso(std::vector<int64_t> shape = {}, DType dtype_to_write=phasm::default_dtype<T>()) :
         m_shape(std::move(shape)),
-        m_length(std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;}))
+        m_length(std::accumulate(m_shape.begin(), m_shape.end(), 1ull, [](size_t a, size_t b){return a*b;})),
+        m_dtype_to_write(dtype_to_write)
     {
         OpticBase::consumes = demangle<T>();
         OpticBase::produces = "tensor";
@@ -116,13 +117,66 @@ public:
     std::vector<int64_t> shape() override { return m_shape; }
 
     tensor to(T* source) override {
-        return phasm::tensor(source, m_shape);
+        switch (m_dtype_to_write) {
+            // We could easily templatize this, but I'm concerned about how many levels of templates the Optics
+            // and SurrogateBuilder already have, and we already have trouble with compile times. Maybe revisit
+            // this when we do the compilation performance analysis.
+            case DType::UI8: {
+                auto *ui8ptr = new uint8_t[m_length];
+                for (size_t i = 0; i < m_length; ++i) {
+                    ui8ptr[i] = source[i];
+                }
+                return tensor(std::unique_ptr<uint8_t[]>(ui8ptr), m_shape);
+            }
+            case DType::I16: {
+                auto *i16ptr = new int16_t[m_length];
+                for (size_t i = 0; i < m_length; ++i) {
+                    i16ptr[i] = source[i];
+                }
+                return tensor(std::unique_ptr<int16_t []>(i16ptr), m_shape);
+            }
+            case DType::I32: {
+                auto *i32ptr = new int32_t[m_length];
+                for (size_t i = 0; i < m_length; ++i) {
+                    i32ptr[i] = source[i];
+                }
+                return tensor(std::unique_ptr<int32_t []>(i32ptr), m_shape);
+            }
+            case DType::I64: {
+                auto *i64ptr = new int64_t[m_length];
+                for (size_t i = 0; i < m_length; ++i) {
+                    i64ptr[i] = source[i];
+                }
+                return tensor(std::unique_ptr<int64_t []>(i64ptr), m_shape);
+            }
+            case DType::F32: {
+                auto *f32ptr = new float[m_length];
+                for (size_t i = 0; i < m_length; ++i) {
+                    f32ptr[i] = source[i];
+                }
+                return tensor(std::unique_ptr<float[]>(f32ptr), m_shape);
+            }
+            case DType::F64: {
+                auto *f64ptr = new double[m_length];
+                for (size_t i = 0; i < m_length; ++i) {
+                    f64ptr[i] = source[i];
+                }
+                return tensor(std::unique_ptr<double[]>(f64ptr), m_shape);
+            }
+            default:
+                throw std::runtime_error("TensorIso::to: Invalid dtype");
+        };
     }
+
+
     void from(tensor source, T* dest) override {
         if (source.get_length() != m_length) {
-            throw std::runtime_error("TensorIso::from: Tensor has wrong length!");
+            throw std::runtime_error("TensorIso::from: Tensor has wrong length");
         }
         switch (source.get_dtype()) {
+            // We could easily templatize this, but I'm concerned about how many levels of templates the Optics
+            // and SurrogateBuilder already have, and we already have trouble with compile times. Maybe revisit
+            // this when we do the compilation performance analysis.
             case DType::UI8: {
                 auto *ui8ptr = source.get_data<uint8_t>();
                 for (size_t i = 0; i < m_length; ++i) {
