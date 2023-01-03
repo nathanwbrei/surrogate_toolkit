@@ -40,7 +40,7 @@ phasm::tensor to_phasm_tensor_typed(const torch::Tensor& t) {
     for (size_t dim=0; dim<dims; ++dim) {
         phasm_dims.push_back(t.size(dim));
     }
-    return phasm::tensor(phasm_data, phasm_dims);
+    return phasm::tensor(std::unique_ptr<T[]>(phasm_data), phasm_dims);
 }
 
 phasm::tensor to_phasm_tensor(const torch::Tensor& t) {
