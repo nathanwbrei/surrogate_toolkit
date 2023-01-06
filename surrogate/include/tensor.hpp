@@ -23,7 +23,7 @@ enum class DType { Undefined, UI8, I16, I32, I64, F32, F64 };
 // https://pytorch.org/docs/stable/tensor_attributes.html
 
 template <typename T>
-phasm::DType dtype() {
+phasm::DType default_dtype() {
     if (std::is_same<T, uint8_t>()) return phasm::DType::UI8;
     if (std::is_same<T, int16_t>()) return phasm::DType::I16;
     if (std::is_same<T, int32_t>()) return phasm::DType::I32;
@@ -32,6 +32,7 @@ phasm::DType dtype() {
     if (std::is_same<T, double>()) return phasm::DType::F64;
     return phasm::DType::Undefined;
 }
+
 
 void print_dtype(std::ostream& os, phasm::DType dtype);
 
@@ -83,7 +84,7 @@ public:
         // TODO: Clean up this mix of size_t's and int64_t's. Why is it this way?
         //   1. Torch uses _signed_ int64's for indices instead of size_t or ptrdiff_t
         //   2. PIN is very confused about size_t, long, and long long
-        m_dtype = dtype<T>();
+        m_dtype = default_dtype<T>();
     }
 
     // Construct tensor from buffer, taking ownership. This does NOT perform a copy.
@@ -92,7 +93,7 @@ public:
         m_data = data.release();
         m_length = length;
         m_shape = {static_cast<long>(length)};
-        m_dtype = dtype<T>();
+        m_dtype = default_dtype<T>();
     }
 
 
@@ -107,7 +108,7 @@ public:
         for (size_t i=0; i<m_length; ++i) buffer[i] = data[i];
         m_data = buffer;
         m_shape = shape;
-        m_dtype = dtype<T>();
+        m_dtype = default_dtype<T>();
     }
 
     // Construct tensor from buffer with shape information, e.g. a _contiguous_ tensor
@@ -119,7 +120,7 @@ public:
         }
         m_data = consecutive_buffer.release();
         m_shape = shape;
-        m_dtype = dtype<T>();
+        m_dtype = default_dtype<T>();
     }
 
     ~tensor();

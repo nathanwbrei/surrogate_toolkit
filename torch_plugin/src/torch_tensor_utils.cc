@@ -40,17 +40,17 @@ phasm::tensor to_phasm_tensor_typed(const torch::Tensor& t) {
     for (size_t dim=0; dim<dims; ++dim) {
         phasm_dims.push_back(t.size(dim));
     }
-    return phasm::tensor(phasm_data, phasm_dims);
+    return phasm::tensor(std::unique_ptr<T[]>(phasm_data), phasm_dims);
 }
 
 phasm::tensor to_phasm_tensor(const torch::Tensor& t) {
     torch::Dtype dtype = t.dtype().toScalarType();
     if (dtype == torch::kUInt8) return to_phasm_tensor_typed<uint8_t>(t);
-    if (dtype == torch::kInt16) return to_phasm_tensor_typed<uint8_t>(t);
-    if (dtype == torch::kInt32) return to_phasm_tensor_typed<uint8_t>(t);
-    if (dtype == torch::kInt64) return to_phasm_tensor_typed<uint8_t>(t);
-    if (dtype == torch::kFloat32) return to_phasm_tensor_typed<uint8_t>(t);
-    if (dtype == torch::kFloat64) return to_phasm_tensor_typed<uint8_t>(t);
+    if (dtype == torch::kInt16) return to_phasm_tensor_typed<int16_t>(t);
+    if (dtype == torch::kInt32) return to_phasm_tensor_typed<int32_t>(t);
+    if (dtype == torch::kInt64) return to_phasm_tensor_typed<int64_t>(t);
+    if (dtype == torch::kFloat32) return to_phasm_tensor_typed<float>(t);
+    if (dtype == torch::kFloat64) return to_phasm_tensor_typed<double>(t);
     throw std::runtime_error("Torch tensor has invalid or incompatible dtype!");
 }
 
