@@ -27,12 +27,12 @@ Inside the container, build and install PHASM.
 
 ```bash
 mkdir build && cd build
-cmake -DCMAKE_PREFIX_PATH="/deps/libtorch;/deps/JANA2/install" \
--DLIBDWARF_DIR="/deps/libdwarf/installdir" -DPIN_ROOT="/deps/pin" ..
+cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" \
+ -DLIBDWARF_DIR="$DEPS/libdwarf/installdir" -DPIN_ROOT="$DEPS/pin" ..
 ```
 
 ### Bare-metal build and run
-#### Complete all the install steps at once
+#### Complete all the installation steps at once
 ```bash
 #scl enable devtoolset-11   # Make sure you are using a recent compiler
 ./install.sh
