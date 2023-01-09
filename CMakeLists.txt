@@ -38,7 +38,7 @@ else()
     message(STATUS "USE_ASAN    Off")
 endif()
 
-option(USE_CUDA "Compile with CUDA support" ON)
+option(USE_CUDA "Compile with CUDA support" OFF)
 if (${USE_CUDA})
     message(STATUS "USE_CUDA    On")
 else()

@@ -16,7 +16,7 @@ FROM ${FROM_IMAGE_NAME}
 
 # Install basic development environment
 RUN apt update -y && \
-    apt -y install --no-install-recommends gdb valgrind cmake wget curl unzip vim libasan6 less exa bat git zlib1g-dev && \
+    apt -y install --no-install-recommends gdb valgrind cmake wget curl unzip vim libasan6 less exa bat git xz-utils zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
 ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.1%2Bcpu.zip"
@@ -68,6 +68,7 @@ RUN git clone https://github.com/JeffersonLab/JANA2.git --branch=v2.0.6 && \
     rm -rf build
 ENV JANA_HOME="${DEP_PATH}/JANA2/install"
 ENV PATH=${JANA_HOME}/bin:${PATH}
+ENV DEPS=$DEP_PATH
 
 LABEL author="xmei@jlab.org"
 LABEL description="A container built upon nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04,\

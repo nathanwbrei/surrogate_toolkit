@@ -31,6 +31,7 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
         exa \
         bat \
         valgrind \
+        xz-utils \
         zlib1g-dev  # zlib for pin or libdwarf
 
     echo "check_certificate = off" >> ~/.wgetrc
