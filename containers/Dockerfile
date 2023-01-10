@@ -42,7 +42,7 @@ RUN git clone -b v2.0.6 http://github.com/JeffersonLab/JANA2 \
 ENV DEPS=/app
 ENV JANA_HOME=/app/JANA2/install
 ENV PATH="$PATH:/app/JANA2/install/bin"
-ENV LD_LIBRARY_PATH="$DEPS/libtorch/lib$DEPS/JANA2/install/plugins:$LD_LIBRARY_PATH"
+ENV LD_LIBRARY_PATH="$DEPS/libtorch/lib:$DEPS/JANA2/install/plugins:$LD_LIBRARY_PATH"
 ENV PIN_ROOT="/app/pin"
 
 RUN apt install -y curl

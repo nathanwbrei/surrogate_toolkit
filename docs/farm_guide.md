@@ -31,7 +31,7 @@ should be successful.
 
 ```bash
 Singularity> mkdir build && cd build
-Singularity> cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPSlibdwarf/installdir" \
+Singularity> cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" -DLIBDWARF_DIR="$DEPS/libdwarf/installdir" \
  -DPIN_ROOT="$DEPS/pin" -DUSE_CUDA=ON..
 Singularity> make -j32 install
 ```
