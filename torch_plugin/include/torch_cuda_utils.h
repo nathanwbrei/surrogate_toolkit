@@ -11,8 +11,8 @@
 namespace phasm {
 
     /**
-     * Ask the node whether it has a CUDA device
-     * @return whether the device has CUDA device or not
+     * Ask the node whether it has a CUDA device.
+     * @return whether the device has CUDA device or not.
      */
     bool has_cuda_device();
 

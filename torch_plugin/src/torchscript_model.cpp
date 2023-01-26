@@ -4,11 +4,21 @@
 
 #include "torchscript_model.h"
 #include "torch_tensor_utils.h"
+#include <cassert>
 
 namespace phasm {
 
 TorchscriptModel::TorchscriptModel(std::string filename) {
-    m_module = torch::jit::load(filename);
+    try {
+        m_module = torch::jit::load(filename);
+    }
+    catch (const c10::Error &e) {
+        std::cerr << "Error loading the model. Abort...\n";
+        // TODO： what if having problem loading the model?
+        assert(false);  // manually exit
+        return;
+    }
+    std::cout << "Loading pytorch pt model at [[" << filename <<"]] succeed.\n\n";
 }
 
 TorchscriptModel::~TorchscriptModel() {
@@ -17,6 +27,9 @@ TorchscriptModel::~TorchscriptModel() {
 void TorchscriptModel::initialize() {
 }
 
+at::Tensor TorchscriptModel::forward(std::vector<torch::jit::IValue> inputs) {
+    return m_module.forward(inputs).toTensor();
+}
 
 bool TorchscriptModel::infer() {
 

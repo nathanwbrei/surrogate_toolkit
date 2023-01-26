@@ -3,7 +3,7 @@
 //
 
 /**
- * This example is trying to load a DNN model (*.pt) originally trained and saved in Python with C++.
+ * This example is trying to load a DNN model (*.pt) originally trained and saved with PyTorch.
  * It is based on the libtorch tutorial at https://pytorch.org/tutorials/advanced/cpp_export.html
  *
  * Usage: ./phasm-example-loading-pt <path/to/lstm-model.pt>
@@ -11,11 +11,15 @@
  * CUDA device is required. The test input tensor is of dimension (1256, 7, 6).
  */
 
+#include <torch/torch.h>
+
 #include "torch_cuda_utils.h"
 #include "torchscript_model.h"
 
 #include <iostream>
 #include <memory>
+
+#define LSTM_MODEL_INPUT_DIM {1256, 7, 6}
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
@@ -37,24 +41,17 @@ int main(int argc, const char *argv[]) {
     torch::Device device(device_str);
 
     std::string pt_name_str = argv[1];
-    try {
-        phasm::TorchscriptModel cuda_model = phasm::TorchscriptModel(pt_name_str);
-    }
-    catch (const c10::Error &e) {
-        std::cerr << "Error loading the model\n";
-        return -1;
-    }
-    std::cout << "Loading gluex-tracking-lstm pytorch pt model.................... succeed\n\n";
+    phasm::TorchscriptModel cuda_model = phasm::TorchscriptModel(pt_name_str);
 
     /** Test feed-forward computation with an input tensor **/
-    //the input must be of type std::vector.	
-//    std::vector<torch::jit::IValue> inputs;
-//    inputs.push_back(torch::ones({1256, 7, 6}, device));  // lstm input dimension
-//
-//    at::Tensor output = cuda_module.forward(inputs).toTensor();
-//    std::cout << "output sizes: " << output.sizes() << std::endl;
-//    std::cout << "output.device().type(): " << output.device().type() << std::endl;
-//    std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
+    //the input must be of type std::vector.
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch::ones(LSTM_MODEL_INPUT_DIM, device));
+
+    at::Tensor output = cuda_model.forward(inputs);
+    std::cout << "Output sizes: " << output.sizes() << std::endl;
+    std::cout << "Output.device().type(): " << output.device().type() << std::endl;
+    std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
 
     return 0;
 }
