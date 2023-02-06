@@ -3,7 +3,7 @@
 //
 
 /**
- * This example is trying to load a DNN model (*.pt) originally trained and saved in Python with C++.
+ * This example is trying to load a DNN model (*.pt) originally trained and saved with PyTorch.
  * It is based on the libtorch tutorial at https://pytorch.org/tutorials/advanced/cpp_export.html
  *
  * Usage: ./phasm-example-loading-pt <path/to/lstm-model.pt>
@@ -11,61 +11,46 @@
  * CUDA device is required. The test input tensor is of dimension (1256, 7, 6).
  */
 
-#include <torch/script.h>
-#include <ATen/cuda/CUDAContext.h>  // for cuda device properties
 #include <torch/torch.h>
+
+#include "torch_cuda_utils.h"
+#include "torchscript_model.h"
 
 #include <iostream>
 #include <memory>
 
-void print_cuda_device_info() {
-    cudaDeviceProp *cuda_prop = at::cuda::getCurrentDeviceProperties();
-    std::cout << "  CUDA device name: " << cuda_prop->name << std::endl;
-    std::cout << "  CUDA compute capacity: "
-              << cuda_prop->major << "." << cuda_prop->minor << std::endl;
-    std::cout << "  LibTorch version: "
-              << TORCH_VERSION_MAJOR << "."
-              << TORCH_VERSION_MINOR << "."
-              << TORCH_VERSION_PATCH << std::endl;
-    std::cout << std::endl;
-}
+#define LSTM_MODEL_INPUT_DIM {1256, 7, 6}
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
-        std::cerr << "usage: phasm-example-loading-pt <path-to-exported-script-module>\n";
+        std::cerr << "Usage: phasm-example-loading-pt <path-to-exported-script-module>\n";
         return -1;
     }
 
-    auto cuda_available = torch::cuda::is_available();
-    if (not cuda_available) {
-        std::cout << "CUDA device is required for this application!" << std::endl;
+    if (not phasm::has_cuda_device) {
+        std::cout << "CUDA device is required for this example!\n Exit..." << std::endl;
         return -1;
     }
 
-    torch::jit::script::Module module;
-    try {
-        // Deserialize the ScriptModule from a file using torch::jit::load().
-        module = torch::jit::load(argv[1]);
-    }
-    catch (const c10::Error &e) {
-        std::cerr << "Error loading the model\n";
-        return -1;
-    }
-    std::cout << "Loading gluex-tracking-lstm pt model.................... succeed\n\n";
+    std::cout << "Run model on CUDA device 0. \n" << std::endl;
+    phasm::get_current_cuda_device_info();
+    phasm::get_libtorch_version();
 
-    /** Test feed-forward computation with an input tensor **/
-    std::cout << "Run model on CUDA device 0." << std::endl;
-    print_cuda_device_info();
+    // set the device string
     auto device_str = torch::kCUDA;
     torch::Device device(device_str);
 
-    //the input must be of type std::vector.	
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(torch::ones({1256, 7, 6}, device));  // lstm input dimension
+    std::string pt_name_str = argv[1];
+    phasm::TorchscriptModel cuda_model = phasm::TorchscriptModel(pt_name_str);
 
-    at::Tensor output = module.forward(inputs).toTensor();
-    std::cout << "output sizes: " << output.sizes() << std::endl;
-    std::cout << "output.device().type(): " << output.device().type() << std::endl;
+    /** Test feed-forward computation with an input tensor **/
+    //the input must be of type std::vector.
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(torch::ones(LSTM_MODEL_INPUT_DIM, device));
+
+    at::Tensor output = cuda_model.forward(inputs);
+    std::cout << "Output sizes: " << output.sizes() << std::endl;
+    std::cout << "Output.device().type(): " << output.device().type() << std::endl;
     std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
 
     return 0;

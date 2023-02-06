@@ -6,6 +6,7 @@ add_library(phasm-torch-plugin SHARED
         src/torch_tensor_utils.cc
         src/feedforward_model.cpp
         src/torchscript_model.cpp
+        src/torch_cuda_utils.cc
         )
 
 set_target_properties(phasm-torch-plugin PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
