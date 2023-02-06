@@ -22,7 +22,7 @@ struct Plugin {
 using PluginGetter = Plugin*();
 
 /// Each plugin is a shared library which is required to provide the following:
-/// extern "C" { std::unique_ptr<Plugin> get_plugin(); }
+/// extern "C" { Plugin* get_plugin(); }
 
 } // namespace phasm
 
