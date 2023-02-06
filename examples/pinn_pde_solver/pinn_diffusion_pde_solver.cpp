@@ -19,7 +19,8 @@ Python code change is ignored in this branch.
 */
 
 #include <torch/torch.h>
-#include <ATen/cuda/CUDAContext.h>  // for cuda device properties
+#include "torch_cuda_utils.h"
+
 #include <math.h>
 #include <iostream>
 
@@ -193,17 +194,6 @@ torch::Tensor get_total_loss(
     return torch::mse_loss(net->forward(X_train), y_train) + get_pde_loss(u, X, device);
 }
 
-void print_cuda_device_info(){
-    cudaDeviceProp *cuda_prop = at::cuda::getCurrentDeviceProperties();
-    std::cout << "  CUDA device name: " << cuda_prop->name << std::endl;
-    std::cout << "  CUDA compute capacity: "
-              << cuda_prop->major << "." << cuda_prop->minor << std::endl;
-    std::cout << "  LibTorch version: "
-              << TORCH_VERSION_MAJOR << "."
-              << TORCH_VERSION_MINOR << "."
-              << TORCH_VERSION_PATCH << std::endl;
-    std::cout << std::endl;
-}
 
 int main() {
 
@@ -213,13 +203,14 @@ int main() {
      * Init NN structure.
      */
     // Device
-    auto cuda_available = torch::cuda::is_available();
-    auto device_str = cuda_available ? torch::kCUDA : torch::kCPU;
+    bool has_gpu = phasm::has_cuda_device();
+    auto device_str = (has_gpu == true) ? torch::kCUDA : torch::kCPU;
     torch::Device device(device_str);
 
-    if (cuda_available) {
+    if (has_gpu) {
         std::cout << "Using CUDA device 0. Training on GPU." << std::endl;
-        print_cuda_device_info();
+        phasm::get_current_cuda_device_info();
+        phasm::get_libtorch_version();
     } else {
         std::cout << "No CUDA device. Training on CPU.\n" << std::endl;
     }
