@@ -1,14 +1,20 @@
 
 find_package(Torch REQUIRED)
 
-add_library(phasm-torch-plugin SHARED
+set(PHASM_TORCH_PLUGIN_SOURCES
         src/torch_plugin_main.cc
         src/torch_tensor_utils.cc
         src/feedforward_model.cpp
         src/torchscript_model.cpp
-        src/torch_cuda_utils.cc
         )
 
+if(${USE_CUDA})
+    list(APPEND PHASM_TORCH_PLUGIN_SOURCES
+            src/torch_cuda_utils.cc
+            )
+endif()
+
+add_library(phasm-torch-plugin SHARED ${PHASM_TORCH_PLUGIN_SOURCES})
 set_target_properties(phasm-torch-plugin PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 # phasm-torch-plugin.so's (install) rpath should include libtorch, so that we don't have to edit our LD_LIBRARY_PATH
 # all the time. We assume that this is neither in the build tree, nor in the system libs. For more details, see
