@@ -11,7 +11,7 @@ endif()
 
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -O0 -g -Wall -Wextra -fno-omit-frame-pointer")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 
 if(NOT CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     # CMake has been explicitly given an install dir, so we use that
@@ -55,4 +55,5 @@ add_subdirectory(torch_plugin)
 add_subdirectory(memtrace)
 #add_subdirectory(memtrace_pin)
 #add_subdirectory(gpu_perf_tester)
+add_subdirectory(mvdt_static)
 
