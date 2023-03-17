@@ -1,7 +1,7 @@
 # Running PHASM on Farm GPU Nodes
 
 ## Within a singularity container
-[A singularity definition file](../containers/libtorch1-13_cuda11-7_ubuntu22-04/cu-dev.def) is provided to build
+[A singularity definition file](../containers/libtorch_cuda/cu-dev.def) is provided to build
 a container running PHASM codebase on the farm GPUs.
 
 Clone the PHASM repo to the farm other than your `/home`.

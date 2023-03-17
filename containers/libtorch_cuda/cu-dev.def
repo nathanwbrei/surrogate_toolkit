@@ -19,6 +19,7 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
         software-properties-common \
         wget \
         git \
+        cmake \
         build-essential \
         libtool \
         autoconf \
@@ -36,18 +37,11 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
     echo "check_certificate = off" >> ~/.wgetrc
 
-    # installing latest cmake, easy to trigger error
-    apt-get -y install libssl3  # version must >1.1.1
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc > kitware.key
-    apt-key add kitware.key # depreciated command apt-key here
-    apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ jammy main'
-    apt-get -y install cmake
-
     # install libtorch
     # root dir
     mkdir deps
-    cd deps
-    wget https://download.pytorch.org/libtorch/cu117/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcu117.zip
+    cd /deps
+    wget https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip
     unzip libtorch-*.zip
     echo "libtorch version: " `cat /deps/libtorch/build-version`
 
@@ -113,7 +107,6 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
     MyLabel dev
 
 %help
-    A container built upon dokcer://nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
-    which has cudnn8.6, cuda11.8, python3.10, gcc11.3, ldd2.35, make4.3 etc preinstalled.
-    Then this definition file installed cmake3.25, and libtorch1.13+cu11.7, pin, dwarf etc at /deps.
+    A container built upon dokcer://nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04.
+    Then this definition file installed libtorch, pin, dwarf, JANA etc at /deps.
     The built container is about 6.5 GB.
