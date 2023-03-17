@@ -1,4 +1,4 @@
-# Using self-built singularity containers on the farm
+# Using self-built singularity containers on `ifarm`
 
 By default, the singularity cache is at `${HOME}/.singularity/cache`. This must be
 reset on ifarm due to limited `${HOME}` space. Update your `SINGULARITY_CACHEDIR`
@@ -44,7 +44,15 @@ As ifarm does not support docker, to use GPU, eventually a singularity container
 singularity pull <singularity_container_name>.sif docker://<docker_hub_container_repo_and_tag>
 ```
 
-When pulling on ifarm, there might be `PROTOCOL_ERROR` due to slow network. Retry and it will succeed.
+When pulling to `ifarm`, there might be `PROTOCOL_ERROR` due to slow network. Retry and it will succeed.
+
+Note that when you are onsite, you need `docker login` with url given before `docker push`,
+otherwise you may get authorization problem because by default, `docker push` leads to some other url.
+
+```bash
+docker login -u [docker_hub_username] https://index.docker.io/v2/  # specify the docker hub url
+```
+
 
 ### References
 - Official guide on building a singularity container:

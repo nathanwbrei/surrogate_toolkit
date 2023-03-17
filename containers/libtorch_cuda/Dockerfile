@@ -14,6 +14,8 @@ ARG FROM_IMAGE_NAME=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 FROM ${FROM_IMAGE_NAME}
 
+USER root
+
 # Install basic development environment
 RUN apt update -y && \
     apt -y install --no-install-recommends gdb valgrind cmake wget curl unzip vim libasan6 less exa bat git xz-utils zlib1g-dev && \
@@ -38,7 +40,7 @@ ENV LD_LIBRARY_PATH=${LIBTORCH_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
 
 # Install pin
 ADD ${PIN_URL} pin.tar.gz
-RUN tar -xf pin.tar.gz &&  \
+RUN tar --no-same-owner -xf pin.tar.gz &&  \
     rm pin.tar.gz && \
     mv pin-3.22-98547-g7a303a835-gcc-linux pin
 ENV PIN_ROOT=$DEP_PATH/pin
