@@ -109,4 +109,7 @@ Idle> run/beamOn 1
 Idle> exit
 ```
 
+#### References
+- [Ifarm spack admin how-to](https://wiki.jlab.org/epsciwiki/index.php/SPACK_Mirror_on_JLab_CUE#Setting_up_a_new_platform)
+- [Ifarm phasm-g4 guide](https://wiki.jlab.org/epsciwiki/index.php/HOWTO_build_and_run_PHASM_on_Geant4_examples)
 
