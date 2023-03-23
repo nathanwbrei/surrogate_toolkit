@@ -14,13 +14,16 @@ ARG FROM_IMAGE_NAME=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 FROM ${FROM_IMAGE_NAME}
 
+USER root
+
 # Install basic development environment
 RUN apt update -y && \
     apt -y install --no-install-recommends gdb valgrind cmake wget curl unzip vim libasan6 less exa bat git xz-utils zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
 ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.1%2Bcpu.zip"
-ARG TORCH_CUDA_URL="https://download.pytorch.org/libtorch/cu117/libtorch-cxx11-abi-shared-with-deps-1.13.0%2Bcu117.zip"
+# last updated on Mar/18/2023
+ARG TORCH_CUDA_URL="https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip"
 # TORCH_URL can switch between libtorch_cuda and libtorch_cpu
 ARG TORCH_URL=$TORCH_CUDA_URL
 ARG PIN_URL="https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz"
@@ -37,7 +40,7 @@ ENV LD_LIBRARY_PATH=${LIBTORCH_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
 
 # Install pin
 ADD ${PIN_URL} pin.tar.gz
-RUN tar -xf pin.tar.gz &&  \
+RUN tar --no-same-owner -xf pin.tar.gz &&  \
     rm pin.tar.gz && \
     mv pin-3.22-98547-g7a303a835-gcc-linux pin
 ENV PIN_ROOT=$DEP_PATH/pin
@@ -72,7 +75,7 @@ ENV DEPS=$DEP_PATH
 
 LABEL author="xmei@jlab.org"
 LABEL description="A container built upon nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04,\
-Then this container installed cmake3.23, and libtorch1.13+cu11.7, pin, dwarf etc at /dep.\
+Then this container installed cmake3.23, and libtorch2.0+cu11.8, pin, dwarf etc at /dep.\
 The built docker container is about 15GB."
 
 WORKDIR /app
