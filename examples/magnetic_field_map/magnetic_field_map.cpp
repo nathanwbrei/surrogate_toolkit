@@ -18,7 +18,7 @@ int main() {
 
     phasm::Surrogate surrogate = SurrogateBuilder()
             .set_model("phasm-torch-plugin", "")
-            .set_callmode(CallMode::CaptureAndDump)
+            .set_callmode(CallMode::DumpTrainingData)
             .local_primitive<double>("x", Direction::IN)
             .local_primitive<double>("y", Direction::IN)
             .local_primitive<double>("z", Direction::IN)

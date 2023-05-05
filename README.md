@@ -41,7 +41,7 @@ cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" \
 export LD_LIBRARY_PATH=$DEPS/libtorch/lib:$LD_LIBRARY_PATH
 
 # Run the PDE solver example and dump captured data to CSV
-PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
+PHASM_CALL_MODE=DumpTrainingData install/bin/phasm-example-pdesolver
 ```
 
 OR if you would prefer to do it manually, follow the steps below
@@ -62,7 +62,7 @@ make install
 export LD_LIBRARY_PATH=$DEPS/libtorch/lib:$LD_LIBRARY_PATH
 
 # Run the PDE solver example and dump captured data to CSV
-PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
+PHASM_CALL_MODE=DumpTrainingData install/bin/phasm-example-pdesolver
 
 # Run vacuum tool against the example target program
 install/bin/phasm-memtrace-pin install/bin/phasm-example-memtrace

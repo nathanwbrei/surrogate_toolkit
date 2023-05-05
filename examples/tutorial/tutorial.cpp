@@ -117,7 +117,7 @@ double f_wrapper(double x, double y, double z) {
 
 TEST_CASE("Call f_wrapper") {
 
-    f_surrogate.set_callmode(phasm::CallMode::CaptureAndDump);
+    f_surrogate.set_callmode(phasm::CallMode::DumpTrainingData);
 
     double result = f_wrapper(1,2,3);
     std::cout << "f(1,2,3) = " << f(1,2,3) << "; f_wrapper(1,2,3) = " << result << std::endl;
@@ -129,7 +129,7 @@ TEST_CASE("Call f_wrapper") {
     std::cout << "f(4,2,3) = " << f(4,2,3) << "; f_wrapper(4,2,3) = " << result << std::endl;
 
     // The results should be identical because PHASM will redirect calls to f_wrapper back to f.
-    // Meanwhile, because the call mode is CaptureAndDump, PHASM will capture the inputs and outputs for each call.
+    // Meanwhile, because the call mode is DumpTrainingData, PHASM will capture the inputs and outputs for each call.
     // When the program exits, PHASM will dump the captures to CSV.
 }
 
