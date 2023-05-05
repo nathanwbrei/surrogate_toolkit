@@ -9,6 +9,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
 # LLVM_DIR must be set to the prefix of /share/llvm/cmake via commandline
 find_package(LLVM REQUIRED CONFIG HINTS ${LLVM_DIR})
+message(STATUS "LLVM_DIR=" ${LLVM_DIR})
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
@@ -51,9 +52,14 @@ target_include_directories(phasm-mvdt-static
         INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
+target_link_directories(phasm-mvdt-static
+        PUBLIC
+        ${LLVM_LIBRARY_DIRS}
+        )
+
 target_link_libraries(phasm-mvdt-static
         PRIVATE
-        clang-cpp
+        clang
         )
 
 install(TARGETS phasm-mvdt-static DESTINATION lib)
