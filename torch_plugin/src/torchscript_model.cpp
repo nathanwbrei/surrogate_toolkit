@@ -33,23 +33,17 @@ at::Tensor TorchscriptModel::forward(std::vector<torch::jit::IValue> inputs) {
 
 bool TorchscriptModel::infer() {
 
-    std::vector<torch::Tensor> input_tensors;
-
+    std::vector<torch::jit::IValue> inputs;
     for (const auto &input_model_var: m_inputs) {
-        input_tensors.push_back(to_torch_tensor(input_model_var->inference_input));
+        inputs.push_back(to_torch_tensor(input_model_var->inference_input));
     }
 
-    // This all assumes a single Tensor of floats as input and output
-    torch::Tensor input = flatten_and_join(input_tensors);
-    std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(input);
     auto output = m_module.forward(inputs).toTensor();
-
     std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
 
     size_t i = 0;
     for (const auto &output_model_var: m_outputs) {
-        output_model_var->inference_output = to_phasm_tensor(input_tensors[i++]);
+        output_model_var->inference_output = to_phasm_tensor(output_tensors[i++]);
     }
     return true;
 }
