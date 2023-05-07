@@ -27,8 +27,8 @@ TorchscriptModel::~TorchscriptModel() {
 void TorchscriptModel::initialize() {
 }
 
-at::Tensor TorchscriptModel::forward(std::vector<torch::jit::IValue> inputs) {
-    return m_module.forward(inputs).toTensor();
+torch::jit::script::Module& TorchscriptModel::get_module() {
+    return m_module;
 }
 
 bool TorchscriptModel::infer() {

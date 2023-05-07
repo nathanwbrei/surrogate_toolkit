@@ -31,8 +31,7 @@ public:
 
     bool infer() override;
 
-    at::Tensor forward(std::vector<torch::jit::IValue> inputs);
-
+    torch::jit::script::Module& get_module();
 };
 
 } // namespace phasm

@@ -28,8 +28,8 @@ int main(int argc, const char *argv[]) {
     }
 
     if (not phasm::has_cuda_device) {
-        std::cout << "CUDA device is required for this example!\n Exit..." << std::endl;
-        return -1;
+        std::cerr << "PHASM: FATAL ERROR: CUDA device is required for this example!\n Exit..." << std::endl;
+        return 1;
     }
 
     std::cout << "Run model on CUDA device 0. \n" << std::endl;
@@ -48,7 +48,7 @@ int main(int argc, const char *argv[]) {
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(torch::ones(LSTM_MODEL_INPUT_DIM, device));
 
-    at::Tensor output = cuda_model.forward(inputs);
+    at::Tensor output = cuda_model.get_module().forward(inputs).toTensor();
     std::cout << "Output sizes: " << output.sizes() << std::endl;
     std::cout << "Output.device().type(): " << output.device().type() << std::endl;
     std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
