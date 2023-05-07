@@ -38,21 +38,49 @@ bool TorchscriptModel::infer() {
         inputs.push_back(to_torch_tensor(input_model_var->inference_input));
     }
 
-    auto output = m_module.forward(inputs).toTensor();
-    std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
 
-    size_t i = 0;
-    for (const auto &output_model_var: m_outputs) {
-        output_model_var->inference_output = to_phasm_tensor(output_tensors[i++]);
+    auto output = m_module.forward(inputs);
+    if (output.isTensor()) {
+
+        if (m_outputs.size() == 1) {
+            m_outputs[0]->inference_output = to_phasm_tensor(output.toTensor());
+        }
+        else {
+            std::cerr << "PHASM: FATAL ERROR: Torchscript model outputs a single tensor when multiple expected" << std::endl;
+            std::cerr << "  Surrogate expects " << m_outputs.size() << std::endl;
+            std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+            exit(1);
+        }
     }
+    else if (output.isTuple()) {
+        auto tuple = output.toTuple();
+        if (tuple->size() != m_outputs.size()) {
+            std::cerr << "PHASM: FATAL ERROR: Torchscript model output tuple size mismatch" << std::endl;
+            std::cerr << "  Surrogate expects " << m_outputs.size() << std::endl;
+            std::cerr << "  PT file provides " << tuple->size() << std::endl;
+            std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+            exit(1);
+        }
+        size_t i = 0;
+        for (const auto &output_model_var: m_outputs) {
+            output_model_var->inference_output = to_phasm_tensor(tuple->elements()[i++].toTensor());
+        }
+    }
+    else {
+        // TODO: We could probably accept the case of output.isTensorList
+        std::cerr << "PHASM: FATAL ERROR: Torchscript model has invalid output type for forward()" << std::endl;
+        std::cerr << "  The model's forward() method must return either a tensor or a tuple of tensors." << std::endl;
+        std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+        exit(1);
+    }
+
+    // TODO: Figure out how to extract UQ info from model so that we can return false when appropriate
     return true;
 }
 
 void TorchscriptModel::train_from_captures() {
 
-    std::cout
-            << "Training a TorchScript model from within C++ is temporarily disabled. Please train from Python for now"
-            << std::endl;
+    std::cerr << "PHASM: WARNING: Training a TorchScript model from C++ is temporarily disabled. Please train from Python for now" << std::endl;
     // Temporarily disable training the torchscript module
     /*
     Instantiate an SGD optimization algorithm to update our Net's parameters.
