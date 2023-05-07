@@ -4,7 +4,6 @@
 
 #include "torchscript_model.h"
 #include "torch_tensor_utils.h"
-#include <cassert>
 
 namespace phasm {
 
@@ -13,12 +12,13 @@ TorchscriptModel::TorchscriptModel(std::string filename) {
         m_module = torch::jit::load(filename);
     }
     catch (const c10::Error &e) {
-        std::cerr << "Error loading the model. Abort...\n";
-        // TODO： what if having problem loading the model?
-        assert(false);  // manually exit
-        return;
+        std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
+        std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+        std::cerr << "  Exception contains: " << std::endl;
+        std::cerr << e.what() << std::endl;
+        exit(1);
     }
-    std::cout << "Loading pytorch pt model at [[" << filename <<"]] succeed.\n\n";
+    std::cerr << "PHASM: Loaded TorchScript model '" << filename << "'" << std::endl;
 }
 
 TorchscriptModel::~TorchscriptModel() {
@@ -80,7 +80,8 @@ bool TorchscriptModel::infer() {
 
 void TorchscriptModel::train_from_captures() {
 
-    std::cerr << "PHASM: WARNING: Training a TorchScript model from C++ is temporarily disabled. Please train from Python for now" << std::endl;
+    std::cerr << "PHASM: FATAL ERROR: Training a TorchScript model from C++ is temporarily disabled. Please train from Python for now" << std::endl;
+    exit(1);
     // Temporarily disable training the torchscript module
     /*
     Instantiate an SGD optimization algorithm to update our Net's parameters.
