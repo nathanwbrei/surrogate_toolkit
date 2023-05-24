@@ -1,12 +1,12 @@
 
 # Parallel Hardware viA Surrogate Models
 
-Clone the repo and go to the directory for it
-```bash
-git clone https://github.com/nathanwbrei/phasm
-cd phasm
-```
+## Resources
+- Test results tracking: https://docs.google.com/spreadsheets/d/19iVKLKfVFlASZSgHDrYQx6XqakzqsAp0i52GIF5nEWs
+- Docker images (libtorchx.x.x_cpu and libtorchx.x.x_cuda): https://hub.docker.com/repository/docker/xxmei/phasm/general
+- Singularity containers on ifarm: `/work/epsci/shared_pkg/phasm-gpu_xxx-xx.sif`
 
+## Build & Run Instructions
 ### Build and run PHASM inside a container
 
 #### CUDA containers (libtorch_cuda)
@@ -67,5 +67,3 @@ PHASM_CALL_MODE=CaptureAndDump install/bin/phasm-example-pdesolver
 # Run vacuum tool against the example target program
 install/bin/phasm-memtrace-pin install/bin/phasm-example-memtrace
 ```
-
-A Google sheet to track the testing results: https://docs.google.com/spreadsheets/d/19iVKLKfVFlASZSgHDrYQx6XqakzqsAp0i52GIF5nEWs

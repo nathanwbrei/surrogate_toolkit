@@ -21,7 +21,8 @@ RUN apt update -y && \
     apt -y install --no-install-recommends gdb valgrind cmake wget curl unzip vim libasan6 less exa bat git xz-utils zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
-ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.13.1%2Bcpu.zip"
+# Updated on May/24/2023
+ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip"
 # last updated on Mar/18/2023
 ARG TORCH_CUDA_URL="https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip"
 # TORCH_URL can switch between libtorch_cuda and libtorch_cpu
