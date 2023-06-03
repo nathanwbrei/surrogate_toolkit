@@ -1,17 +1,22 @@
 
 #include "plugin.h"
-#include <iostream>
 #include <memory>
 #include "feedforward_model.h"
+#include "torchscript_model.h"
 
 struct TorchPlugin : public phasm::Plugin {
 
-    std::string get_name() {
+    std::string get_name() override {
         return "phasm-torch-plugin";
     }
 
-    std::shared_ptr<phasm::Model> make_model(std::string /*model_name*/) override {
-        return std::make_shared<phasm::FeedForwardModel>();
+    std::shared_ptr<phasm::Model> make_model(std::string file_name) override {
+        if (file_name.empty()) {
+            return std::make_shared<phasm::FeedForwardModel>();
+        }
+        else {
+            return std::make_shared<phasm::TorchscriptModel>(file_name);
+        }
     }
 };
 

@@ -33,7 +33,7 @@ install(TARGETS phasm-torch-plugin DESTINATION plugins)
 
 
 set(PHASM_TORCH_PLUGIN_TEST_SOURCES
-        test/pytorch_model_tests.cpp
+        test/torchscript_model_tests.cpp
         test/pytorch_tests.cpp
     )
 

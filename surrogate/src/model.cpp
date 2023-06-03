@@ -5,6 +5,7 @@
 #include "model.h"
 #include "surrogate.h"
 #include <fstream>
+#include <iostream>
 
 namespace phasm {
 
@@ -33,15 +34,21 @@ std::shared_ptr<ModelVariable> Model::get_model_var(std::string param_name) {
 void Model::finalize(CallMode callmode) {
 
     switch (callmode) {
-        case CallMode::CaptureAndTrain:
+        case CallMode::TrainModel:
             train_from_captures();
             break;
-        case CallMode::CaptureAndDump: {
-            std::ofstream outfile("captures.csv");
+        case CallMode::DumpTrainingData: {
+            std::ofstream outfile("training_captures.csv");
             dump_captures_to_csv(outfile);
             break;
         }
-        case CallMode::CaptureAndSummarize:
+        case CallMode::DumpValidationData: {
+            std::ofstream outfile("validation_captures.csv");
+            dump_captures_to_csv(outfile);
+            break;
+        }
+        case CallMode::DumpInputSummary:
+            std::cout << "PHASM: Dumping input summary (Note: this is a no-op for now)" << std::endl;
         default:
             break;
     }

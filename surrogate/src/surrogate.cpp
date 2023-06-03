@@ -59,12 +59,16 @@ void Surrogate::call() {
         case CallMode::UseOriginal:
             call_original();
             break;
-        case CallMode::CaptureAndTrain:
-        case CallMode::CaptureAndDump:
+        case CallMode::TrainModel:
+        case CallMode::DumpTrainingData:
             call_original_and_capture();
             break;
-        case CallMode::CaptureAndSummarize:
+        case CallMode::DumpValidationData:
+            call_model_and_capture();
+            break;
+        case CallMode::DumpInputSummary:
             capture_input_range();
+            call_original();
             break;
         case CallMode::NotSet:
         default:
@@ -85,6 +89,19 @@ void Surrogate::call_original_and_capture() {
     }
     m_original_function();
     for (auto &output: m_callsite_vars) {
+        output->captureAllTrainingOutputs();
+    }
+    m_model->m_captured_rows++;
+}
+
+void Surrogate::call_model_and_capture() {
+    for (auto &input: m_callsite_vars) {
+        input->captureAllTrainingInputs();
+        input->captureAllInferenceInputs();
+    }
+    m_original_function();
+    for (auto &output: m_callsite_vars) {
+        output->publishAllInferenceOutputs();
         output->captureAllTrainingOutputs();
     }
     m_model->m_captured_rows++;
@@ -118,11 +135,13 @@ void Surrogate::call_model() {
 CallMode get_call_mode_from_envvar() {
     char *callmode_str = std::getenv("PHASM_CALL_MODE");
     if (callmode_str == nullptr) return CallMode::NotSet;
+    if (strcmp(callmode_str, "NotSet") == 0) return CallMode::NotSet;
     if (strcmp(callmode_str, "UseModel") == 0) return CallMode::UseModel;
     if (strcmp(callmode_str, "UseOriginal") == 0) return CallMode::UseOriginal;
-    if (strcmp(callmode_str, "CaptureAndTrain") == 0) return CallMode::CaptureAndTrain;
-    if (strcmp(callmode_str, "CaptureAndDump") == 0) return CallMode::CaptureAndDump;
-    if (strcmp(callmode_str, "CaptureAndSummarize") == 0) return CallMode::CaptureAndSummarize;
+    if (strcmp(callmode_str, "TrainModel") == 0) return CallMode::TrainModel;
+    if (strcmp(callmode_str, "DumpTrainingData") == 0) return CallMode::DumpTrainingData;
+    if (strcmp(callmode_str, "DumpValidationData") == 0) return CallMode::DumpValidationData;
+    if (strcmp(callmode_str, "DumpInputSummary") == 0) return CallMode::DumpInputSummary;
     return CallMode::NotSet;
 }
 
@@ -132,17 +151,15 @@ void print_help_screen() {
     std::cout << "PHASM doesn't know what you want to do." << std::endl;
     std::cout << "Please specify a call mode using the PHASM_CALL_MODE environment variable." << std::endl;
     std::cout << "Valid options are:  " << std::endl;
-    std::cout << "    UseModel             Use the surrogate model with its current training parameters" << std::endl;
-    std::cout << "    UseOriginal          Do NOT use the surrogate model" << std::endl;
-    std::cout
-            << "    CaptureAndTrain      Call the original function, capture all inputs and outputs, and use them to train the model"
-            << std::endl;
-    std::cout
-            << "    CaptureAndDump       Call the original function, capture all inputs and outputs, and dump them to CSV"
-            << std::endl;
-    std::cout
-            << "    CaptureAndSummarize  Call the original function, track the ranges of all inputs and outputs, and dump them to file"
-            << std::endl;
+    std::cout << "    UseModel                   Call the surrogate model" << std::endl;
+    std::cout << "    UseOriginal                Call the original function instead" << std::endl;
+    std::cout << "    TrainModel                 Call the original function, capture all inputs and outputs, and use them to train the model"
+              << std::endl;
+    std::cout << "    DumpTrainingData           Call the original function, capture all inputs and outputs, and dump them to CSV"
+              << std::endl;
+    std::cout << "    DumpValidationData         Call the surrogate model, capture all inputs and outputs, and dump them to CSV"
+              << std::endl;
+    std::cout << "    DumpInputSummary           Dump information about the ranges for each of the model inputs" << std::endl;
     std::cout << std::endl;
 }
 

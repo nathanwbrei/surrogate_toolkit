@@ -4,7 +4,6 @@
 
 #include "torchscript_model.h"
 #include "torch_tensor_utils.h"
-#include <cassert>
 
 namespace phasm {
 
@@ -13,12 +12,13 @@ TorchscriptModel::TorchscriptModel(std::string filename) {
         m_module = torch::jit::load(filename);
     }
     catch (const c10::Error &e) {
-        std::cerr << "Error loading the model. Abort...\n";
-        // TODO： what if having problem loading the model?
-        assert(false);  // manually exit
-        return;
+        std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
+        std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+        std::cerr << "  Exception contains: " << std::endl;
+        std::cerr << e.what() << std::endl;
+        exit(1);
     }
-    std::cout << "Loading pytorch pt model at [[" << filename <<"]] succeed.\n\n";
+    std::cerr << "PHASM: Loaded TorchScript model '" << filename << "'" << std::endl;
 }
 
 TorchscriptModel::~TorchscriptModel() {
@@ -27,38 +27,61 @@ TorchscriptModel::~TorchscriptModel() {
 void TorchscriptModel::initialize() {
 }
 
-at::Tensor TorchscriptModel::forward(std::vector<torch::jit::IValue> inputs) {
-    return m_module.forward(inputs).toTensor();
+torch::jit::script::Module& TorchscriptModel::get_module() {
+    return m_module;
 }
 
 bool TorchscriptModel::infer() {
 
-    std::vector<torch::Tensor> input_tensors;
-
-    for (const auto &input_model_var: m_inputs) {
-        input_tensors.push_back(to_torch_tensor(input_model_var->inference_input));
-    }
-
-    // This all assumes a single Tensor of floats as input and output
-    torch::Tensor input = flatten_and_join(input_tensors);
     std::vector<torch::jit::IValue> inputs;
-    inputs.push_back(input);
-    auto output = m_module.forward(inputs).toTensor();
-
-    std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
-
-    size_t i = 0;
-    for (const auto &output_model_var: m_outputs) {
-        output_model_var->inference_output = to_phasm_tensor(input_tensors[i++]);
+    for (const auto &input_model_var: m_inputs) {
+        inputs.push_back(to_torch_tensor(input_model_var->inference_input));
     }
+
+
+    auto output = m_module.forward(inputs);
+    if (output.isTensor()) {
+
+        if (m_outputs.size() == 1) {
+            m_outputs[0]->inference_output = to_phasm_tensor(output.toTensor());
+        }
+        else {
+            std::cerr << "PHASM: FATAL ERROR: Torchscript model outputs a single tensor when multiple expected" << std::endl;
+            std::cerr << "  Surrogate expects " << m_outputs.size() << std::endl;
+            std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+            exit(1);
+        }
+    }
+    else if (output.isTuple()) {
+        auto tuple = output.toTuple();
+        if (tuple->size() != m_outputs.size()) {
+            std::cerr << "PHASM: FATAL ERROR: Torchscript model output tuple size mismatch" << std::endl;
+            std::cerr << "  Surrogate expects " << m_outputs.size() << std::endl;
+            std::cerr << "  PT file provides " << tuple->size() << std::endl;
+            std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+            exit(1);
+        }
+        size_t i = 0;
+        for (const auto &output_model_var: m_outputs) {
+            output_model_var->inference_output = to_phasm_tensor(tuple->elements()[i++].toTensor());
+        }
+    }
+    else {
+        // TODO: We could probably accept the case of output.isTensorList
+        std::cerr << "PHASM: FATAL ERROR: Torchscript model has invalid output type for forward()" << std::endl;
+        std::cerr << "  The model's forward() method must return either a tensor or a tuple of tensors." << std::endl;
+        std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
+        exit(1);
+    }
+
+    // TODO: Figure out how to extract UQ info from model so that we can return false when appropriate
     return true;
 }
 
 void TorchscriptModel::train_from_captures() {
 
-    std::cout
-            << "Training a TorchScript model from within C++ is temporarily disabled. Please train from Python for now"
-            << std::endl;
+    std::cerr << "PHASM: FATAL ERROR: Training a TorchScript model from C++ is temporarily disabled. Please train from Python for now" << std::endl;
+    exit(1);
     // Temporarily disable training the torchscript module
     /*
     Instantiate an SGD optimization algorithm to update our Net's parameters.

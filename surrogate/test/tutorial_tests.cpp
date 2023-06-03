@@ -15,7 +15,7 @@
 using namespace phasm;
 static Surrogate s_surrogate = SurrogateBuilder()
         .set_model("phasm-torch-plugin", "")
-        .set_callmode(phasm::CallMode::CaptureAndDump)
+        .set_callmode(phasm::CallMode::DumpTrainingData)
         .local_primitive<double>("x", IN)
         .local_primitive<double>("y", IN)
         .local_primitive<double>("z", IN)

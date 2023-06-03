@@ -13,7 +13,7 @@ namespace phasm {
 
 class Model;
 enum class CallMode {
-    NotSet, UseOriginal, UseModel, CaptureAndTrain, CaptureAndDump, CaptureAndSummarize
+    NotSet, UseOriginal, UseModel, DumpTrainingData, DumpValidationData, TrainModel, DumpInputSummary
 };
 
 class Surrogate {
@@ -44,10 +44,11 @@ public:
     inline Surrogate& bind_original_function(std::function<void(void)> f) { m_original_function = std::move(f); return *this;};
 
     void call();
+    void call_model();
     void call_original();
     void call_original_and_capture();
+    void call_model_and_capture();
     void capture_input_range();
-    void call_model();
 
     // ------------------------------------------------------------------------
     // Configuration: These are meant to be called by the SurrogateBuilder
