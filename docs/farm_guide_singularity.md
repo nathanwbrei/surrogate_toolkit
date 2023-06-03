@@ -4,7 +4,7 @@
 [A singularity definition file](../containers/libtorch_cuda/cu-dev.def) is provided to build
 a container running PHASM codebase on the farm GPUs.
 
-Clone the PHASM repo to the farm other than your `/home`.
+Clone the PHASM repo to the farm **OTHER THAN** your home directory.
 
 ### 1. Load the singularity module
 
@@ -113,3 +113,5 @@ Idle> exit
 - [Ifarm spack admin how-to](https://wiki.jlab.org/epsciwiki/index.php/SPACK_Mirror_on_JLab_CUE#Setting_up_a_new_platform)
 - [Ifarm phasm-g4 guide](https://wiki.jlab.org/epsciwiki/index.php/HOWTO_build_and_run_PHASM_on_Geant4_examples)
 
+## Bare-Metal
+[This](ifarm_guide_bare_metal.md) is strongly not advised but could be an reference for how to build containers.

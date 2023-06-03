@@ -9,8 +9,8 @@ RUN apt update -y \
  && apt install -y gdb valgrind cmake wget unzip vim libasan6 less exa bat git zlib1g-dev
 
 # Install libtorch
-# This is still a cpu-only libtorch
-ADD "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip" libtorch.zip
+# This is still a cpu-only libtorch. Url updated on May 24 2023
+ADD "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip" libtorch.zip
 RUN unzip libtorch.zip
 
 # Install libdwarf
