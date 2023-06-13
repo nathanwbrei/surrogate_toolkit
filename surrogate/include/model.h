@@ -21,6 +21,7 @@ class Model {
 protected:
     std::vector<std::shared_ptr<ModelVariable>> m_model_vars;
     size_t m_captured_rows = 0;
+    bool m_combine_tensors = true;
 
     // The following are just for convenience
     std::vector<std::shared_ptr<ModelVariable>> m_inputs;
@@ -30,6 +31,9 @@ protected:
 public:
     Model() = default;
     virtual ~Model() = default; // We want to be able to inherit from this
+
+    void enable_tensor_combining(bool enabled) { m_combine_tensors = enabled; }
+
 
     /// Surrogate calls set_model_vars() for us before calling initialize(). This way,
     /// the model can configure itself to adjust to the input and output sizes.
