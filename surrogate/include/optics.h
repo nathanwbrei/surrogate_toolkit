@@ -171,7 +171,9 @@ public:
 
     void from(tensor source, T* dest) override {
         if (source.get_length() != m_length) {
-            throw std::runtime_error("TensorIso::from: Tensor has wrong length");
+            std::string msg = "TensorIso::from: Tensor has wrong length. Destination fits " + std::to_string(m_length)
+                    + " but provided a tensor with length " + std::to_string(source.get_length());
+            throw std::runtime_error(msg);
         }
         switch (source.get_dtype()) {
             // We could easily templatize this, but I'm concerned about how many levels of templates the Optics
