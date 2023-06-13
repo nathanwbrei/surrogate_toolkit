@@ -1,27 +1,39 @@
 import torch
 import numpy as np
 import pandas as pd
+import sys
 from torch_mlp import TorchMLP
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+
+import matplotlib
+# This weirdness lets us generate a plot when we don't have a GUI (e.g. in containers and ssh hosts)
+try:
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    havedisplay = True
+except:
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    havedisplay = False
+
 
 plt.rcParams.update({'font.size':20})
 
-
-print("Load csv-data...")
-
-df = pd.read_csv('captures.csv')
+training_data_filename = "training_captures.csv"
+if len(sys.argv > 1):
+    training_data_filename = sys.argv[1]
+print("Loading training data from '" + training_data_filename + "'")
+df = pd.read_csv(training_data_filename)
 
 features = df[['x',' y',' z']].values
 targets = df[[' Bx',' By',' Bz']].values
-
 X_train, X_test, Y_train, Y_test = train_test_split(features,targets,test_size=0.1)
 
-print("...done!")
+print("...done")
 print(" ")
 
-
-print("Set up MLP...")
+print("Setting up MLP...")
 
 # Define a model config:
 model_cfg = {
@@ -40,10 +52,10 @@ model_cfg = {
 
 mfield_mlp = TorchMLP(model_cfg,"cpu")
 
-print("...done!")
+print("...done")
 print(" ")
 
-print("Train MLP...")
+print("Training MLP...")
 
 
 loss_dict = mfield_mlp.fit(
@@ -53,10 +65,9 @@ loss_dict = mfield_mlp.fit(
     y_test=torch.as_tensor(Y_test,dtype=torch.float32)
 )
 
-print("...done!")
+print("...done")
 print(" ")
-
-print("Check model performance...")
+print("Checking model performance...")
 
 # Check the training history:
 
@@ -94,18 +105,17 @@ with torch.no_grad():
 
 
 plt.show()
+plt.savefig('model_performance.png')
 
-print("...done!")
+print("...done")
 print(" ")
 
-print("Store trained model...")
+print("Storing trained model...")
 
 scripted_model =  torch.jit.script(mfield_mlp.model)
 scripted_model.save('gluex_mfield_mlp.pt')
 
-#torch.save(scripted_model,'gluex_mfield_mlp.pt')
-
-print("...done!")
+print("...done")
 print(" ")
 
 
