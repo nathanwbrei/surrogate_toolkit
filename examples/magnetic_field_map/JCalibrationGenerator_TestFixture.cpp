@@ -14,7 +14,7 @@ JCalibration_TestFixture& JCalibrationGenerator_TestFixture::GetPrototype() {
 }
 
 const char* JCalibrationGenerator_TestFixture::Description() {
-    return "This lets you write test cases without having to pull in a heavyweight calibration database";
+    return "";
 }
 
 double JCalibrationGenerator_TestFixture::CheckOpenable(std::string, int32_t, std::string) {
