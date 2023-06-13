@@ -50,7 +50,8 @@ bool TorchscriptModel::infer() {
 
         size_t i = 0;
         for (const auto &output_model_var: m_outputs) {
-            output_model_var->inference_output = to_phasm_tensor(input_tensors[i++]);
+            output_model_var->inference_output = to_phasm_tensor(output_tensors[i++]);
+            std::cout << "PHASM: TorchscriptModel: Writing back " << output_model_var->name << ": size=" << output_model_var->shape() << std::endl;
         }
     }
     else {
