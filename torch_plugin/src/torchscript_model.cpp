@@ -25,6 +25,22 @@ TorchscriptModel::~TorchscriptModel() {
 }
 
 void TorchscriptModel::initialize() {
+    // Compute flattened input and output dimensions from shapes
+    for (auto input: this->m_inputs) {
+        int64_t n_elems = 1;
+        for (int64_t len : input->shape()) {
+            n_elems *= len;
+        }
+    }
+    for (auto output: this->m_outputs) {
+        int64_t n_elems = 1;
+        std::vector<int64_t> shape = output->shape();
+        m_output_shapes.push_back(shape);
+        for (int64_t len : shape) {
+            n_elems *= len;
+        }
+        m_output_lengths.push_back(n_elems);
+    }
 }
 
 torch::jit::script::Module& TorchscriptModel::get_module() {
@@ -48,10 +64,10 @@ bool TorchscriptModel::infer() {
 
         std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
 
+        assert(output_tensors.size() == m_outputs.size());
         size_t i = 0;
         for (const auto &output_model_var: m_outputs) {
             output_model_var->inference_output = to_phasm_tensor(output_tensors[i++]);
-            std::cout << "PHASM: TorchscriptModel: Writing back " << output_model_var->name << ": size=" << output_model_var->shape() << std::endl;
         }
     }
     else {
