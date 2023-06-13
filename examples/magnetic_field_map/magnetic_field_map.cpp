@@ -18,17 +18,19 @@ int main(int argc, char* argv[]) {
 
 
     phasm::CallMode call_mode;
-    if (argc > 1) {
+    std::string modelname;
+    if (argc == 1) {
         std::cout << "PHASM: No model specified, so we are dumping training data (from the original function) to CSV" << std::endl;
         call_mode = CallMode::DumpTrainingData;
     }
     else {
         std::cout << "PHASM: Provided model '" << argv[1] << "', so we are dumping validation data (from the model) to CSV" << std::endl;
         call_mode = CallMode::DumpValidationData;
+        modelname = argv[1];
     }
 
     phasm::Surrogate surrogate = SurrogateBuilder()
-            .set_model("phasm-torch-plugin", "", true)
+            .set_model("phasm-torch-plugin", modelname, true)
             .set_callmode(call_mode)
             .local_primitive<double>("x", Direction::IN)
             .local_primitive<double>("y", Direction::IN)
