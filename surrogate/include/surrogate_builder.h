@@ -35,7 +35,7 @@ public:
     inline SurrogateBuilder& set_model(std::shared_ptr<Model> model, bool enable_tensor_combining=false) { m_model = model; m_model->enable_tensor_combining(enable_tensor_combining); return *this; }
     inline SurrogateBuilder& set_callmode(CallMode callmode) { m_callmode = callmode; return *this; }
 
-    SurrogateBuilder& set_model(std::string plugin_name, std::string model_name);
+    SurrogateBuilder& set_model(std::string plugin_name, std::string model_name, bool enable_tensor_combining=false);
 
     template <typename T>
     Cursor<T> local(std::string name);

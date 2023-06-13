@@ -9,8 +9,9 @@
 
 namespace phasm {
 
-SurrogateBuilder& SurrogateBuilder::set_model(std::string plugin_name, std::string model_name) {
+SurrogateBuilder& SurrogateBuilder::set_model(std::string plugin_name, std::string model_name, bool enable_tensor_combining) {
     m_model = PluginLoader::get_singleton().get_or_load_plugin(plugin_name)->make_model(model_name);
+    m_model->enable_tensor_combining(enable_tensor_combining);
     return *this;
 }
 
