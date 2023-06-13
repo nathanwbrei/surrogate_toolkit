@@ -6,10 +6,10 @@ find_package(Torch REQUIRED)
 
 set(MAGNETIC_FIELD_MAP_SOURCES
         magnetic_field_map.cpp
-        DMagneticFieldMapFineMesh.cc
-        HDEVIO.cc
-        JCalibrationGenerator_TestFixture.cpp
-        JCalibration_TestFixture.cpp
+        halld_recon/DMagneticFieldMapFineMesh.cc
+        halld_recon/HDEVIO.cc
+        halld_recon/JCalibrationGenerator_TestFixture.cpp
+        halld_recon/JCalibration_TestFixture.cpp
         )
 
 add_executable(phasm-example-magfieldmap ${MAGNETIC_FIELD_MAP_SOURCES})

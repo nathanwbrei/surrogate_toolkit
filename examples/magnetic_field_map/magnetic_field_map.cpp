@@ -7,15 +7,14 @@
 
 #include <JANA/JApplication.h>
 #include <JANA/Calibrations/JCalibrationManager.h>
-#include "DMagneticFieldMapFineMesh.h"
+#include "halld_recon/DMagneticFieldMapFineMesh.h"
+#include "halld_recon/JCalibrationGenerator_TestFixture.hpp"
 #include "surrogate_builder.h"
-#include "JCalibrationGenerator_TestFixture.hpp"
 
 
 int main(int argc, char* argv[]) {
 
     using phasm::SurrogateBuilder, phasm::Direction, phasm::CallMode;
-
 
     phasm::CallMode call_mode;
     std::string modelname;
