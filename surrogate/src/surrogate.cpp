@@ -99,12 +99,13 @@ void Surrogate::call_model_and_capture() {
         input->captureAllTrainingInputs();
         input->captureAllInferenceInputs();
     }
-    m_original_function();
+    bool result = m_model->infer();
     for (auto &output: m_callsite_vars) {
         output->publishAllInferenceOutputs();
         output->captureAllTrainingOutputs();
     }
     m_model->m_captured_rows++;
+    // TODO: Do something with result
 }
 
 
