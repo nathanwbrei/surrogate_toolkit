@@ -33,26 +33,24 @@ From: ubuntu:jammy
         bat \
         valgrind \
         xz-utils \
+        libexpat-dev \
         zlib1g-dev  # zlib for pin or libdwarf
 
+    # Certs nonsense
     echo "check_certificate = off" >> ~/.wgetrc
-
-    # build and install libdwarf
-    cd /deps
-    wget https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
-    tar -xf libdwarf-0.3.4.tar.xz
-    mv libdwarf-0.3.4 libdwarf
-    cd libdwarf
-    mkdir build installdir
-    cd build
-    cmake .. -DCMAKE_INSTALL_PREFIX=../installdir
-    make -j16 install
+    wget http://pki.jlab.org/JLabCA.crt -O /usr/local/share/ca-certificates/JLabCA.crt
+    chmod 644 /usr/local/share/ca-certificates/JLabCA.crt
+    update-ca-certificates
 
     # Geant4
     cd /deps
     wget https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz
     tar xf geant4-v11.0.2.tar.gz
-
+    cd geant4-v11.0.2
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=/deps/geant4
+    make -j8 install
 
     # clean apt lists and install/build packages
     apt-get clean
@@ -60,29 +58,6 @@ From: ubuntu:jammy
     rm -rf /var/lib/apt/lists/*
 
 %environment
-    # CUDA path
-    export CUDA_INSTALL_PATH=/usr/local/cuda
-    export LD_LIBRARY_PATH=${CUDA_INSTALL_PATH}/lib64:${CUDA_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
-
-    # cudnn path
-    export CUDNN_LIB_PATH=/usr/lib/x86_64-linux-gnu
-    export CUDNN_INCLUDE_PATH=/usr/include/x86_64-linux-gnu/
-    export LD_LIBRARY_PATH=${CUDNN_LIB_PATH}:${LD_LIBRARY_PATH}
-
-    # export deps path
-    export DEPS=/deps
-
-    # add libtorch library path
-    export LIBTORCH_INSTALL_PATH=${DEPS}/libtorch
-    export LD_LIBRARY_PATH=${LIBTORCH_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
-
-    # add JANA2 path
-    export JANA_HOME="${DEPS}/JANA2/install"
-    export PATH=${JANA_HOME}/bin:${PATH}
-
-    # add Julia path
-    export PATH=/deps/julia-1.9.1/bin:${PATH}
-
     # add cmake-specific configurations
     export CC=`which gcc`
     export CXX=`which g++`
