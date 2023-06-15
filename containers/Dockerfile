@@ -28,7 +28,7 @@ RUN apt install -y xz-utils \
 # Install Intel PIN
 ADD "https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz" pin.tar.gz
 RUN tar -xf pin.tar.gz \
- && rm pin.tar.gz && \
+ && rm pin.tar.gz \
  && mv pin-3.22-98547-g7a303a835-gcc-linux pin
 
 # Install JANA (Do this last because we are more likely to upgrade!)
@@ -45,7 +45,6 @@ ENV PATH="$PATH:/app/JANA2/install/bin"
 ENV LD_LIBRARY_PATH="$DEPS/libtorch/lib:$DEPS/JANA2/install/plugins:$LD_LIBRARY_PATH"
 ENV PIN_ROOT="/app/pin"
 
-RUN apt install -y curl
 CMD /bin/bash
 
 
