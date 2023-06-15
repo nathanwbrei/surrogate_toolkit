@@ -39,6 +39,9 @@ RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
     update-ca-certificates && \
     echo "check_certificate = off" >> ~/.wgetrc
 
+# Add Python
+RUN apt-get install python3-venv python3-tk
+
 # Install libtorch
 ADD ${TORCH_URL} libtorch.zip
 RUN unzip libtorch.zip && rm libtorch.zip
