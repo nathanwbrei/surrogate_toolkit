@@ -33,6 +33,12 @@ ARG DEP_PATH=/deps
 
 WORKDIR ${DEP_PATH}
 
+# Fix certificates
+ADD http://pki.jlab.org/JLabCA.crt /usr/local/share/ca-certificates/JLabCA.crt
+RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
+    update-ca-certificates && \
+    echo "check_certificate = off" >> ~/.wgetrc
+
 # Install libtorch
 ADD ${TORCH_URL} libtorch.zip
 RUN unzip libtorch.zip && rm libtorch.zip

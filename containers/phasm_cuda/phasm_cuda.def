@@ -35,7 +35,11 @@ From: nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
         xz-utils \
         zlib1g-dev  # zlib for pin or libdwarf
 
+    # Fix certificates
     echo "check_certificate = off" >> ~/.wgetrc
+    wget http://pki.jlab.org/JLabCA.crt -O /usr/local/share/ca-certificates/JLabCA.crt
+    chmod 644 /usr/local/share/ca-certificates/JLabCA.crt
+    update-ca-certificates
 
     # install libtorch
     # root dir

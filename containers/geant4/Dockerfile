@@ -28,10 +28,10 @@ RUN apt-get update && \
         libexpat-dev \
         zlib1g-dev  # zlib for pin or libdwarf
 
-RUN echo "check_certificate = off" >> ~/.wgetrc && \
-    wget http://pki.jlab.org/JLabCA.crt -O /usr/local/share/ca-certificates/JLabCA.crt && \
-    chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
-    update-ca-certificates
+ADD http://pki.jlab.org/JLabCA.crt /usr/local/share/ca-certificates/JLabCA.crt
+RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
+    update-ca-certificates && \
+    echo "check_certificate = off" >> ~/.wgetrc
 
 RUN cd /deps && \
     wget https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz && \

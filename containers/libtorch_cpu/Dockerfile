@@ -8,6 +8,12 @@ WORKDIR /app
 RUN apt update -y \
  && apt install -y gdb valgrind cmake wget unzip vim libasan6 less exa bat git zlib1g-dev
 
+# Fix certificates
+ADD http://pki.jlab.org/JLabCA.crt /usr/local/share/ca-certificates/JLabCA.crt
+RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
+    update-ca-certificates && \
+    echo "check_certificate = off" >> ~/.wgetrc
+
 # Install libtorch
 # This is still a cpu-only libtorch. Url updated on May 24 2023
 ADD "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip" libtorch.zip
