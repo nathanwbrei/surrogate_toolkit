@@ -5,13 +5,13 @@ import numpy as np
 import sys
 import os
 
-if len(sys.argv > 1):
+if len(sys.argv) > 1:
     training_data_filename = sys.argv[1]
 else:
     training_data_filename = "training_captures.csv"
 print("Loading training data from '" + training_data_filename + "'")
 
-if len(sys.argv > 2):
+if len(sys.argv) > 2:
     validation_data_filename = sys.argv[2]
 else:
     validation_data_filename = "validation_captures.csv"
@@ -45,7 +45,7 @@ if generate_validation_data:
         residuals = targets - predictions
 
 else:
-    validation_data = pd.read_csv(training_data_filename)
+    validation_data = pd.read_csv(validation_data_filename)
     predictions = validation_data[[' Bx',' By',' Bz']].values
     residuals = targets - predictions
 
@@ -76,6 +76,6 @@ axr[2].grid(True)
 axr[2].set_xlim(-0.2,0.2)
 
 plt.show()
-plt.save("residuals.pdf")
+plt.savefig("residuals.pdf")
 
 

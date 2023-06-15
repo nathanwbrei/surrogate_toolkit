@@ -16,7 +16,7 @@ enum class CallMode {
     NotSet, UseOriginal, UseModel, DumpTrainingData, DumpValidationData, TrainModel, DumpInputSummary
 };
 
-std::ostream& operator<<(std::ostream& os, CallMode cm) {
+inline std::ostream& operator<<(std::ostream& os, CallMode cm) {
     switch (cm) {
         case CallMode::NotSet: os << "NotSet"; break;
         case CallMode::UseOriginal: os << "UseOriginal"; break;
