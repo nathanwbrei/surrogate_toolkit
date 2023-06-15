@@ -33,7 +33,10 @@ python3 train_model.py training_captures.csv
 # This produces `validation_captures.csv`
 $PHASM_INSTALL_DIR/bin/phasm-example-magfieldmap gluex_mfield_mlp.pt
 
-# Analyze the performance of the model by comparing the training data against the validation data
+# Generate a plot of the model performance
+python3 validate_model.py training_captures.csv validation_captures.csv
+
+# Analyze the performance of the model interactively
 jupyter trust validate_model.ipynb
 jupyter lab validate_model.ipynb
 ```
