@@ -43,6 +43,7 @@ From: ubuntu:jammy
     update-ca-certificates
 
     # Geant4
+    mkdir /deps
     cd /deps
     wget https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz
     tar xf geant4-v11.0.2.tar.gz
