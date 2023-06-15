@@ -33,16 +33,20 @@ std::shared_ptr<ModelVariable> Model::get_model_var(std::string param_name) {
 /// TODO: All this moves to Surrogate. Model keeps a reference count. Last surrogate turns out the lights.
 void Model::finalize(CallMode callmode) {
 
+    std::cout << "PHASM: Starting model shutdown" << std::endl;
     switch (callmode) {
         case CallMode::TrainModel:
+            std::cout << "PHASM: Training model from captures" << std::endl;
             train_from_captures();
             break;
         case CallMode::DumpTrainingData: {
+            std::cout << "PHASM: Dumping training data to ./training_captures.csv" << std::endl;
             std::ofstream outfile("training_captures.csv");
             dump_captures_to_csv(outfile);
             break;
         }
         case CallMode::DumpValidationData: {
+            std::cout << "PHASM: Dumping validation data to ./validation_captures.csv" << std::endl;
             std::ofstream outfile("validation_captures.csv");
             dump_captures_to_csv(outfile);
             break;
@@ -52,6 +56,7 @@ void Model::finalize(CallMode callmode) {
         default:
             break;
     }
+    std::cout << "PHASM: Finished model shutdown" << std::endl;
 }
 
 

@@ -16,6 +16,18 @@ enum class CallMode {
     NotSet, UseOriginal, UseModel, DumpTrainingData, DumpValidationData, TrainModel, DumpInputSummary
 };
 
+std::ostream& operator<<(std::ostream& os, CallMode cm) {
+    switch (cm) {
+        case CallMode::NotSet: os << "NotSet"; break;
+        case CallMode::UseOriginal: os << "UseOriginal"; break;
+        case CallMode::UseModel: os << "UseModel"; break;
+        case CallMode::DumpTrainingData: os << "DumpTrainingData"; break;
+        case CallMode::DumpValidationData: os << "DumpValidationData"; break;
+        case CallMode::TrainModel: os << "TrainModel"; break;
+        case CallMode::DumpInputSummary: os << "DumpInputSummary"; break;
+    }
+}
+
 class Surrogate {
 public:
     friend class Model;

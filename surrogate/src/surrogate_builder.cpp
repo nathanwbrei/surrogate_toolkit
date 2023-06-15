@@ -9,6 +9,27 @@
 
 namespace phasm {
 
+Surrogate SurrogateBuilder::finish() const {
+    Surrogate s;
+    if (m_callmode != CallMode::NotSet) {
+        std::cout << "PHASM: Call mode = " << m_callmode << " (set in the builder)" << std::endl;
+        s.set_callmode(m_callmode);
+    }
+    else if (g_callmode != CallMode::NotSet) {
+        std::cout << "PHASM: Call mode = " << m_callmode << " (set via environment variable)" << std::endl;
+        s.set_callmode(g_callmode);
+    }
+    else {
+        std::cout << "PHASM: Call mode = " << m_callmode << " (Change this by setting PHASM_CALL_MODE env var)" << std::endl;
+        s.set_callmode(CallMode::UseOriginal);
+    }
+    s.add_callsite_vars(m_csvs);
+    s.set_model(m_model);
+    m_model->add_model_vars(s.get_model_vars());
+    m_model->initialize();
+    return s;
+}
+
 SurrogateBuilder& SurrogateBuilder::set_model(std::string plugin_name, std::string model_name, bool enable_tensor_combining) {
     m_model = PluginLoader::get_singleton().get_or_load_plugin(plugin_name)->make_model(model_name);
     m_model->enable_tensor_combining(enable_tensor_combining);
