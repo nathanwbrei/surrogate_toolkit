@@ -17,7 +17,7 @@ else:
     validation_data_filename = "validation_captures.csv"
 print("Loading validation data from '" + training_data_filename + "'")
 
-if !os.path.exists(validation_data_filename):
+if not os.path.exists(validation_data_filename):
     print("Could not find validation data. Re-generating validation data from model instead")
     generate_validation_data = True
 else:

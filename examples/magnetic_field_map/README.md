@@ -18,8 +18,8 @@ export PHASM_INSTALL_DIR=$PHASM_SOURCE_DIR/build/install
 
 # Copy the python scripts you will be using into your work dir
 cd $WORK_DIR
-cp $PYTHON_SOURCE_DIR/train_model.py $WORK_DIR
-cp $PYTHON_SOURCE_DIR/validate_model.ipynb $WORK_DIR
+cp $PHASM_SOURCE_DIR/examples/magnetic_field_map/train_model.py $WORK_DIR
+cp $PHASM_SOURCE_DIR/examples/magnetic_field_map/validate_model.py $WORK_DIR
 
 # Intercept calls to GlueX's magnetic field map to capture training data. 
 # This produces `training_captures.csv`
