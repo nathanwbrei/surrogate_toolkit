@@ -9,7 +9,7 @@ namespace phasm {
 
 TorchscriptModel::TorchscriptModel(std::string filename) {
     try {
-        m_module = torch::jit::load(filename);
+        m_module = torch::jit::load(filename, torch::kCPU);  // load to CPU by default
     }
     catch (const c10::Error &e) {
         std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
