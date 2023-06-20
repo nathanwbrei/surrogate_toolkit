@@ -1,6 +1,5 @@
 # A Dockerfile based on nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 #
-# It's test by xmei@jlab.org on a macbook.
 # The building process takes 20 minutes.
 # To see the building message, try `docker build progress=plain <PATH>`
 
@@ -11,15 +10,34 @@
 # https://github.com/JeffersonLab/JANA2/blob/master/containers/Docker/Dockerfile
 
 ARG FROM_IMAGE_NAME=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
-
 FROM ${FROM_IMAGE_NAME}
-
 USER root
 
 # Install basic development environment
-RUN apt update -y && \
-    apt -y install --no-install-recommends gdb valgrind cmake wget curl unzip vim libasan6 less exa bat git xz-utils zlib1g-dev && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends \
+        apt-transport-https \
+        ca-certificates \
+        gnupg \
+        software-properties-common \
+        wget \
+        git \
+        cmake \
+        build-essential \
+        libtool \
+        autoconf \
+        unzip \
+        vim \
+        curl \
+        gdb \
+        libasan6 \
+        less \
+        exa \
+        bat \
+        valgrind \
+        xz-utils \
+        libexpat-dev \
+        zlib1g-dev  # zlib for pin or libdwarf
 
 # Updated on May/24/2023
 ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip"
@@ -82,14 +100,15 @@ RUN cd /deps && \
     wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.1-linux-x86_64.tar.gz && \
     tar xf julia-1.9.1-linux-x86_64.tar.gz
 
+# install clang static analyzer
+RUN apt-get install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang
+
 ENV JANA_HOME="${DEP_PATH}/JANA2/install"
 ENV PATH=${JANA_HOME}/bin:/deps/julia-1.9.1/bin:${PATH}
 ENV DEPS=$DEP_PATH
 
-LABEL author="xmei@jlab.org"
-LABEL description="A container built upon nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04,\
-Then this container installed cmake3.23, and libtorch2.0+cu11.8, pin, dwarf etc at /dep.\
-The built docker container is about 15GB."
+LABEL author="nbrei@jlab.org"
+LABEL description="A CUDA+Ubuntu container that includes JANA2, libtorch, julia, Intel PIN, libdwarf, llvm/clang, and geant4"
 
 WORKDIR /app
 CMD /bin/bash
