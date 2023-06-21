@@ -3,8 +3,8 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 
-#ifndef SURROGATE_TOOLKIT_TORCHSCRIPT_MODEL_H
-#define SURROGATE_TOOLKIT_TORCHSCRIPT_MODEL_H
+#ifndef TORCH_PLUGIN_TORCHSCRIPT_MODEL_H
+#define TORCH_PLUGIN_TORCHSCRIPT_MODEL_H
 
 #include "surrogate.h"
 #include "model.h"
@@ -20,8 +20,14 @@ private:
     std::vector<std::vector<int64_t>> m_output_shapes;
     std::vector<int64_t> m_output_lengths;
 
+    /// @brief The kernel part of loading *.pt module. Load to @param device manually.
+    void LoadModule(torch::Device device);
+
+    /// @brief Print the infomation of every layer.
+    void PrintModuleLayers();
+
 public:
-    TorchscriptModel(std::string filename);
+    TorchscriptModel(std::string filename, bool print_module_layers=false, torch::Device device=torch::kCPU);
 
     ~TorchscriptModel();
 
@@ -35,4 +41,4 @@ public:
 };
 
 } // namespace phasm
-#endif //SURROGATE_TOOLKIT_FEEDFORWARD_MODEL_H
+#endif //TORCH_PLUGIN_TORCHSCRIPT_MODEL_H

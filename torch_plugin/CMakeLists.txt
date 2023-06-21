@@ -6,6 +6,7 @@ set(PHASM_TORCH_PLUGIN_SOURCES
         src/torch_tensor_utils.cc
         src/feedforward_model.cpp
         src/torchscript_model.cpp
+        src/torch_utils.cc
         )
 
 if(${USE_CUDA})
