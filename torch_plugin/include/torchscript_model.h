@@ -3,8 +3,8 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 
-#ifndef SURROGATE_TOOLKIT_TORCHSCRIPT_MODEL_H
-#define SURROGATE_TOOLKIT_TORCHSCRIPT_MODEL_H
+#ifndef TORCH_PLUGIN_TORCHSCRIPT_MODEL_H
+#define TORCH_PLUGIN_TORCHSCRIPT_MODEL_H
 
 #include "surrogate.h"
 #include "model.h"
@@ -17,13 +17,18 @@ struct TorchscriptModel : public Model {
 private:
     std::string m_filename;
     torch::jit::script::Module m_module;
+    torch::Device m_device = torch::kCPU;
     std::vector<std::vector<int64_t>> m_output_shapes;
     std::vector<int64_t> m_output_lengths;
+
+    void LoadModule();
 
 public:
     TorchscriptModel(std::string filename);
 
     ~TorchscriptModel();
+
+    void ActivateGPU(); // Call before constructor to load pt module to GPU
 
     void initialize() override;
 
@@ -35,4 +40,4 @@ public:
 };
 
 } // namespace phasm
-#endif //SURROGATE_TOOLKIT_FEEDFORWARD_MODEL_H
+#endif //TORCH_PLUGIN_TORCHSCRIPT_MODEL_H

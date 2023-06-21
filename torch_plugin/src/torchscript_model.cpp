@@ -7,9 +7,17 @@
 
 namespace phasm {
 
-TorchscriptModel::TorchscriptModel(std::string filename) {
+void TorchscriptModel::ActivateGPU() {
+    if (not torch::cuda::is_available()) {
+        std::cerr << "CUDA device is required for this example!\n Exit..." << std::endl;
+        exit(-1);
+    }
+    m_device = torch::kCUDA;
+}
+
+void TorchscriptModel::LoadModule() {
     try {
-        m_module = torch::jit::load(filename, torch::kCPU);  // load to CPU by default
+        m_module = torch::jit::load(m_filename, m_device);  // manually load to m_device
     }
     catch (const c10::Error &e) {
         std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
@@ -18,7 +26,12 @@ TorchscriptModel::TorchscriptModel(std::string filename) {
         std::cerr << e.what() << std::endl;
         exit(1);
     }
-    std::cerr << "PHASM: Loaded TorchScript model '" << filename << "'" << std::endl;
+    std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'" << std::endl;
+}
+
+TorchscriptModel::TorchscriptModel(std::string filename) {
+    m_filename = filename;
+    TorchscriptModel::LoadModule();
 }
 
 TorchscriptModel::~TorchscriptModel() {
