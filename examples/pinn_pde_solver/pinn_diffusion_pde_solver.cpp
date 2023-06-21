@@ -20,6 +20,7 @@ Python code change is ignored in this branch.
 
 #include <torch/torch.h>
 #include "torch_cuda_utils.h"
+#include "torch_utils.h"
 
 #include <math.h>
 #include <iostream>
