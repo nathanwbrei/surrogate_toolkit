@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torchmetrics import MeanMetric
+from torchmetrics import MeanMetric  # TODO(daniel): ModuleNotFoundError: No module named 'torchmetrics'
 from collections import OrderedDict
 
 class TorchMLP(nn.Module):
