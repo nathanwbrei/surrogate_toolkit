@@ -29,9 +29,13 @@ void TorchscriptModel::LoadModule() {
     std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'" << std::endl;
 }
 
-TorchscriptModel::TorchscriptModel(std::string filename) {
+TorchscriptModel::TorchscriptModel(std::string filename, bool print_module_layers) {
     m_filename = filename;
     TorchscriptModel::LoadModule();
+
+    if (print_module_layers) {
+        TorchscriptModel::PrintModuleLayers();
+    }
 }
 
 TorchscriptModel::~TorchscriptModel() {
@@ -127,6 +131,29 @@ bool TorchscriptModel::infer() {
 
     // TODO: Figure out how to extract UQ info from model so that we can return false when appropriate
     return true;
+}
+
+void TorchscriptModel::PrintModuleLayers() {
+    // Module reference https://pytorch.org/cppdocs/api/structtorch_1_1jit_1_1_module.html
+    // https://github.com/pytorch/pytorch/blob/main/torch/csrc/jit/api/module.h
+    bool skipFirstModule = true;  // the first one is a summary, skip it
+    for (const auto& cur_module : m_module.named_modules()) {
+        if (skipFirstModule) {
+            skipFirstModule = false;
+            continue;
+        }
+        std::cout << "Module name: " << cur_module.name << std::endl;
+        std::cout << "Module type: " << cur_module.value.type()->repr_str() << std::endl;
+        if (cur_module.value.named_parameters().size() > 0) {
+            std::cout << "Module parameters: " << std::endl;
+            for (const auto& parameter : cur_module.value.named_parameters()) {
+                std::cout << "  Parameter name: " << parameter.name << std::endl;
+                std::cout << "  Parameter device: " << parameter.value.device().type() << std::endl;
+                std::cout << "  Parameter shape: " << parameter.value.sizes() << std::endl;
+            }
+        }
+        std::cout << "----------------" << std::endl;
+      }
 }
 
 void TorchscriptModel::train_from_captures() {

@@ -42,7 +42,7 @@ int main(int argc, const char *argv[]) {
 //    torch::Device device(device_str);
 
     std::string pt_name_str = argv[1];
-    phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str);
+    phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str, true);
 
     /** Test feed-forward computation with an input tensor **/
     //the input must be of type std::vector.

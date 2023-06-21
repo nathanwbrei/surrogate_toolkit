@@ -21,10 +21,14 @@ private:
     std::vector<std::vector<int64_t>> m_output_shapes;
     std::vector<int64_t> m_output_lengths;
 
+    /// @brief The kernel part of loading *.pt module. Load to m_device manually.
     void LoadModule();
 
+    /// @brief Print the infomation of every layer.
+    void PrintModuleLayers();
+
 public:
-    TorchscriptModel(std::string filename);
+    TorchscriptModel(std::string filename, bool print_module_layers=false);
 
     ~TorchscriptModel();
 
