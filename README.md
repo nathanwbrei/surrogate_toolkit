@@ -27,4 +27,4 @@ Follow [this guide](docs/farm_guide_singularity.md) to compile PHASM with the si
 All the examples, including the CUDA and non-CUDA ones should be built successfully.
 
 ### Bare-metal build and run
-This method is not recommended. However, the process is recorder [here](/docs/bare_metal_build.md).
+This method is not recommended. However, the process is taken down [here](/docs/bare_metal_build.md).

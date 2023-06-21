@@ -11,17 +11,18 @@
  * CUDA device is required. The test input tensor is of dimension (1256, 7, 6).
  *
  * The LSTM model definition： https://github.com/cissieAB/gluex-tracking-pytorch-lstm/blob/main/python/utils.py#L70
- */
+ * Ifarm location: /work/epsci/shared_pkg/lstm_model.pt
+ **/
+
+#include <iostream>
+#include <memory>
 
 #include <torch/torch.h>
 
 #include "torch_utils.h"
 #include "torchscript_model.h"
 
-#include <iostream>
-#include <memory>
-
-#define LSTM_MODEL_INPUT_DIM {1256, 7, 6}
+// #define LSTM_MODEL_INPUT_DIM {1256, 7, 6}  // TODO(@xmei
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
@@ -32,27 +33,16 @@ int main(int argc, const char *argv[]) {
     phasm::get_libtorch_version();
 
     bool has_gpu = phasm::has_cuda_device();
-
-
-//    if (not phasm::has_cuda_device) {
-//        std::cout << "CUDA device is required for this example!\n Exit..." << std::endl;
-//        return -1;
-//    }
-
-//    std::cout << "Run model on CUDA device 0. \n" << std::endl;
-//    phasm::get_current_cuda_device_info();
-//    auto device_str = torch::kCUDA;
-//    torch::Device device(device_str);
-
-    std::string pt_name_str = argv[1];
-
+    torch::Device device= torch::kCPU;
     if (has_gpu) {
-        std::cout << "Use CUDA device 0 to load module!\n\n" << std::endl;
-        phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str, true, torch::kCUDA);
-    } else {
-        phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str, true, torch::kCPU);
+        std::cout << "Use CUDA device 0 to load module!\n" << std::endl;
+        device = torch::kCUDA;
     }
 
+    /* Load module to the assigned device */
+    phasm::TorchscriptModel model = phasm::TorchscriptModel(argv[1], true, device);
+
+    /* Get the input layer information and claim the input based on device */
 
     /** Test feed-forward computation with an input tensor **/
     //the input must be of type std::vector.

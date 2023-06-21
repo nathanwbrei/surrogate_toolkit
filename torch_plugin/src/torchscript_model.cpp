@@ -18,7 +18,7 @@ void TorchscriptModel::LoadModule(torch::Device device) {
         std::cerr << e.what() << std::endl;
         exit(1);
     }
-    std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'" << std::endl;
+    std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'\n" << std::endl;
 }
 
 TorchscriptModel::TorchscriptModel(std::string filename, bool print_module_layers, torch::Device device) {
