@@ -31,6 +31,9 @@ int main(int argc, const char *argv[]) {
 
     phasm::get_libtorch_version();
 
+    bool has_gpu = phasm::has_cuda_device();
+
+
 //    if (not phasm::has_cuda_device) {
 //        std::cout << "CUDA device is required for this example!\n Exit..." << std::endl;
 //        return -1;
@@ -42,7 +45,14 @@ int main(int argc, const char *argv[]) {
 //    torch::Device device(device_str);
 
     std::string pt_name_str = argv[1];
-    phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str, true);
+
+    if (has_gpu) {
+        std::cout << "Use CUDA device 0 to load module!\n\n" << std::endl;
+        phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str, true, torch::kCUDA);
+    } else {
+        phasm::TorchscriptModel model = phasm::TorchscriptModel(pt_name_str, true, torch::kCPU);
+    }
+
 
     /** Test feed-forward computation with an input tensor **/
     //the input must be of type std::vector.

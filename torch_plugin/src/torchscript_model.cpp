@@ -7,17 +7,9 @@
 
 namespace phasm {
 
-void TorchscriptModel::ActivateGPU() {
-    if (not torch::cuda::is_available()) {
-        std::cerr << "CUDA device is required for this example!\n Exit..." << std::endl;
-        exit(-1);
-    }
-    m_device = torch::kCUDA;
-}
-
-void TorchscriptModel::LoadModule() {
+void TorchscriptModel::LoadModule(torch::Device device) {
     try {
-        m_module = torch::jit::load(m_filename, m_device);  // manually load to m_device
+        m_module = torch::jit::load(m_filename, device);  // manually load to device
     }
     catch (const c10::Error &e) {
         std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
@@ -29,9 +21,9 @@ void TorchscriptModel::LoadModule() {
     std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'" << std::endl;
 }
 
-TorchscriptModel::TorchscriptModel(std::string filename, bool print_module_layers) {
+TorchscriptModel::TorchscriptModel(std::string filename, bool print_module_layers, torch::Device device) {
     m_filename = filename;
-    TorchscriptModel::LoadModule();
+    TorchscriptModel::LoadModule(device);
 
     if (print_module_layers) {
         TorchscriptModel::PrintModuleLayers();
@@ -136,10 +128,10 @@ bool TorchscriptModel::infer() {
 void TorchscriptModel::PrintModuleLayers() {
     // Module reference https://pytorch.org/cppdocs/api/structtorch_1_1jit_1_1_module.html
     // https://github.com/pytorch/pytorch/blob/main/torch/csrc/jit/api/module.h
-    bool skipFirstModule = true;  // the first one is a summary, skip it
+    bool skip_first_module = true;  // the first one is a summary, skip it
     for (const auto& cur_module : m_module.named_modules()) {
-        if (skipFirstModule) {
-            skipFirstModule = false;
+        if (skip_first_module) {
+            skip_first_module = false;
             continue;
         }
         std::cout << "Module name: " << cur_module.name << std::endl;

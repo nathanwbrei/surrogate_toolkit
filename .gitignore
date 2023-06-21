@@ -12,3 +12,4 @@ a.out.dSYM
 *.pyc
 .DS_Store
 *.pt  # PyTorch trained model
+*.json  # VS code setting

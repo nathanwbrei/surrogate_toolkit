@@ -17,22 +17,19 @@ struct TorchscriptModel : public Model {
 private:
     std::string m_filename;
     torch::jit::script::Module m_module;
-    torch::Device m_device = torch::kCPU;
     std::vector<std::vector<int64_t>> m_output_shapes;
     std::vector<int64_t> m_output_lengths;
 
-    /// @brief The kernel part of loading *.pt module. Load to m_device manually.
-    void LoadModule();
+    /// @brief The kernel part of loading *.pt module. Load to @param device manually.
+    void LoadModule(torch::Device device);
 
     /// @brief Print the infomation of every layer.
     void PrintModuleLayers();
 
 public:
-    TorchscriptModel(std::string filename, bool print_module_layers=false);
+    TorchscriptModel(std::string filename, bool print_module_layers=false, torch::Device device=torch::kCPU);
 
     ~TorchscriptModel();
-
-    void ActivateGPU(); // Call before constructor to load pt module to GPU
 
     void initialize() override;
 
