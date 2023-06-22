@@ -41,6 +41,9 @@ public:
     bool infer() override;
 
     torch::jit::script::Module& get_module();
+
+    /// @brief @return the shape of the input layer.
+    std::vector<int64_t> GetFirstLayerShape();
 };
 
 } // namespace phasm

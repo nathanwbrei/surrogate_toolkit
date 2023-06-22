@@ -43,6 +43,8 @@ int main(int argc, const char *argv[]) {
     phasm::TorchscriptModel model = phasm::TorchscriptModel(argv[1], true, device);
 
     /* Get the input layer information and claim the input based on device */
+    std::vector<int64_t> first_layer_shape = model.GetFirstLayerShape();
+    std::cout << "Input layer shape: " << first_layer_shape << std::endl;
 
     /** Test feed-forward computation with an input tensor **/
     //the input must be of type std::vector.

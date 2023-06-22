@@ -125,9 +125,17 @@ bool TorchscriptModel::infer() {
     return true;
 }
 
+std::vector<int64_t> TorchscriptModel::GetFirstLayerShape() {
+    auto module_summ = *m_module.named_modules().begin();
+    auto first_layer = *module_summ.value.named_parameters().begin();
+
+    return std::vector<int64_t>(first_layer.value.sizes().begin(), first_layer.value.sizes().end());
+}
+
 void TorchscriptModel::PrintModuleLayers() {
     // Module reference https://pytorch.org/cppdocs/api/structtorch_1_1jit_1_1_module.html
     // https://github.com/pytorch/pytorch/blob/main/torch/csrc/jit/api/module.h
+    std::cout << "The layers of the loaded module:\n" << "----------------" << std::endl;
     bool skip_first_module = true;  // the first one is a summary, skip it
     for (const auto& cur_module : m_module.named_modules()) {
         if (skip_first_module) {
@@ -146,6 +154,7 @@ void TorchscriptModel::PrintModuleLayers() {
         }
         std::cout << "----------------" << std::endl;
       }
+    std::cout << "\n\n";
 }
 
 void TorchscriptModel::train_from_captures() {
