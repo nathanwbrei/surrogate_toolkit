@@ -26,6 +26,7 @@ inline std::ostream& operator<<(std::ostream& os, CallMode cm) {
         case CallMode::TrainModel: os << "TrainModel"; break;
         case CallMode::DumpInputSummary: os << "DumpInputSummary"; break;
     }
+    return os;
 }
 
 class Surrogate {
