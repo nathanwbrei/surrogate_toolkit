@@ -1,4 +1,3 @@
-
 // Copyright 2022, Jefferson Science Associates, LLC.
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
@@ -7,9 +6,9 @@
 
 namespace phasm {
 
-void TorchscriptModel::LoadModule(torch::Device device) {
+void TorchscriptModel::LoadModule() {
     try {
-        m_module = torch::jit::load(m_filename, device);  // manually load to device
+        m_module = torch::jit::load(m_filename, m_device);  // manually load to m_device
     }
     catch (const c10::Error &e) {
         std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
@@ -23,7 +22,8 @@ void TorchscriptModel::LoadModule(torch::Device device) {
 
 TorchscriptModel::TorchscriptModel(std::string filename, bool print_module_layers, torch::Device device) {
     m_filename = filename;
-    TorchscriptModel::LoadModule(device);
+    m_device = device;
+    TorchscriptModel::LoadModule();
 
     if (print_module_layers) {
         TorchscriptModel::PrintModuleLayers();
