@@ -22,7 +22,8 @@
 #include "torch_utils.h"
 #include "torchscript_model.h"
 
-// #define LSTM_MODEL_INPUT_DIM {1256, 7, 6}  // TODO(@xmei
+# define BATCH_SIZE 2048
+# define SEQ_LENGTH 7  // For the test lstm_model.pt model only
 
 int main(int argc, const char *argv[]) {
     if (argc != 2) {
@@ -44,17 +45,24 @@ int main(int argc, const char *argv[]) {
 
     /* Get the input layer information and claim the input based on device */
     std::vector<int64_t> first_layer_shape = model.GetFirstLayerShape();
-    std::cout << "Input layer shape: " << first_layer_shape << std::endl;
+
+    // Caculate the input dimension, based on first layer weight matrix shape.
+    // TODO (@xmei): below method is for RNN layer only. Different for nn.linear and nn.conv.
+    std::vector<int64_t> input_shape;
+    input_shape.push_back(BATCH_SIZE);
+    input_shape.push_back(SEQ_LENGTH);
+    std::copy(first_layer_shape.begin() + 1, first_layer_shape.end(), std::back_inserter(input_shape));
+    std::cout << "Input dimension: " << input_shape << std::endl;
 
     /** Test feed-forward computation with an input tensor **/
-    //the input must be of type std::vector.
-//    std::vector<torch::jit::IValue> inputs;
-//    inputs.push_back(torch::ones(LSTM_MODEL_INPUT_DIM, device));
-//
-//    at::Tensor output = model.get_module().forward(inputs).toTensor();
-//    std::cout << "Output sizes: " << output.sizes() << std::endl;
-//    std::cout << "Output.device().type(): " << output.device().type() << std::endl;
-//    std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
+    //The input must be of type std::vector.
+    std::vector<torch::jit::IValue> input;
+    input.push_back(torch::randn(input_shape, device));
+
+    at::Tensor output = model.get_module().forward(input).toTensor();
+    std::cout << "Output sizes: " << output.sizes() << std::endl;
+    std::cout << "Output.device().type(): " << output.device().type() << std::endl;
+    std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
 
     return 0;
 }
