@@ -1,4 +1,3 @@
-
 // Copyright 2022, Jefferson Science Associates, LLC.
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
@@ -7,9 +6,9 @@
 
 namespace phasm {
 
-void TorchscriptModel::LoadModule(torch::Device device) {
+void TorchscriptModel::LoadModule() {
     try {
-        m_module = torch::jit::load(m_filename, device);  // manually load to device
+        m_module = torch::jit::load(m_filename, m_device);  // manually load to m_device
     }
     catch (const c10::Error &e) {
         std::cerr << "PHASM: FATAL ERROR: Exception loading TorchScript file" << std::endl;
@@ -18,12 +17,13 @@ void TorchscriptModel::LoadModule(torch::Device device) {
         std::cerr << e.what() << std::endl;
         exit(1);
     }
-    std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'" << std::endl;
+    std::cerr << "PHASM: Loaded TorchScript model '" << m_filename << "'\n" << std::endl;
 }
 
 TorchscriptModel::TorchscriptModel(std::string filename, bool print_module_layers, torch::Device device) {
     m_filename = filename;
-    TorchscriptModel::LoadModule(device);
+    m_device = device;
+    TorchscriptModel::LoadModule();
 
     if (print_module_layers) {
         TorchscriptModel::PrintModuleLayers();
@@ -125,9 +125,17 @@ bool TorchscriptModel::infer() {
     return true;
 }
 
+std::vector<int64_t> TorchscriptModel::GetFirstLayerShape() {
+    auto module_summ = *m_module.named_modules().begin();
+    auto first_layer = *module_summ.value.named_parameters().begin();
+
+    return std::vector<int64_t>(first_layer.value.sizes().begin(), first_layer.value.sizes().end());
+}
+
 void TorchscriptModel::PrintModuleLayers() {
     // Module reference https://pytorch.org/cppdocs/api/structtorch_1_1jit_1_1_module.html
     // https://github.com/pytorch/pytorch/blob/main/torch/csrc/jit/api/module.h
+    std::cout << "The layers of the loaded module:\n" << "----------------" << std::endl;
     bool skip_first_module = true;  // the first one is a summary, skip it
     for (const auto& cur_module : m_module.named_modules()) {
         if (skip_first_module) {
@@ -146,6 +154,7 @@ void TorchscriptModel::PrintModuleLayers() {
         }
         std::cout << "----------------" << std::endl;
       }
+    std::cout << "\n\n";
 }
 
 void TorchscriptModel::train_from_captures() {

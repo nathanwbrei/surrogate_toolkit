@@ -20,8 +20,11 @@ private:
     std::vector<std::vector<int64_t>> m_output_shapes;
     std::vector<int64_t> m_output_lengths;
 
-    /// @brief The kernel part of loading *.pt module. Load to @param device manually.
-    void LoadModule(torch::Device device);
+    // This should be included in Model.h but let's leave it here now.
+    torch::Device m_device = torch::kCPU;
+
+    /// @brief The kernel part of loading *.pt module. Load to @param m_device manually.
+    void LoadModule();
 
     /// @brief Print the infomation of every layer.
     void PrintModuleLayers();
@@ -38,6 +41,9 @@ public:
     bool infer() override;
 
     torch::jit::script::Module& get_module();
+
+    /// @brief @return the shape of the input layer.
+    std::vector<int64_t> GetFirstLayerShape();
 };
 
 } // namespace phasm
