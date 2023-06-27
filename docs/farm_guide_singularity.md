@@ -73,26 +73,39 @@ Run model on CUDA device 0.
 ### 4. Run Geant4 within singularity container
 
 The images copied to `ifarm` `/scigroup/cvmfs/epsci/singularity/images` subdirectory are automatically uploaded to
-`/cvmfs/oasis.opensciencegrid.org/jlab/epsci/singularity/images` (within 4-hr delay).
-Currently, a singularity container based on cuda-11.8+libtorch-1.13+cudnn-8.0+gcc-1.13 is available
-at the above position.
+`/cvmfs/oasis.opensciencegrid.org/jlab/epsci/singularity/images` (within a 4-hr delay).
 
 David has [an instruction](https://wiki.jlab.org/epsciwiki/index.php/HOWTO_build_and_run_PHASM_on_Geant4_examples)
 on how to pull `root` and `geant4` into existing containers. Here we walk through the process again.
 
-On **login node**:
+A CUDA singularity container is available here.
 
 ```bash
-# At phasm root directory
-ifarm1802.jlab.org> mkdir g4
-ifarm1802.jlab.org> singularity shell -B /cvmfs:/cvmfs \
-    /cvmfs/oasis.opensciencegrid.org/jlab/epsci/singularity/images/libtorch_cuda_feb_23.sif
+/cvmfs/oasis.opensciencegrid.org/jlab/epsci/singularity/images/phasm-gpu_Mar-17.sif
+```
+
+Note that as X11 forwarding (via `srun/salloc --x11`) is not supported with `ifarm` Slurm, we are not available to see the simulation runtime as we usually do on login nodes.
+
+```bash
+# On login node
+ifarm1801.jlab.org> module use /apps/modulefiles
+ifarm1801.jlab.org> module load singularity
+# Ask for a GPU node in interactive mode
+ifarm1801.jlab.org> srun --gres gpu:A100:1 -p gpu --cpus-per-task=4 --mem-per-cpu=8000 --pty bash
+
+# On GPU node
+bash-4.2$ singularity run --nv -B /cvmfs:/cvmfs /cvmfs/oasis.opensciencegrid.org/jlab/epsci/singularity/images/phasm-gpu_Mar-17.sif
 
 # Inside the container
-Singularity> source /cvmfs/oasis.opensciencegrid.org/jlab/epsci/ubuntu/22.04/share/spack/setup-env.sh # takes a while
-Singularity> spack env activate phasm # activate g4&root
-Singularity> export G4EX=$SPACK_ROOT/opt/spack/linux-ubuntu22.04-x86_64/gcc-11.3.0/geant4-11.1.0-px46pszk3frzg74fdbsqktipkohbyq3u/share/Geant4/examples/basic/B4
+Singularity> nvidia-smi  # verify CUDA
+Singularity> source /cvmfs/oasis.opensciencegrid.org/jlab/epsci/ubuntu/22.04/share/spack/setup-env.sh
+Singularity> spack env activate phasm # activate g4&root env
+# You will see below errors but donot be afraid! It's working!
+# ==> Warning: couldn't get environment settings for geant4@11.1.0 /px46psz
+#  Error writing to config file: '[Errno 30] Read-only file system: '/cvmfs/oasis.opensciencegrid.org/jlab/# epsci/ubuntu/22.04/var/spack/environments/phasm/.spack.yaml.tmp''
 
+# Set the g4 dependencies
+Singularity> export G4EX=$SPACK_ROOT/opt/spack/linux-ubuntu22.04-x86_64/gcc-11.3.0/geant4-11.1.0-px46pszk3frzg74fdbsqktipkohbyq3u/share/Geant4/examples/basic/B4
 # Build and install g4
 Singularity> cmake -S $G4EX -B g4/build -DCMAKE_INSTALL_PREFIX=g4/install -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=1
 Singularity> cd g4
@@ -100,13 +113,22 @@ Singularity> cmake --build build --target install -- -j8
 
 # Run g4 example
 Singularity> cp -rp $G4EX/macros  .
-Singularity> cd macros
-Singularity> ../install/bin/exampleB4d  # a graphic window should come out eventually
+Singularity> cd macros  # necessary macro files are loacted here
+Singularity> ../install/bin/exampleB4d
+# If you are on the login node, a graphic window should come out.
+# But if you are on GPU node where X11 is forbidden, there is no GUI.
+# Without GUI, the example will complain as below.
+# ERROR: G4VisManager::IsValidView(): Current view is not valid.
+# ERROR: G4VisManager::PrintInvalidPointers:
+#   Graphics system is OpenGLStoredX but:
+#   Null scene pointer. Use "/vis/drawVolume" or "/vis/scene/create".
+#   Null viewer pointer. Use "/vis/viewer/create".
 
-# g4 simulation example
+# G4 exampleB4d is running.
 Idle> run/beamOn 1
 # Quit the simulation
 Idle> exit
+Singularity>  # still in the singularity container
 ```
 
 #### References
@@ -114,4 +136,4 @@ Idle> exit
 - [Ifarm phasm-g4 guide](https://wiki.jlab.org/epsciwiki/index.php/HOWTO_build_and_run_PHASM_on_Geant4_examples)
 
 ## Bare-Metal
-[This](ifarm_guide_bare_metal.md) is strongly not advised but could be an reference for how to build containers.
+[This](ifarm_guide_bare_metal.md) is strongly not advised but could serve as a reference on how to build containers.
