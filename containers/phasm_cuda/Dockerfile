@@ -9,7 +9,7 @@
 # - JANA Dockerfile
 # https://github.com/JeffersonLab/JANA2/blob/master/containers/Docker/Dockerfile
 
-ARG FROM_IMAGE_NAME=nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+ARG FROM_IMAGE_NAME=nvidia/cuda:11.8.0-devel-ubuntu22.04
 FROM ${FROM_IMAGE_NAME}
 USER root
 
@@ -39,12 +39,14 @@ RUN apt-get update && \
         libexpat-dev \
         zlib1g-dev  # zlib for pin or libdwarf
 
+# install clang static analyzer
+RUN apt-get update && apt-get -y install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang
+
 # Updated on May/24/2023
 ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip"
 # last updated on Mar/18/2023
 ARG TORCH_CUDA_URL="https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip"
 # TORCH_URL can switch between libtorch_cuda and libtorch_cpu
-ARG TORCH_URL=$TORCH_CUDA_URL
 ARG PIN_URL="https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz"
 ARG DWARF_URL="https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz"
 ARG DEP_PATH=/deps
@@ -58,8 +60,11 @@ RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
     echo "check_certificate = off" >> ~/.wgetrc
 
 # Install libtorch
-ADD ${TORCH_URL} libtorch.zip
-RUN unzip libtorch.zip && rm libtorch.zip
+# Downloading the Torch zip appears to break due to mysterious checksum
+# problems, so we download it externally
+ADD libtorch libtorch
+
+
 ENV LIBTORCH_INSTALL_PATH=${DEP_PATH}/libtorch
 ENV LD_LIBRARY_PATH=${LIBTORCH_INSTALL_PATH}/lib:${LD_LIBRARY_PATH}
 
@@ -100,8 +105,6 @@ RUN cd /deps && \
     wget https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.1-linux-x86_64.tar.gz && \
     tar xf julia-1.9.1-linux-x86_64.tar.gz
 
-# install clang static analyzer
-RUN apt-get install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang
 
 ENV JANA_HOME="${DEP_PATH}/JANA2/install"
 ENV PATH=${JANA_HOME}/bin:/deps/julia-1.9.1/bin:${PATH}
