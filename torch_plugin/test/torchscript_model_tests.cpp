@@ -53,7 +53,7 @@ TEST_CASE("Module has 'mfield' in its name") {
 namespace phasm::test::torchscript_model_tests {
 
 /**
- * Test loading a torchscript model and do one round of inference.
+ * Test loading a torchscript model and do one round of inference on CPU.
 */
 TEST_CASE("Load the module to CPU and do inference") {
     auto s = SurrogateBuilder()
@@ -76,11 +76,38 @@ TEST_CASE("Load the module to CPU and do inference") {
     REQUIRE(By == -2.0);
     REQUIRE(Bz == -3.0);
 
-    // Inference results
+    // Inference results, a loose constraint
     s.call_model_and_capture();
     REQUIRE(Bx != -1.0);
     REQUIRE(By != -2.0);
     REQUIRE(Bz != -3.0);
 }
 
+TEST_CASE("Load the module to assigned device (GPU prefered) and do inference") {
+    torch::Device device(torch::cuda::is_available()? torch::kCUDA : torch::kCPU);
+
+    auto s = SurrogateBuilder()
+        .set_model(std::make_shared<TorchscriptModel>(
+            TorchscriptModel(ptPath, false, device)), 
+            true
+            )
+        .local_primitive<double>("x", phasm::IN)
+        .local_primitive<double>("y", phasm::IN)
+        .local_primitive<double>("z", phasm::IN)
+        .local_primitive<double>("Bx", Direction::OUT)
+        .local_primitive<double>("By", Direction::OUT)
+        .local_primitive<double>("Bz", Direction::OUT)
+        .finish();
+
+    // Set up a simple function pretending to be a magnetic field map data
+    double x = 1.0, y = 2.0, z = 3.0, Bx, By, Bz;
+    s.bind_original_function([&]() { Bx = -x, By = -y; Bz = -z; });
+    s.bind_all_callsite_vars(&x, &y, &z, &Bx, &By, &Bz);
+
+    // Inference results
+    s.call_model_and_capture();
+    REQUIRE(Bx != -1.0);
+    REQUIRE(By != -2.0);
+    REQUIRE(Bz != -3.0);
+}
 } // namespace phasm::test::torchscript_model_tests

@@ -205,7 +205,7 @@ int main() {
      */
     // Device
     bool has_gpu = phasm::has_cuda_device();
-    auto device_str = (has_gpu == true) ? torch::kCUDA : torch::kCPU;
+    auto device_str = has_gpu? torch::kCUDA : torch::kCPU;
     torch::Device device(device_str);
 
     if (has_gpu) {

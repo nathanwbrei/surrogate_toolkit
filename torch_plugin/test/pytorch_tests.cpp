@@ -79,6 +79,4 @@ TEST_CASE("Getting a multidimensional array out of a Torch tensor with arbitrary
     std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << std::endl;
 }
 
-
-
 }

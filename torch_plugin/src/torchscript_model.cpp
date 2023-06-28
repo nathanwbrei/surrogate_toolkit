@@ -66,10 +66,10 @@ bool TorchscriptModel::infer() {
         }
 
         // This all assumes a single Tensor of floats as input and output
-        torch::Tensor input = flatten_and_join(input_tensors);
+        torch::Tensor input = flatten_and_join(input_tensors).to(m_device); // loocated on m_device
         std::vector<torch::jit::IValue> inputs;
         inputs.push_back(input);
-        auto output = m_module.forward(inputs).toTensor();
+        auto output = m_module.forward(inputs).toTensor().to(torch::kCPU);  // oon CPU
 
         std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
 
@@ -82,14 +82,14 @@ bool TorchscriptModel::infer() {
     else {
         std::vector<torch::jit::IValue> inputs;
         for (const auto &input_model_var: m_inputs) {
-            inputs.push_back(to_torch_tensor(input_model_var->inference_input));
+            inputs.push_back(to_torch_tensor(input_model_var->inference_input).to(m_device));
         }
 
         auto output = m_module.forward(inputs);
         if (output.isTensor()) {
 
             if (m_outputs.size() == 1) {
-                m_outputs[0]->inference_output = to_phasm_tensor(output.toTensor());
+                m_outputs[0]->inference_output = to_phasm_tensor(output.toTensor().to(torch::kCPU));
             }
             else {
                 std::cerr << "PHASM: FATAL ERROR: Torchscript model outputs a single tensor when multiple expected" << std::endl;
@@ -109,7 +109,7 @@ bool TorchscriptModel::infer() {
             }
             size_t i = 0;
             for (const auto &output_model_var: m_outputs) {
-                output_model_var->inference_output = to_phasm_tensor(tuple->elements()[i++].toTensor());
+                output_model_var->inference_output = to_phasm_tensor(tuple->elements()[i++].toTensor().to(m_device));
             }
         }
         else {
