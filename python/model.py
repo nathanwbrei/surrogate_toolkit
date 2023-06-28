@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
 import numpy as np
-import torchvision
-import torchvision
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # checking device to use CUDA
 N = nn.Sequential(
