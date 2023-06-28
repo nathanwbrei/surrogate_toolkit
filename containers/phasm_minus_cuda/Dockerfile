@@ -31,6 +31,16 @@ ARG DEP_PATH=/deps
 
 WORKDIR ${DEP_PATH}
 
+# Install additional python packages
+# Configure timezone info so that it doesn't hang while attempting to prompt user for timezone
+ENV TZ=Europe/Kiev
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get -y update && apt-get -y install python3-venv python3-tk
+
+# Install clang static analyzer
+RUN apt-get update && apt-get -y install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang
+
+
 # Fix certificates
 ADD http://pki.jlab.org/JLabCA.crt /usr/local/share/ca-certificates/JLabCA.crt
 RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \

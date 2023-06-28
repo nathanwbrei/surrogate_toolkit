@@ -39,6 +39,15 @@ RUN apt-get update && \
         libexpat-dev \
         zlib1g-dev  # zlib for pin or libdwarf
 
+# Install additional python packages
+# Configure timezone info so that it doesn't hang while attempting to prompt user for timezone
+ENV TZ=Europe/Kiev
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get -y update && apt-get -y install python3-venv python3-tk
+
+# install clang static analyzer
+RUN apt-get update && apt-get -y install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm python3-clang
+
 # Updated on May/24/2023
 ARG TORCH_CPU_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip"
 # last updated on Mar/18/2023
