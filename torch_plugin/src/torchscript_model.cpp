@@ -66,10 +66,10 @@ bool TorchscriptModel::infer() {
         }
 
         // This all assumes a single Tensor of floats as input and output
-        torch::Tensor input = flatten_and_join(input_tensors).to(m_device); // loocated on m_device
+        torch::Tensor input = flatten_and_join(input_tensors).to(m_device); // located on m_device
         std::vector<torch::jit::IValue> inputs;
         inputs.push_back(input);
-        auto output = m_module.forward(inputs).toTensor().to(torch::kCPU);  // oon CPU
+        auto output = m_module.forward(inputs).toTensor().to(torch::kCPU);  // on CPU
 
         std::vector<torch::Tensor> output_tensors = split_and_unflatten_outputs(output, m_output_lengths, m_output_shapes);
 

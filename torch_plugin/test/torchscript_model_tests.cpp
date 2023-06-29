@@ -99,15 +99,14 @@ TEST_CASE("Load the module to assigned device (GPU prefered) and do inference") 
         .local_primitive<double>("Bz", Direction::OUT)
         .finish();
 
-    // Set up a simple function pretending to be a magnetic field map data
     double x = 1.0, y = 2.0, z = 3.0, Bx, By, Bz;
     s.bind_original_function([&]() { Bx = -x, By = -y; Bz = -z; });
     s.bind_all_callsite_vars(&x, &y, &z, &Bx, &By, &Bz);
 
-    // Inference results
     s.call_model_and_capture();
     REQUIRE(Bx != -1.0);
     REQUIRE(By != -2.0);
     REQUIRE(Bz != -3.0);
 }
+
 } // namespace phasm::test::torchscript_model_tests
