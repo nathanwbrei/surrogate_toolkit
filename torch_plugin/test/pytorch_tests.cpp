@@ -2,7 +2,7 @@
 // Copyright 2022, Jefferson Science Associates, LLC.
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
-#define CATCH_CONFIG_MAIN
+
 #include <catch.hpp>
 #include <optics.h>
 #include <torch/torch.h>
@@ -78,7 +78,5 @@ TEST_CASE("Getting a multidimensional array out of a Torch tensor with arbitrary
     std::cout << mat[0][0] << " " << mat[0][1] << " " << mat[0][2] << std::endl;
     std::cout << mat[1][0] << " " << mat[1][1] << " " << mat[1][2] << std::endl;
 }
-
-
 
 }
