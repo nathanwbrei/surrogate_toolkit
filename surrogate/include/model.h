@@ -52,6 +52,8 @@ public:
     // The total number of training samples we have accumulated so far
     size_t get_capture_count() const;
 
+    size_t get_model_var_count() { return m_model_vars.size(); }
+
     std::shared_ptr<ModelVariable> get_model_var(size_t position);
 
     std::shared_ptr<ModelVariable> get_model_var(std::string param_name);

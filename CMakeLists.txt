@@ -2,9 +2,12 @@
 cmake_minimum_required(VERSION 3.9)
 project(surrogate_toolkit VERSION 0.0.1)
 
+# Expose custom CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)   # Enable -fPIC for all targets
 
-# Set default standard to C++14, but allow user to override at command line
+# Set default standard to C++17, but allow user to override at command line
 if(NOT "${CMAKE_CXX_STANDARD}")
     set(CMAKE_CXX_STANDARD 17)
 endif()
@@ -52,6 +55,7 @@ include_directories(external)
 add_subdirectory(examples)
 add_subdirectory(surrogate)
 add_subdirectory(torch_plugin)
+add_subdirectory(julia_plugin)
 add_subdirectory(memtrace)
 #add_subdirectory(memtrace_pin)
 #add_subdirectory(gpu_perf_tester)
