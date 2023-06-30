@@ -1,11 +1,23 @@
 #!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    echo "Error: Wrong number of arguments"
+    echo "Usage: $0 <DOWNLOAD_DIR>"
+    echo ""
+    exit 1
+fi
+
+DOWNLOAD_DIR=$(readlink -f $1)
+echo "Download dir: $DOWNLOAD_DIR"
+
+
 # exit when any command fails in the script
 set -e
 
 function finish {
   RESULT=$?
   if [[ ! $RESULT -eq 0 ]]; then
-    echo "\'${last_command}\' returned with exit code $RESULT."
+    echo "Error: '${last_command}' returned with exit code $RESULT."
   fi
 }
 
@@ -18,16 +30,14 @@ trap finish EXIT
 # Figure out whether we are on linux or macos
 if [[ "$OSTYPE" == "darwin"* ]]; then
   MACOS=1
-  echo "Detected your system is macOS"
+  echo "Detected system = macOS"
 else
   MACOS=0
-  echo "Assuming your system is Linux"
+  echo "Assuming system = Linux"
 fi
 
-DEPSDIR=`pwd`/deps
-echo "Downloading everything to DEPS=$DEPSDIR."
-mkdir -p deps
-cd deps
+mkdir -p $DOWNLOAD_DIR
+cd $DOWNLOAD_DIR
 
 # Download PyTorch
 DOWNLOAD_LIBTORCH=1
@@ -41,18 +51,14 @@ if [[ $DOWNLOAD_LIBTORCH -eq 1 ]]; then
     echo "Downloading libtorch"
     if [[ $MACOS -eq 1 ]]; then
         # Download macOS version
-        wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip
-        unzip libtorch-macos-1.10.1.zip
-        mv libtorch-macos-1.10.1 libtorch
+        curl -kOJ https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip libtorch-macos-1.10.1.zip
     else
         # Download Linux version
         read -p "Download the cxx11 ABI version? (Choose yes unless you are running something like CentOS7) [y/n]: " REPLY
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
-            unzip libtorch-cxx11-abi-shared-with-deps-1.11.0+cpu.zip
+            curl -kOJ https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
         else
-            wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
-            unzip libtorch-shared-with-deps-1.11.0+cpu.zip
+            curl -kOJ https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
         fi
     fi
 fi
@@ -68,17 +74,13 @@ fi
 if [[ $DOWNLOAD_PIN -eq 1 ]]; then
     echo "Downloading Intel PIN"
     if [[ $MACOS -eq 1 ]]; then
-        wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-clang-mac.tar.gz
-        tar -xf pin-3.22-98547-g7a303a835-clang-mac.tar.gz
-        mv pin-3.22-98547-g7a303a835-clang-mac pin
+        curl -kOJ https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-clang-mac.tar.gz
     else
-        wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
-        tar -xf pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
-        mv pin-3.22-98547-g7a303a835-gcc-linux pin
+        curl -kOJ https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
     fi
 fi
 
-# Build and install JANA2
+# Download JANA2
 DOWNLOAD_JANA=1
 if [[ -d "JANA2" ]]; then
     read -p "JANA2 has already been downloaded. Re-download? [y/n]: " REPLY
@@ -88,17 +90,10 @@ if [[ -d "JANA2" ]]; then
 fi
 if [[ $DOWNLOAD_JANA -eq 1 ]]; then
     echo "Downloading JANA2"
-    git clone http://github.com/JeffersonLab/JANA2 --branch=v2.0.6
-    mkdir JANA2/install
-    export JANA_HOME=`pwd`/JANA2/install
-    mkdir JANA2/build
-    cd JANA2/build
-    cmake .. -DCMAKE_INSTALL_PREFIX=$JANA_HOME
-    make -j8 install
-    cd ../..
+    curl -kOJ https://github.com/JeffersonLab/JANA2/releases/tag/v2.0.6
 fi
 
-# Build and install libdwarf
+# Download libdwarf
 DOWNLOAD_LIBDWARF=1
 if [[ -d "libdwarf-0.3.4" ]]; then
     read -p "libdwarf has already been downloaded. Re-download? [y/n]: " REPLY
@@ -108,15 +103,7 @@ if [[ -d "libdwarf-0.3.4" ]]; then
 fi
 if [[ $DOWNLOAD_LIBDWARF -eq 1 ]]; then
     echo "Downloading libdwarf"
-    #git clone https://github.com/davea42/libdwarf-code libdwarf
-    wget --no-check-certificate https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
-    tar -xf libdwarf-0.3.4.tar.xz
-    mkdir libdwarf-0.3.4/build
-    mkdir libdwarf-0.3.4/installdir
-    cd libdwarf-0.3.4/build
-    cmake .. -DCMAKE_INSTALL_PREFIX=$DEPSDIR/libdwarf-0.3.4/installdir
-    make install
+    curl -kOJ https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
 fi
 
-echo "Pass to CMake:"
-echo "-DCMAKE_PREFIX_PATH=\"$DEPSDIR/libtorch;$DEPSDIR/JANA2/install;$DEPSDIR/libdwarf-0.3.4/installdir\" -DLIBDWARF_DIR=\"$DEPSDIR/libdwarf-0.3.4/installdir\" -DPIN_ROOT=\"$DEPSDIR/pin\""
+echo "Success!"
