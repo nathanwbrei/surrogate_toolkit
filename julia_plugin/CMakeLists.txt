@@ -1,6 +1,15 @@
 
-find_package(Julia)
-if(${Julia_FOUND})
+if(NOT ${USE_JULIA})
+
+    message(STATUS "Skipping target 'phasm-julia-plugin' because USE_JULIA=Off")
+    message(STATUS "Skipping target 'phasm-julia-plugin-tests' because USE_JULIA=Off")
+
+else()
+
+    message(STATUS "Including target 'phasm-julia_plugin'")
+
+    # find_package(Julia)
+    # Already happened in top-level CMakeLists
 
     set(PHASM_JULIA_PLUGIN_SOURCES
             src/julia_plugin_main.cc
@@ -19,9 +28,6 @@ if(${Julia_FOUND})
     add_executable("phasm-julia-plugin-tests" ${PHASM_JULIA_PLUGIN_TEST_SOURCES})
     target_include_directories(phasm-julia-plugin-tests PRIVATE include)
     target_link_libraries(phasm-julia-plugin-tests phasm-julia-plugin)
-
-else()
-    message(WARNING "Skipping target 'julia_plugin' as dependency 'Julia' not found")
 
 endif()
 

@@ -1,5 +1,14 @@
 
-find_package(Torch REQUIRED)
+if (NOT ${USE_TORCH})
+    message(STATUS "Skipping target 'phasm-torch-plugin' because USE_TORCH=Off")
+    return()
+endif()
+
+message(STATUS "Including target 'phasm-torch-plugin'")
+
+
+# find_package(Torch REQUIRED)
+# Handled at top-level CMakeLists instead
 
 set(PHASM_TORCH_PLUGIN_SOURCES
         src/torch_plugin_main.cc
@@ -10,9 +19,7 @@ set(PHASM_TORCH_PLUGIN_SOURCES
         )
 
 if(${USE_CUDA})
-    list(APPEND PHASM_TORCH_PLUGIN_SOURCES
-            src/torch_cuda_utils.cc
-            )
+        list(APPEND PHASM_TORCH_PLUGIN_SOURCES src/torch_cuda_utils.cc)
 endif()
 
 add_library(phasm-torch-plugin SHARED ${PHASM_TORCH_PLUGIN_SOURCES})
@@ -36,9 +43,8 @@ install(TARGETS phasm-torch-plugin DESTINATION plugins)
 set(PHASM_TORCH_PLUGIN_TEST_SOURCES
         test/torchscript_model_tests.cpp
         test/pytorch_tests.cpp
-    )
+)
 
 add_executable("phasm-torch-plugin-tests" ${PHASM_TORCH_PLUGIN_TEST_SOURCES})
 target_include_directories(phasm-torch-plugin-tests PRIVATE include ../memtrace/include ${TORCH_INCLUDE_DIRS})
 target_link_libraries(phasm-torch-plugin-tests ${TORCH_LIBRARIES} phasm-surrogate phasm-torch-plugin)
-

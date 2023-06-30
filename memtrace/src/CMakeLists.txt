@@ -1,4 +1,12 @@
 
+if (NOT ${USE_DWARF})
+        message(STATUS "Skipping target 'phasm-memtrace' because USE_DWARF=Off")
+        return()
+endif()
+
+message(STATUS "Including target 'phasm-memtrace'")
+
+
 #find_package(libdwarf REQUIRED)
 #TODO: Access libdwarf as a CMake target instead?
 set(LIBDWARF_INCLUDE_DIRS ${LIBDWARF_DIR}/include/libdwarf ${LIBDWARF_DIR}/include/libdwarf-0)

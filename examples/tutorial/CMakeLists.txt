@@ -1,6 +1,5 @@
 
-find_package(Torch REQUIRED)
-
+message(STATUS "Including target 'phasm-example-tutorial'")
 set(TUTORIAL_SOURCES tutorial.cpp)
 add_executable(phasm-example-tutorial ${TUTORIAL_SOURCES})
 target_include_directories(phasm-example-tutorial PRIVATE

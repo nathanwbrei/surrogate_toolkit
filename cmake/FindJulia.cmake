@@ -15,9 +15,6 @@ set(Julia_LIBRARY_DIRS ${Julia_LIBRARY} ${Julia_LIBRARY}/julia)
 set(Julia_LIBRARY ${Julia_LIBRARY_DIR}/libjulia.so)
 set(Julia_INCLUDE_DIRS ${Julia_INCLUDE_DIR})
 
-message(STATUS "Looking for package Julia. Julia_DIR=${Julia_DIR}")
-message(STATUS "Looking for package Julia. Julia_INCLUDE_DIR=${Julia_INCLUDE_DIR}")
-message(STATUS "Looking for package Julia. Julia_LIBRARY=${Julia_LIBRARY}")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Julia
