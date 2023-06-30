@@ -1,4 +1,7 @@
 
+
+message(STATUS "Including target 'phasm-surrogate'")
+
 set(SURROGATE_LIBRARY_SOURCES
         src/surrogate.cpp
         src/model.cpp

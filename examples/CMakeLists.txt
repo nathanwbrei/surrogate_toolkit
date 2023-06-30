@@ -5,8 +5,6 @@ add_subdirectory(memtrace)
 # add_subdirectory(tracking)  # empty project as of May 22, 2023
 add_subdirectory(tutorial)
 add_subdirectory(loading_pt)
+add_subdirectory(pinn_pde_solver)
 
-if(${USE_CUDA})
-    add_subdirectory(pinn_pde_solver)
-endif()
 
