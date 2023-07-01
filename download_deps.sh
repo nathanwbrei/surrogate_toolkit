@@ -39,6 +39,25 @@ fi
 mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 
+# Download Julia
+DOWNLOAD_JULIA=1
+if [[ -f "julia.tar.gz" ]]; then
+    read -p "Julia has already been downloaded. Re-download? [y/n]: " REPLY
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        DOWNLOAD_JULIA=0
+    fi
+fi
+if [[ $DOWNLOAD_JULIA -eq 1 ]]; then
+    echo "Downloading Julia"
+    if [[ $MACOS -eq 1 ]]; then
+        # Download macOS version
+        echo "Skipping download of Julia for macOS until we figure out which package we need"
+    else
+        # Download Linux version
+        wget --no-check-certificate -O julia.tar.gz https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.1-linux-x86_64.tar.gz
+    fi
+fi
+
 # Download PyTorch
 DOWNLOAD_LIBTORCH=1
 if [[ -f "libtorch.zip" ]]; then
@@ -54,12 +73,7 @@ if [[ $DOWNLOAD_LIBTORCH -eq 1 ]]; then
         wget --no-check-certificate -O libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip libtorch-macos-1.10.1.zip
     else
         # Download Linux version
-        read -p "Download the cxx11 ABI version? (Choose yes unless you are running something like CentOS7) [y/n]: " REPLY
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            wget --no-check-certificate -O libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
-        else
-            wget --no-check-certificate -O libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
-        fi
+        wget --no-check-certificate -O libtorch.zip https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip
     fi
 fi
 

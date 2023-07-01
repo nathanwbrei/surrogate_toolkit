@@ -47,6 +47,11 @@ rm -rf $INSTALL_DIR/Torch
 unzip libtorch.zip
 mv libtorch $INSTALL_DIR/Torch
 
+# Install Julia
+rm -rf $INSTALL_DIR/julia
+mkdir $INSTALL_DIR/julia
+tar -xf julia.tar.gz -C $INSTALL_DIR/julia --strip-components 1
+
 # Install PIN
 rm -rf $INSTALL_DIR/PIN
 mkdir $INSTALL_DIR/PIN
@@ -57,7 +62,7 @@ rm -rf JANA
 unzip JANA2.zip
 mv -f JANA2-2.0.6 JANA
 mkdir -p JANA/install
-export JANA_HOME=$INSTALL_DIR
+export JANA_HOME=$INSTALL_DIR/JANA
 mkdir JANA/build
 cd JANA/build
 cmake .. -DCMAKE_INSTALL_PREFIX=$JANA_HOME
