@@ -23,17 +23,7 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap finish EXIT
 
 
-declare_use_dep() {
-    local usevar=$1
-    local default=$2
 
-    if [[ -v $usevar ]]; then
-        echo "$usevar=${!usevar} (user override)"
-    else
-        export $usevar=$default
-        echo "$usevar=${!usevar} (default)"
-    fi
-}
 
 conditional_download() {
     local name=$1
@@ -55,12 +45,9 @@ conditional_download() {
     fi
 }
 
-
-declare_use_dep USE_TORCH ON
-declare_use_dep USE_JULIA ON
-declare_use_dep USE_JANA ON
-declare_use_dep USE_PIN OFF
-declare_use_dep USE_DWARF OFF
+# Pull in the environment variables describing which deps we need
+# These should match PHASM's CMake flags exactly
+source $(dirname "$0")/collect_deps.sh
 
 echo ""
 DOWNLOAD_DIR=$(readlink -f $1)
