@@ -29,7 +29,6 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap finish EXIT
 
 
-
 # Figure out whether we are on linux or macos
 if [[ "$OSTYPE" == "darwin"* ]]; then
   MACOS=1
@@ -44,81 +43,35 @@ mkdir -p $INSTALL_DIR
 cd $DOWNLOAD_DIR
 
 # Install PyTorch
-if [[ $MACOS -eq 1 ]]; then
-    # Download macOS version
-    unzip $DOWNLOAD_DIR/libtorch-macos-1.10.1.zip
-    mv libtorch-macos-1.10.1 libtorch
-else
-    # Download Linux version
-    read -p "Download the cxx11 ABI version? (Choose yes unless you are running something like CentOS7) [y/n]: " REPLY
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.11.0%2Bcpu.zip
-        unzip libtorch-cxx11-abi-shared-with-deps-1.11.0+cpu.zip
-    else
-        wget --no-check-certificate https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-1.11.0%2Bcpu.zip
-        unzip libtorch-shared-with-deps-1.11.0+cpu.zip
-    fi
-fi
+rm -rf $INSTALL_DIR/Torch
+unzip libtorch.zip
+mv libtorch $INSTALL_DIR/Torch
 
-# Download PIN
-DOWNLOAD_PIN=1
-if [[ -d "pin" ]]; then
-    read -p "Intel PIN has already been downloaded. Re-download? [y/n]: " REPLY
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        DOWNLOAD_PIN=0
-    fi
-fi
-if [[ $DOWNLOAD_PIN -eq 1 ]]; then
-    echo "Downloading Intel PIN"
-    if [[ $MACOS -eq 1 ]]; then
-        wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-clang-mac.tar.gz
-        tar -xf pin-3.22-98547-g7a303a835-clang-mac.tar.gz
-        mv pin-3.22-98547-g7a303a835-clang-mac pin
-    else
-        wget https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
-        tar -xf pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
-        mv pin-3.22-98547-g7a303a835-gcc-linux pin
-    fi
-fi
+# Install PIN
+rm -rf $INSTALL_DIR/PIN
+mkdir $INSTALL_DIR/PIN
+tar -xf pin.tar.gz -C $INSTALL_DIR/PIN --strip-components 1
 
 # Build and install JANA2
-DOWNLOAD_JANA=1
-if [[ -d "JANA2" ]]; then
-    read -p "JANA2 has already been downloaded. Re-download? [y/n]: " REPLY
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        DOWNLOAD_JANA=0
-    fi
-fi
-if [[ $DOWNLOAD_JANA -eq 1 ]]; then
-    echo "Downloading JANA2"
-    git clone http://github.com/JeffersonLab/JANA2 --branch=v2.0.6
-    mkdir JANA2/install
-    export JANA_HOME=$INSTALL_DIR
-    mkdir JANA2/build
-    cd JANA2/build
-    cmake .. -DCMAKE_INSTALL_PREFIX=$JANA_HOME
-    make -j8 install
-    cd ../..
-fi
+rm -rf JANA
+unzip JANA2.zip
+mv -f JANA2-2.0.6 JANA
+mkdir -p JANA/install
+export JANA_HOME=$INSTALL_DIR
+mkdir JANA/build
+cd JANA/build
+cmake .. -DCMAKE_INSTALL_PREFIX=$JANA_HOME
+make -j8 install
+cd ../..
 
 # Build and install libdwarf
-DOWNLOAD_LIBDWARF=1
-if [[ -d "libdwarf-0.3.4" ]]; then
-    read -p "libdwarf has already been downloaded. Re-download? [y/n]: " REPLY
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        DOWNLOAD_LIBDWARF=0
-    fi
-fi
-if [[ $DOWNLOAD_LIBDWARF -eq 1 ]]; then
-    echo "Downloading libdwarf"
-    #git clone https://github.com/davea42/libdwarf-code libdwarf
-    wget --no-check-certificate https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
-    tar -xf libdwarf-0.3.4.tar.xz
-    mkdir libdwarf-0.3.4/build
-    cd libdwarf-0.3.4/build
-    cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
-    make install
-fi
+rm -rf libdwarf
+mkdir libdwarf
+tar -xf libdwarf.tar.xz -C libdwarf --strip-components 1
+mkdir libdwarf/build
+cd libdwarf/build
+cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
+make install
 
 echo "Success!"
 echo "Pass the following variables to CMake:"

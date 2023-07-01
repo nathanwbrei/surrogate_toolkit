@@ -20,13 +20,11 @@ endif()
 
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -O0 -g -Wall -Wextra -fno-omit-frame-pointer")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
 if(NOT CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     # CMake has been explicitly given an install dir, so we use that
-elseif(DEFINED ENV{SURROGATE_HOME})
+elseif(DEFINED ENV{PHASM_HOME})
     # CMake hasn't been told of an install dir, but we have an envvar, so we use that instead
-    set(CMAKE_INSTALL_PREFIX $ENV{SURROGATE_HOME} CACHE PATH "Comment explaining this nonsense" FORCE)
+    set(CMAKE_INSTALL_PREFIX $ENV{PHASM_HOME} CACHE PATH "Comment explaining this nonsense" FORCE)
 else()
     # No explicit install dir, so we install to './install' to avoid clobbering /usr/local
     set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "Comment explaining this nonsense" FORCE)
@@ -34,6 +32,7 @@ endif()
 
 
 message(STATUS "-----------------------")
+message(STATUS "Dependency prefix path is ${CMAKE_PREFIX_PATH}")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ standard is ${CMAKE_CXX_STANDARD}")
