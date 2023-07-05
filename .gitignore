@@ -12,6 +12,7 @@ a.out.dSYM
 *.pyc
 .DS_Store
 *.pt  # PyTorch trained model
+downloads
 
 # VS code
 venv/
