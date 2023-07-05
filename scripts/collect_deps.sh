@@ -15,10 +15,10 @@ declare_use_dep() {
     fi
 }
 
-declare_use_dep USE_TORCH ON
-declare_use_dep USE_JULIA ON
-declare_use_dep USE_JANA ON
-declare_use_dep USE_LLVM OFF
-declare_use_dep USE_GEANT4 OFF
-declare_use_dep USE_PIN OFF
-declare_use_dep USE_DWARF OFF
+declare_use_dep PHASM_USE_TORCH 1
+declare_use_dep PHASM_USE_JULIA 1
+declare_use_dep PHASM_USE_JANA 1
+declare_use_dep PHASM_USE_LLVM 0
+declare_use_dep PHASM_USE_GEANT4 0
+declare_use_dep PHASM_USE_PIN 0
+declare_use_dep PHASM_USE_DWARF 0

@@ -6,30 +6,35 @@ source $(dirname "$0")/collect_deps.sh
 
 apt-get update 
 
+# Prevent tzdata from hanging while attempting to prompt the user
+export DEBIAN_FRONTEND=noninteractive
+#export TZ=America/New_York
+
 # Install basic dev environment
 apt-get -y install --no-install-recommends \
     apt-transport-https \
-    ca-certificates \
-    gnupg \
-    software-properties-common \
-    wget \
-    git \
-    cmake \
-    build-essential \
-    libtool \
     autoconf \
-    unzip \
-    vim \
-    curl \
-    gdb \
-    libasan6 \
-    less \
-    exa \
     bat \
-    valgrind \
-    python3-venv \
+    build-essential \
+    ca-certificates \
+    cmake \
+    curl \
+    exa \
+    gdb \
+    git \
+    gnupg \
+    less \
+    libasan6 \
+    libtool \
     python3-tk \
-    xz-utils
+    python3-venv \
+    software-properties-common \
+    unzip \
+    valgrind \
+    vim \
+    wget \
+    xz-utils \
+    zlib1g-dev
 
 # Fix certificates
 wget -O /usr/local/share/ca-certificates/JLabCA.crt http://pki.jlab.org/JLabCA.crt
@@ -37,17 +42,3 @@ chmod 644 /usr/local/share/ca-certificates/JLabCA.crt
 update-ca-certificates
 echo "check_certificate = off" >> ~/.wgetrc
 
-if [[ $USE_PIN ~= [oO][nN] ]]; then
-    apt-get -y install \
-        zlib1g-dev
-fi
-
-if [[ $USE_DWARF ~= [oO][nN] ]]; then
-    apt-get -y install \
-        zlib1g-dev
-fi
-
-
-
-
-    

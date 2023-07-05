@@ -37,7 +37,7 @@ mkdir -p $INSTALL_DIR
 cd $DOWNLOAD_DIR
 
 # Install PyTorch
-if [[ $USE_TORCH ~= [oO][nN] ]]; then
+if [ $PHASM_USE_TORCH -eq 1 ]; then
   echo "Installing Torch"
   rm -rf $INSTALL_DIR/Torch
   unzip libtorch.zip
@@ -45,7 +45,7 @@ if [[ $USE_TORCH ~= [oO][nN] ]]; then
 fi
 
 # Install Julia
-if [[ $USE_JULIA ~= [oO][nN] ]]; then
+if [ $PHASM_USE_JULIA -eq 1 ]; then
   echo "Installing Julia"
   rm -rf $INSTALL_DIR/julia
   mkdir $INSTALL_DIR/julia
@@ -53,7 +53,7 @@ if [[ $USE_JULIA ~= [oO][nN] ]]; then
 fi
 
 # Install PIN
-if [[ $USE_PIN ~= [oO][nN] ]]; then
+if [ $PHASM_USE_PIN -eq 1 ]; then
   echo "Installing PIN"
   rm -rf $INSTALL_DIR/PIN
   mkdir $INSTALL_DIR/PIN
@@ -61,7 +61,7 @@ if [[ $USE_PIN ~= [oO][nN] ]]; then
 fi
 
 # Build and install JANA2
-if [[ $USE_JANA ~= [oO][nN] ]]; then
+if [ $PHASM_USE_JANA -eq 1 ]; then
   echo "Building and installing JANA"
   rm -rf JANA
   unzip JANA.zip
@@ -76,7 +76,7 @@ if [[ $USE_JANA ~= [oO][nN] ]]; then
 fi 
 
 # Build and install libdwarf
-if [[ $USE_DWARF ~= [oO][nN] ]]; then
+if [ $PHASM_USE_DWARF -eq 1 ]; then
   echo "Building and installing libdwarf"
   rm -rf libdwarf
   mkdir libdwarf
@@ -87,7 +87,7 @@ if [[ $USE_DWARF ~= [oO][nN] ]]; then
   make install
 fi
 
-if [[ $USE_GEANT4 ~= [oO][nN] ]]; then
+if [ $PHASM_USE_GEANT4 -eq 1 ]; then
   echo "Building and installing geant4"
   rm -rf geant4
   mkdir geant4
