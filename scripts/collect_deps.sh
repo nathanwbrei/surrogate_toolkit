@@ -7,7 +7,7 @@ declare_use_dep() {
     local usevar=$1
     local default=$2
 
-    if [[ -v $usevar ]]; then
+    if [ -v $usevar ]; then
         echo "$usevar=${!usevar} (user override)"
     else
         export $usevar=$default
