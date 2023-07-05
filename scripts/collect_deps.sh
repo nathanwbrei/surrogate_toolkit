@@ -7,11 +7,12 @@ declare_use_dep() {
     local usevar=$1
     local default=$2
 
-    if [ -v $usevar ]; then
-        echo "$usevar=${!usevar} (user override)"
-    else
+    # Used to be `-v $usevar`, but had to change it because macOS is stuck on bash v3.2 (from 2007!)
+    if [ -n "$usevar" ]; then
         export $usevar=$default
         echo "$usevar=${!usevar} (default)"
+    else
+        echo "$usevar=${!usevar} (user override)"
     fi
 }
 

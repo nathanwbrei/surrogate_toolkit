@@ -22,14 +22,6 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo the error message given before exiting
 trap finish EXIT
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  MACOS=1
-  echo "Detected system = macOS"
-else
-  MACOS=0
-  echo "Detected system = Linux"
-fi
-
 
 
 conditional_download() {
@@ -47,10 +39,10 @@ conditional_download() {
         fi
         if [[ $do_download -eq 1 ]]; then
             echo "Downloading $name"
-            if [[ $MACOS -eq 1 ]]; then
-              wget --no-check-certificate -O $filename $url
-            else
+            if [[ $HOST_IS_MACOS -eq 1 ]]; then
               curl --insecure -o $filename -L $url
+            else
+              wget --no-check-certificate -O $filename $url
             fi
         fi
     fi
@@ -64,10 +56,27 @@ echo ""
 DOWNLOAD_DIR=$(readlink -f $1)
 echo "DOWNLOAD_DIR $DOWNLOAD_DIR"
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  HOST_IS_MACOS=1
+else
+  HOST_IS_MACOS=0
+fi
+echo "HOST_IS_MACOS = $HOST_IS_MACOS"
+
+
+if [[ ! -n "$TARGET_IS_MACOS" ]]
+then
+  export TARGET_IS_MACOS=0
+fi
+
+echo "TARGET_IS_MACOS = $TARGET_IS_MACOS"
+
+
+
 mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 
-if [ $MACOS -eq 1 ]; then
+if [ $TARGET_IS_MACOS -eq 1 ]; then
   conditional_download Torch PHASM_USE_TORCH libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip libtorch-macos-1.10.1.zip
   #conditional_download Julia USE_JULIA julia.tar.gz JULIA_URL
   conditional_download JANA PHASM_USE_JANA JANA.zip https://github.com/JeffersonLab/JANA2/archive/refs/tags/v2.0.6.zip
