@@ -22,6 +22,13 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo the error message given before exiting
 trap finish EXIT
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  MACOS=1
+  echo "Detected system = macOS"
+else
+  MACOS=0
+  echo "Detected system = Linux"
+fi
 
 
 
@@ -40,7 +47,11 @@ conditional_download() {
         fi
         if [[ $do_download -eq 1 ]]; then
             echo "Downloading $name"
-            wget --no-check-certificate -O $filename $url
+            if [[ $MACOS -eq 1 ]]; then
+              wget --no-check-certificate -O $filename $url
+            else
+              curl --insecure -o $filename -L $url
+            fi
         fi
     fi
 }
@@ -56,10 +67,7 @@ echo "DOWNLOAD_DIR $DOWNLOAD_DIR"
 mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  MACOS=1
-  echo "Detected system = macOS"
-
+if [ $MACOS -eq 1 ]; then
   conditional_download Torch PHASM_USE_TORCH libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip libtorch-macos-1.10.1.zip
   #conditional_download Julia USE_JULIA julia.tar.gz JULIA_URL
   conditional_download JANA PHASM_USE_JANA JANA.zip https://github.com/JeffersonLab/JANA2/archive/refs/tags/v2.0.6.zip
@@ -68,16 +76,12 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   conditional_download geant4 PHASM_USE_GEANT4 geant4.tar.gz https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz
 
 else
-  MACOS=0
-  echo "Assuming system = Linux"
-
   conditional_download Torch PHASM_USE_TORCH libtorch.zip https://download.pytorch.org/libtorch/cu118/libtorch-cxx11-abi-shared-with-deps-2.0.0%2Bcu118.zip
   conditional_download Julia PHASM_USE_JULIA julia.tar.gz https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.1-linux-x86_64.tar.gz
   conditional_download JANA PHASM_USE_JANA JANA.zip https://github.com/JeffersonLab/JANA2/archive/refs/tags/v2.0.6.zip
   conditional_download PIN PHASM_USE_PIN pin.tar.gz https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
   conditional_download Libdwarf PHASM_USE_DWARF libdwarf.tar.xz https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
   conditional_download geant4 PHASM_USE_GEANT4 geant4.tar.gz https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz
-
 fi
 
 echo "Success!"
