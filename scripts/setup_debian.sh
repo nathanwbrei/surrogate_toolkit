@@ -42,3 +42,25 @@ chmod 644 /usr/local/share/ca-certificates/JLabCA.crt
 update-ca-certificates
 echo "check_certificate = off" >> ~/.wgetrc
 
+if [ $PHASM_USE_LLVM -eq 1 ]
+then
+    # Install clang static analyzer, etc, as needed1
+    apt-get -y install \
+        clang-format \
+        clang-tidy \
+        clang-tools \
+        clang \
+        clangd \
+        libc++-dev \
+        libc++1 \
+        libc++abi-dev \
+        libc++abi1 \
+        libclang-dev \
+        libclang1 \
+        liblldb-dev \
+        lld \
+        lldb \
+        llvm-dev \
+        llvm-runtime \
+        llvm python3-clang
+fi
