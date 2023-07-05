@@ -38,6 +38,7 @@ cd $DOWNLOAD_DIR
 
 # Install PyTorch
 if [[ $USE_TORCH ~= [oO][nN] ]]; then
+  echo "Installing Torch"
   rm -rf $INSTALL_DIR/Torch
   unzip libtorch.zip
   mv libtorch $INSTALL_DIR/Torch
@@ -45,6 +46,7 @@ fi
 
 # Install Julia
 if [[ $USE_JULIA ~= [oO][nN] ]]; then
+  echo "Installing Julia"
   rm -rf $INSTALL_DIR/julia
   mkdir $INSTALL_DIR/julia
   tar -xf julia.tar.gz -C $INSTALL_DIR/julia --strip-components 1
@@ -52,6 +54,7 @@ fi
 
 # Install PIN
 if [[ $USE_PIN ~= [oO][nN] ]]; then
+  echo "Installing PIN"
   rm -rf $INSTALL_DIR/PIN
   mkdir $INSTALL_DIR/PIN
   tar -xf pin.tar.gz -C $INSTALL_DIR/PIN --strip-components 1
@@ -59,6 +62,7 @@ fi
 
 # Build and install JANA2
 if [[ $USE_JANA ~= [oO][nN] ]]; then
+  echo "Building and installing JANA"
   rm -rf JANA
   unzip JANA.zip
   mv -f JANA2-2.0.6 JANA
@@ -73,13 +77,25 @@ fi
 
 # Build and install libdwarf
 if [[ $USE_DWARF ~= [oO][nN] ]]; then
+  echo "Building and installing libdwarf"
   rm -rf libdwarf
   mkdir libdwarf
   tar -xf libdwarf.tar.xz -C libdwarf --strip-components 1
   mkdir libdwarf/build
   cd libdwarf/build
-  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR
+  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/libdwarf
   make install
+fi
+
+if [[ $USE_GEANT4 ~= [oO][nN] ]]; then
+  echo "Building and installing geant4"
+  rm -rf geant4
+  mkdir geant4
+  tar -xf geant4.tar.gz -C geant4 --strip-components 1
+  mkdir geant4/build
+  cd geant4/build
+  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/geant4
+  make -j8 install
 fi
 
 echo "Success!"

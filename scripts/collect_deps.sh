@@ -18,5 +18,7 @@ declare_use_dep() {
 declare_use_dep USE_TORCH ON
 declare_use_dep USE_JULIA ON
 declare_use_dep USE_JANA ON
+declare_use_dep USE_LLVM OFF
+declare_use_dep USE_GEANT4 OFF
 declare_use_dep USE_PIN OFF
 declare_use_dep USE_DWARF OFF

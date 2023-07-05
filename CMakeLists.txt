@@ -60,11 +60,15 @@ message(STATUS "USE_JANA    ${USE_JANA}")
 option(USE_LLVM "Compile with LLVM (e.g. Clang static analyzer) dependency" OFF)
 message(STATUS "USE_LLVM    ${USE_LLVM}")
 
-option(USE_PIN "Compile with Intel PIN support" OFF)
+option(USE_GEANT4 "Compile with geant4 dependency" OFF)
+message(STATUS "USE_GEANT4   ${USE_GEANT4}")
+
+option(USE_PIN "Compile with Intel PIN dependency" OFF)
 message(STATUS "USE_PIN     ${USE_PIN}")
 
-option(USE_DWARF "Compile with libdwarf support" OFF)
+option(USE_DWARF "Compile with libdwarf dependency" OFF)
 message(STATUS "USE_DWARF   ${USE_DWARF}")
+
 
 message(STATUS "-----------------------")
 

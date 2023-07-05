@@ -65,6 +65,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   conditional_download JANA USE_JANA JANA.zip https://github.com/JeffersonLab/JANA2/archive/refs/tags/v2.0.6.zip
   conditional_download PIN USE_PIN pin.tar.gz https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-clang-mac.tar.gz
   conditional_download Libdwarf USE_DWARF libdwarf.tar.xz https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
+  conditional_download geant4 USE_GEANT4 geant4.tar.gz https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz
 
 else
   MACOS=0
@@ -75,6 +76,7 @@ else
   conditional_download JANA USE_JANA JANA.zip https://github.com/JeffersonLab/JANA2/archive/refs/tags/v2.0.6.zip
   conditional_download PIN USE_PIN pin.tar.gz https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz
   conditional_download Libdwarf USE_DWARF libdwarf.tar.xz https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz
+  conditional_download geant4 USE_GEANT4 geant4.tar.gz https://gitlab.cern.ch/geant4/geant4/-/archive/v11.0.2/geant4-v11.0.2.tar.gz
 
 fi
 
