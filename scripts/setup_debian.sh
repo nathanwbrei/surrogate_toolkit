@@ -42,6 +42,24 @@ chmod 644 /usr/local/share/ca-certificates/JLabCA.crt
 update-ca-certificates
 echo "check_certificate = off" >> ~/.wgetrc
 
+if [ $PHASM_USE_GEANT4 -eq 1 ]
+then
+    apt-get -y install \
+        mysql-client \
+        libmysqlclient-dev \
+        libexpat1-dev \
+        tcsh \
+        scons \
+        libx11-dev \
+        libxext-dev \
+        libglu1-mesa-dev \
+        libxt-dev \
+        libxmu-dev \
+        libxrender-dev \
+        libxft-dev \
+        libafterimage-dev
+fi
+
 if [ $PHASM_USE_LLVM -eq 1 ]
 then
     # Install clang static analyzer, etc, as needed1

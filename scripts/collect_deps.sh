@@ -8,11 +8,11 @@ declare_use_dep() {
     local default=$2
 
     # Used to be `-v $usevar`, but had to change it because macOS is stuck on bash v3.2 (from 2007!)
-    if [ -n "$usevar" ]; then
-        export $usevar=$default
-        echo "$usevar=${!usevar} (default)"
+    if [ -n "${!usevar}" ]; then
+        echo "$usevar = ${!usevar} (explicitly set)"
     else
-        echo "$usevar=${!usevar} (user override)"
+        export $usevar=$default
+        echo "$usevar = ${!usevar} (defaulted)"
     fi
 }
 
