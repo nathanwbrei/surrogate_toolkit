@@ -1,13 +1,13 @@
-.idea/
-deps/
 build/
 cmake-build*/
 memtrace_pin/obj*/
+
+# Big files usually located on cluster
 *.log
-pinatrace.out
-a.out
-a.out.dSYM
+*.out*
 *.csv
+*.png
+*.root
 .ipynb_checkpoints/
 *.pyc
 .DS_Store
@@ -18,3 +18,13 @@ downloads
 venv/
 .vscode/
 *.json
+
+# Python and notebook
+__pycache__
+*.pyc
+*.pkl
+*.pt
+*.npy
+.DS_Store
+.ipynb_checkpoints/
+.idea/
