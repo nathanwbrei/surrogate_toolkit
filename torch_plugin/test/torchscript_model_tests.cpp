@@ -103,10 +103,20 @@ TEST_CASE("Load the module to assigned device (GPU prefered) and do inference") 
     s.bind_original_function([&]() { Bx = -x, By = -y; Bz = -z; });
     s.bind_all_callsite_vars(&x, &y, &z, &Bx, &By, &Bz);
 
+    // Verify call_original method
+    s.call_original_and_capture();
+    REQUIRE(Bx == -1.0);
+    REQUIRE(By == -2.0);
+    REQUIRE(Bz == -3.0);
+
     s.call_model_and_capture();
     REQUIRE(Bx != -1.0);
     REQUIRE(By != -2.0);
     REQUIRE(Bz != -3.0);
 }
+
+// TEST_CASE("Get the module from REST API") {
+
+// }
 
 } // namespace phasm::test::torchscript_model_tests
