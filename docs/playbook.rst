@@ -1,5 +1,6 @@
 
-# Playbook
+Performance analysis playbook
+=============================
 
 These are the bottlenecks we know about so far:
 
@@ -21,7 +22,8 @@ We have two goals:
    this out using perf, totalview, vtune, or similar. The case where our code is a basic neural
    net is going to be substantially simpler than the general case. 
    
-## Approach
+Approach
+--------
 
 The simplest starting place is with a multilayered perceptron. The independent variables are the 
    amount of memory movement in, and out, and the number of layers and neurons. The dependent variables
