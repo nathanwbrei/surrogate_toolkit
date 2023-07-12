@@ -141,7 +141,8 @@ int main(int argc,char** argv)
   // scoreNtupleWriter.SetDefaultFileType("xml");
   G4TScoreNtupleWriter<G4AnalysisManager> scoreNtupleWriter;
   scoreNtupleWriter.SetVerboseLevel(1);
-  scoreNtupleWriter.SetNtupleMerging(true);
+  // scoreNtupleWriter.SetNtupleMerging(true);
+  // TODO: Re-enable iff we eventually add ROOT as a dependency
     // Note: merging ntuples is available only with Root output
     // (the default in G4TScoreNtupleWriter)
 
