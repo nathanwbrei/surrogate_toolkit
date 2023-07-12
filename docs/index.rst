@@ -12,6 +12,7 @@ Welcome to PHASM's documentation!
 
    Home <self>
    quick_start
+   containers
    how_to_build
    tutorial
    playbook

@@ -1,3 +1,4 @@
+
 Building PHASM
 ==============
 
@@ -10,30 +11,20 @@ Requirements
 - LLVM libraries
 - Table of examples and their dependencies
 
-Containers
-----------
 
-Singularity containers
-~~~~~~~~~~~~~~~~~~~~~~
-    - On /work, on CVMFS
-    - Building locally
-    - Submitting to SLURM
-    - Connecting an IDE
 
-Docker containers
-~~~~~~~~~~~~~~~~~
-    - On DockerHub
-    - Building locally
-    - Running locally
-    - Connecting an IDE
+------------
 
-Without using containers
-------------------------
-
-What the scripts are, what the workflow is
 
 Building 
 --------
 
-Instructions are fairly simple
+PHASM can be built using 
+.. code-block:: console
+
+    $ git clone http://github.com/nathanwbrei/phasm
+    $ cd phasm
+    $ mkdir build
+    $ cd build
+    $ cmake .. -DCMAKE_PREFIX_PATH=/deps
 
