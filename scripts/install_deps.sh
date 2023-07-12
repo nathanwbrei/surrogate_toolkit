@@ -40,8 +40,13 @@ cd $DOWNLOAD_DIR
 if [ $PHASM_USE_TORCH -eq 1 ]; then
   echo "Installing Torch"
   rm -rf $INSTALL_DIR/Torch
-  unzip libtorch.zip
-  mv libtorch $INSTALL_DIR/Torch
+  if [ $PHASM_USE_CUDA -eq 1 ]; then
+    unzip libtorch_cuda.zip
+    mv libtorch_cuda $INSTALL_DIR/Torch
+  else 
+    unzip libtorch_cpu.zip
+    mv libtorch_cpu $INSTALL_DIR/Torch
+  fi
 fi
 
 # Install Julia

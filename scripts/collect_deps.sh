@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script brings into existence the set of environment variables $USE_TORCH, $USE_JULIA, etc, 
+# This script brings into existence the set of environment variables $PHASM_USE_TORCH, $PHASM_USE_JULIA, etc, 
 # and furnishes them with sensible defaults which the user can override. This lets us download
 # the dependencies and set up our environments to include exactly what we need
 
@@ -16,6 +16,7 @@ declare_use_dep() {
     fi
 }
 
+declare_use_dep PHASM_USE_CUDA 0
 declare_use_dep PHASM_USE_TORCH 1
 declare_use_dep PHASM_USE_JULIA 1
 declare_use_dep PHASM_USE_JANA 1
