@@ -1,6 +1,6 @@
 build/
 cmake-build*/
-memtrace_pin/obj*/
+*obj*/
 
 # Big files usually located on cluster
 *.log
@@ -8,10 +8,9 @@ memtrace_pin/obj*/
 *.csv
 *.png
 *.root
-.ipynb_checkpoints/
 *.pyc
 .DS_Store
-*.pt  # PyTorch trained model
+*.pt
 downloads
 
 # VS code
@@ -23,8 +22,10 @@ venv/
 __pycache__
 *.pyc
 *.pkl
-*.pt
 *.npy
 .DS_Store
 .ipynb_checkpoints/
 .idea/
+
+# MLFlow
+*mlruns/

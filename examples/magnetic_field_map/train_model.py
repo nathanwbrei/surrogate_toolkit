@@ -117,6 +117,3 @@ scripted_model.save('gluex_mfield_mlp.pt')
 
 print("...done")
 print(" ")
-
-
-

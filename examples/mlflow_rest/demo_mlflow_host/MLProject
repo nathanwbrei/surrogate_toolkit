@@ -1,0 +1,12 @@
+name: mfield_mlp
+
+python_env: python_env.yaml
+
+entry_points:
+  main:
+    parameters:
+      epochs: {type: int, default: 50}
+
+    command: |
+          python mfield_mlp_mlflow.py \
+            --epochs {epochs}
