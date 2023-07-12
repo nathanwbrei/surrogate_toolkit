@@ -20,7 +20,7 @@ declare_use_dep PHASM_USE_CUDA 0
 declare_use_dep PHASM_USE_TORCH 1
 declare_use_dep PHASM_USE_JULIA 1
 declare_use_dep PHASM_USE_JANA 1
-declare_use_dep PHASM_USE_LLVM 0
-declare_use_dep PHASM_USE_GEANT4 0
-declare_use_dep PHASM_USE_PIN 0
-declare_use_dep PHASM_USE_DWARF 0
+declare_use_dep PHASM_USE_LLVM 1
+declare_use_dep PHASM_USE_GEANT4 1
+declare_use_dep PHASM_USE_PIN 1
+declare_use_dep PHASM_USE_DWARF 1

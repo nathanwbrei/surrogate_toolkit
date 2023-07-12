@@ -61,7 +61,7 @@ option(USE_LLVM "Compile with LLVM (e.g. Clang static analyzer) dependency" OFF)
 message(STATUS "USE_LLVM    ${USE_LLVM}")
 
 option(USE_GEANT4 "Compile with geant4 dependency" OFF)
-message(STATUS "USE_GEANT4   ${USE_GEANT4}")
+message(STATUS "USE_GEANT4  ${USE_GEANT4}")
 
 option(USE_PIN "Compile with Intel PIN dependency" OFF)
 message(STATUS "USE_PIN     ${USE_PIN}")
@@ -92,7 +92,7 @@ endif()
 message(STATUS "-----------------------")
 
 include_directories(external)
-
+add_subdirectory(containers)
 add_subdirectory(examples)
 add_subdirectory(surrogate)
 add_subdirectory(torch_plugin)
