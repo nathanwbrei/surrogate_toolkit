@@ -99,7 +99,8 @@ if [ $PHASM_USE_GEANT4 -eq 1 ]; then
   tar -xf geant4.tar.gz -C geant4 --strip-components 1
   mkdir geant4/build
   cd geant4/build
-  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/geant4 -DGEANT4_INSTALL_DATA=On
+  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/geant4 -DGEANT4_INSTALL_DATA=On -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=1
+
   make -j8 install
 fi
 
