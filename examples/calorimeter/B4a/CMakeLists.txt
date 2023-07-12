@@ -63,8 +63,6 @@ foreach(_script ${EXAMPLEB4A_SCRIPTS})
 endforeach()
 
 #----------------------------------------------------------------------------
-# Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
-#
+# Install the executable to 'share/examples/calorimeter' directory under CMAKE_INSTALL_PREFIX
 
-
-install(TARGETS phasm-example-calorimeter-B4a DESTINATION bin)
+install(TARGETS phasm-example-calorimeter-B4a DESTINATION share/examples/calorimeter)
