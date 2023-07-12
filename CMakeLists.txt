@@ -88,6 +88,11 @@ if (${USE_TORCH})
     message(STATUS "Found package Torch => ${Torch_DIR}")
 endif()
 
+if (${USE_GEANT4})
+    find_package(Geant4 REQUIRED)
+    message(STATUS "Found package Geant4 => ${Geant4_DIR}")
+endif()
+
 
 message(STATUS "-----------------------")
 

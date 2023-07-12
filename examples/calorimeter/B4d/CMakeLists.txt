@@ -33,8 +33,9 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries
 #
-add_executable(phasm_example_calorimeter_B4d exampleB4d.cc ${sources} ${headers})
-target_link_libraries(phasm_example_calorimeter_B4d ${Geant4_LIBRARIES})
+add_executable(phasm-example-calorimeter-B4d exampleB4d.cc ${sources} ${headers})
+target_link_libraries(phasm-example-calorimeter-B4d ${Geant4_LIBRARIES})
+set_target_properties(phasm-example-calorimeter-B4d PROPERTIES INSTALL_RPATH_USE_LINK_PATH True)
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
@@ -64,4 +65,4 @@ endforeach()
 #----------------------------------------------------------------------------
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
-install(TARGETS phasm_example_calorimeter_B4d DESTINATION bin)
+install(TARGETS phasm-example-calorimeter-B4d DESTINATION bin)
