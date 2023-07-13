@@ -16,7 +16,7 @@ void JuliaModel::initialize() {
         std::cout << std::endl;
     }
 
-    jl_eval_string("using .TestModule");
+    jl_eval_string("include(\"Phasm.jl\"); using .Phasm");
     if (jl_exception_occurred()) {
         jl_static_show(jl_stdout_stream(), jl_exception_occurred());
         std::cout << std::endl;
@@ -35,7 +35,7 @@ void JuliaModel::train_from_captures() {
 
 bool JuliaModel::infer() {
     std::cout << "PHASM: Calling JuliaModel::infer" << std::endl;
-    auto ret = jl_eval_string("TestModule.infer(reinterpret(TestModule.Model,model))");
+    auto ret = jl_eval_string("Phasm.phasm_infer(reinterpret(Phasm.Model,model), TestModel.infer)");
     if (jl_exception_occurred()) {
         std::cout << "Julia exception in JuliaModel::infer(): " << jl_typeof_str(jl_exception_occurred()) << std::endl;
         jl_static_show(jl_stdout_stream(), jl_exception_occurred());

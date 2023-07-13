@@ -18,21 +18,20 @@ TEST_CASE("Scalar-valued result") {
 
     phasm::Surrogate f_surrogate = phasm::SurrogateBuilder()
         .set_model(model)
-        .local_primitive<double>("x", phasm::IN)
+        .local_primitive<double>("x", phasm::INOUT)
         .local_primitive<double>("f", phasm::OUT)
         .finish();
 
-
     double x = 2.0;
     double f = 0.0;
-    std::cout << "Before call_model(): f = " << f << std::endl;
+    std::cout << "Before call_model(): x = " << x << ", f = " << f << std::endl;
 
     f_surrogate
         .bind_original_function([&](){ f = square(x); })
         .bind_all_callsite_vars(&x, &f)
         .call_model();
 
-    std::cout << "After call_model(): f = " << f << std::endl;
+    std::cout << "After call_model(): x = " << x << ", f = " << f << std::endl;
     REQUIRE(f != 0.0);
 }
 
