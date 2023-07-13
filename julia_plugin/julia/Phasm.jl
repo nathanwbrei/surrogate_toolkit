@@ -47,7 +47,7 @@ function phasm_infer(model::Model, infer_fn)
         end
     end
 
-    outputs = infer_fn(inputs)
+    outputs, is_confident = infer_fn(inputs)
     output_idx = 1  # Julia is 1-indexed!!!
     for i in 0:var_count-1
         if (phasm_modelvars_isoutput(model, i))
@@ -55,6 +55,7 @@ function phasm_infer(model::Model, infer_fn)
             output_idx += 1
         end
     end
+    return is_confident
 end # function infer
 
 

@@ -10,6 +10,7 @@ function infer(inputs)
     output = [33.0]
     println("Output: $(update)")
     println("Output: $(output)")
-    return [update, output]
+
+    return ([update, output], true)
 
 end # function infer
