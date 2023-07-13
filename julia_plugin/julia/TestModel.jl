@@ -3,7 +3,7 @@ include("Phasm.jl")
 
 module TestModule
 
-println("PHASM: Julia: Loading TestModule.jl")
+println("PHASM: Julia: Loading TestModel.jl")
 using Main.Phasm
 
 function infer(model::Model)
