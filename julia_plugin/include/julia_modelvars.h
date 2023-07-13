@@ -14,5 +14,6 @@ bool phasm_modelvars_isinput(void* model, int64_t index);
 bool phasm_modelvars_isoutput(void* model, int64_t index);
 double* phasm_modelvars_getinputdata(void* model, int64_t index);
 void phasm_modelvars_setoutputdata(void* model, int64_t index, double* data, size_t length);
+void phasm_modelvars_setoutputdata2(void* model, int64_t index, double* data, int64_t* shape, size_t dims);
 
 } // extern "C"

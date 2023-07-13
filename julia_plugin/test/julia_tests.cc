@@ -32,7 +32,8 @@ TEST_CASE("Scalar-valued result") {
         .call_model();
 
     std::cout << "After call_model(): x = " << x << ", f = " << f << std::endl;
-    REQUIRE(f != 0.0);
+    REQUIRE(x == 22.0);
+    REQUIRE(f == 33.0);
 }
 
 } // namespace phasm_julia_tests

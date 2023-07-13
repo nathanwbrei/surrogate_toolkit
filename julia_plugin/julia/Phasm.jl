@@ -33,8 +33,14 @@ end
 function phasm_modelvars_setoutputdata(model::Model, index, array) 
     println("In phasm_modelvars_setoutputdata")
     ptr = pointer(array)
-    len = Csize_t(length(array))
-    @ccall phasm_modelvars_setoutputdata(model::Model,index::Int64,ptr::Ptr{Float64},len::Csize_t)::Cvoid
+    dims = Csize_t(ndims(array))
+    if (dims == 1)
+        len = Csize_t(length(array))
+        @ccall phasm_modelvars_setoutputdata(model::Model,index::Int64,ptr::Ptr{Float64},len::Csize_t)::Cvoid
+    else
+        shape = [Int64(x) for x in size(array)]::Vector{Int64}
+        @ccall phasm_modelvars_setoutputdata2(model::Model,index::Int64,ptr::Ptr{Float64},pointer(shape)::Ptr{Int64}, dims::Csize_t)::Cvoid
+    end
     println("Finished phasm_modelvars_setoutputdata")
 end
 
@@ -57,9 +63,6 @@ function phasm_infer(model::Model, infer_fn)
     end
     return is_confident
 end # function infer
-
-
-
 
 
 end # module Phasm
