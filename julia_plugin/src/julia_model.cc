@@ -37,9 +37,10 @@ bool JuliaModel::infer() {
     std::cout << "PHASM: Calling JuliaModel::infer" << std::endl;
     auto ret = jl_eval_string("TestModule.infer(reinterpret(TestModule.Model,model))");
     if (jl_exception_occurred()) {
-        std::cout << "infer(model): exception: " << jl_typeof_str(jl_exception_occurred()) << std::endl;
+        std::cout << "Julia exception in JuliaModel::infer(): " << jl_typeof_str(jl_exception_occurred()) << std::endl;
         jl_static_show(jl_stdout_stream(), jl_exception_occurred());
         std::cout << std::endl;
+        throw std::runtime_error("Exception inside Julia model!");
     }
     if (jl_typeis(ret, jl_bool_type)) {
         return jl_unbox_bool(ret);

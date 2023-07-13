@@ -32,14 +32,16 @@ bool phasm_modelvars_isoutput(void* model, int64_t index) {
     return m->get_model_var(index)->is_output;
 }
 
-double* phasm_modelvars_inputdata(void* model, int64_t index) {
+double* phasm_modelvars_getinputdata(void* model, int64_t index) {
     auto m = static_cast<phasm::JuliaModel*>(model);
-    std::cout << "Inside phasm_modelvars_inputdata()" << std::endl;
+    std::cout << "Inside phasm_modelvars_getinputdata()" << std::endl;
     return m->get_model_var(index)->inference_input.get_data<double>();
 }
 
-double* phasm_modelvars_outputdata(void* model, int64_t index) {
+void phasm_modelvars_setoutputdata(void* model, int64_t index, double* data, size_t length) {
     auto m = static_cast<phasm::JuliaModel*>(model);
     std::cout << "Inside phasm_modelvars_outputdata()" << std::endl;
-    return m->get_model_var(index)->inference_output.get_data<double>();
+    auto mv = m->get_model_var(index);
+    mv->inference_output = phasm::tensor(data, length);
 }
+

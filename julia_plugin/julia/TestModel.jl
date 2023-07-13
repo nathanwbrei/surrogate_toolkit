@@ -8,11 +8,18 @@ using Main.Phasm
 
 function infer(model::Model)
     println("Inside TestModule::infer")
-    for i in 1:phasm_modelvars_count(model)
-        ptr = phasm_modelvars_inputdata(model,i-1)
-        println("Model var before: $(unsafe_string(phasm_modelvars_getname(model,i-1))): $(ptr): $(unsafe_load(ptr))")
-        unsafe_store!(ptr, 33.0)
-        println("Model var after: $(unsafe_string(phasm_modelvars_getname(model,i-1))): $(ptr): $(unsafe_load(ptr))")
-    end
+    ptr = phasm_modelvars_getinputdata(model,0)
+    println("Reading model variable '$(phasm_modelvars_getname(model,0))' at index 0: $(ptr): $(unsafe_load(ptr))")
+
+    result = [22.0]
+    println("Writing model variable '$(phasm_modelvars_getname(model,0))' at index 0")
+    phasm_modelvars_setoutputdata(model,0, pointer(result), length(result))
+
+    result = [33.0]
+    println("Writing model variable '$(phasm_modelvars_getname(model,1))' at index 1")
+    phasm_modelvars_setoutputdata(model,1, pointer(result), length(result))
+
+    return true
+
 end # function infer
 end # module TestModule

@@ -12,7 +12,7 @@ int64_t phasm_modelvars_count(void* model);
 const char* phasm_modelvars_getname(void* model, int64_t index);
 bool phasm_modelvars_isinput(void* model, int64_t index);
 bool phasm_modelvars_isoutput(void* model, int64_t index);
-double* phasm_modelvars_inputdata(void* model, int64_t index);
-double* phasm_modelvars_outputdata(void* model, int64_t index);
+double* phasm_modelvars_getinputdata(void* model, int64_t index);
+void phasm_modelvars_setoutputdata(void* model, int64_t index, double* data, size_t length);
 
 } // extern "C"
