@@ -66,4 +66,3 @@ endforeach()
 # Install the executable to 'share/examples/calorimeter' directory under CMAKE_INSTALL_PREFIX
 #
 install(TARGETS phasm-example-calorimeter-B4d DESTINATION share/examples/calorimeter)
-install(FILES macros surrogate DESTINATION share/examples/calorimeter)
