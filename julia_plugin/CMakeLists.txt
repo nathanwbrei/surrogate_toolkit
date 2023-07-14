@@ -35,7 +35,7 @@ else()
     install(TARGETS phasm-julia-plugin-tests DESTINATION share/tests/julia-plugin-tests)
     install(FILES test/ScalarModel.jl DESTINATION share/tests/julia-plugin-tests)
     install(FILES test/OddModel.jl DESTINATION share/tests/julia-plugin-tests)
-    install(FILES julia/Phasm.jl DESTINATION share/tests/julia-plugin-tests)
+    install(FILES src/Phasm.jl DESTINATION share/tests/julia-plugin-tests)
 
 endif()
 

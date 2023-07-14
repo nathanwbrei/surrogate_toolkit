@@ -28,9 +28,12 @@ bool phasm_modelvars_isoutput(void* model, int64_t index) {
     return m->get_model_var(index)->is_output;
 }
 
-double* phasm_modelvars_getinputdata(void* model, int64_t index) {
+void phasm_modelvars_getinputdata(void* model, int64_t index, double** data, const int64_t** shape, size_t* ndims) {
     auto m = static_cast<phasm::JuliaModel*>(model);
-    return m->get_model_var(index)->inference_input.get_data<double>();
+    auto& t = m->get_model_var(index)->inference_input;
+    *data = t.get_data<double>();
+    *shape = t.get_shape().data();
+    *ndims = t.get_shape().size();
 }
 
 void phasm_modelvars_setoutputdata(void* model, int64_t index, double* data, size_t length) {

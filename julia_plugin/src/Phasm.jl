@@ -26,12 +26,22 @@ phasm_modelvars_isinput(model::Model, index) = @ccall phasm_modelvars_isinput(mo
 phasm_modelvars_isoutput(model::Model, index) = @ccall phasm_modelvars_isoutput(model::Model,index::Int64)::Bool
 
 function phasm_modelvars_getinputdata(model::Model, index) 
-    ptr = @ccall phasm_modelvars_getinputdata(model::Model,index::Int64)::Ptr{Float64}
-    return unsafe_wrap(Array, ptr, (1,); own=false)
+    data_ptr::Vector{Ptr{Float64}} = [0]
+    shape_ptr::Vector{Ptr{Int64}} = [0]
+    ndims::Vector{Csize_t} = [0]
+    @ccall phasm_modelvars_getinputdata(
+        model::Model,
+        index::Int64,
+        pointer(data_ptr)::Ptr{Ptr{Float64}},
+        pointer(shape_ptr)::Ptr{Ptr{Int64}},
+        pointer(ndims)::Ptr{Csize_t}
+        )::Cvoid
+    shape_vec = unsafe_wrap(Array, shape_ptr[1], (ndims[1],); own=false)
+    shape_tup = (shape_vec...,)
+    return unsafe_wrap(Array, data_ptr[1], shape_tup; own=false)
 end
 
 function phasm_modelvars_setoutputdata(model::Model, index, array) 
-    println("In phasm_modelvars_setoutputdata")
     ptr = pointer(array)
     dims = Csize_t(ndims(array))
     if (dims == 1)
@@ -41,7 +51,6 @@ function phasm_modelvars_setoutputdata(model::Model, index, array)
         shape = [Int64(x) for x in size(array)]::Vector{Int64}
         @ccall phasm_modelvars_setoutputdata2(model::Model,index::Int64,ptr::Ptr{Float64},pointer(shape)::Ptr{Int64}, dims::Csize_t)::Cvoid
     end
-    println("Finished phasm_modelvars_setoutputdata")
 end
 
 function phasm_infer(model::Model, infer_fn)

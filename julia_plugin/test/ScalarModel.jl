@@ -1,16 +1,16 @@
 
 
-println("PHASM: Julia: Loading TestModel.jl")
+println("PHASM: Julia: Loading ScalarModel.jl")
 
 function infer(inputs)
     for input in inputs
-        println("Input: $(input)")
+        println("From Julia callee: Input: $(input)")
     end
 
     update = [22.0]
     output = [33.0]
-    println("Output: $(update)")
-    println("Output: $(output)")
+    println("From Julia callee: Output: $(update)")
+    println("From Julia callee: Output: $(output)")
 
     return ([update, output], true)
 

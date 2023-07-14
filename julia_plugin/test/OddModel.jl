@@ -1,16 +1,17 @@
 
-println("PHASM: Julia: Loading TestModel.jl")
+println("PHASM: Julia: Loading OddModel.jl")
 
 function infer(inputs)
     for input in inputs
-        println("Input: $(input)")
+        println("From Julia callee: Input: $(input)")
     end
 
-    update = [22.0]
-    output = [33.0]
-    println("Output: $(update)")
-    println("Output: $(output)")
+    entries_squared = inputs[1].^2
+    sum_of_squares = [sum(entries_squared)]
 
-    return ([update, output], true)
+    println("From Julia callee: Output: $(entries_squared)")
+    println("From Julia callee: Output: $(sum_of_squares)")
+
+    return ([entries_squared, sum_of_squares], true)
 
 end # function infer
