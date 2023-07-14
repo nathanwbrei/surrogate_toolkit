@@ -33,7 +33,8 @@ else()
     set_target_properties(phasm-julia-plugin-tests PROPERTIES INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib)
     
     install(TARGETS phasm-julia-plugin-tests DESTINATION share/tests/julia-plugin-tests)
-    install(FILES julia/TestModel.jl DESTINATION share/tests/julia-plugin-tests)
+    install(FILES test/ScalarModel.jl DESTINATION share/tests/julia-plugin-tests)
+    install(FILES test/OddModel.jl DESTINATION share/tests/julia-plugin-tests)
     install(FILES julia/Phasm.jl DESTINATION share/tests/julia-plugin-tests)
 
 endif()

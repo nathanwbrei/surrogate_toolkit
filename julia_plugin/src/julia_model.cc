@@ -8,7 +8,6 @@
 
 namespace phasm {
 void JuliaModel::initialize() {
-    std::cout << "PHASM: Calling JuliaModel::initialize" << std::endl;
     std::string inc_str = "include(\"" + m_filepath + "\")";
     jl_eval_string(inc_str.c_str());
     if (jl_exception_occurred()) {
@@ -34,7 +33,7 @@ void JuliaModel::train_from_captures() {
 }
 
 bool JuliaModel::infer() {
-    std::cout << "PHASM: Calling JuliaModel::infer" << std::endl;
+    // TODO: Don't want to do the jl_eval_string on every call to infer()
     auto ret = jl_eval_string("Phasm.phasm_infer(reinterpret(Phasm.Model,model), infer)");
     if (jl_exception_occurred()) {
         std::cout << "Julia exception in JuliaModel::infer(): " << jl_typeof_str(jl_exception_occurred()) << std::endl;
