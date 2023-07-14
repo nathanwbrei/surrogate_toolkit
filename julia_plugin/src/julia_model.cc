@@ -14,13 +14,6 @@ void JuliaModel::initialize() {
         jl_static_show(jl_stdout_stream(), jl_exception_occurred());
         std::cout << std::endl;
     }
-
-    jl_eval_string("include(\"Phasm.jl\"); using .Phasm");
-    if (jl_exception_occurred()) {
-        jl_static_show(jl_stdout_stream(), jl_exception_occurred());
-        std::cout << std::endl;
-    }
-
     jl_value_t* boxed_model = jl_box_voidpointer(this);
     jl_set_global(jl_main_module, jl_symbol("model"), boxed_model);
     if (jl_exception_occurred()) {
