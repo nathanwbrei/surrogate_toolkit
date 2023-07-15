@@ -10,6 +10,8 @@ References:
 - https://mlflow.org/docs/latest/rest-api.html
 */
 
+#include <filesystem>
+#include <string>
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 // #include <torch/torch.h>
@@ -31,13 +33,31 @@ using namespace web::http::client;
 #define REQ_KEY_2 U("version")
 #define REQ_VALUE_2 U("1")
 
-std::string extractSourceFromJson(const web::json::value jsonResponse) {
-
-    std::string sourceString = utility::conversions::to_utf8string(
+std::string extractArtifactUriFromJson(const web::json::value jsonResponse) {
+    std::string artifactUri = utility::conversions::to_utf8string(
         jsonResponse.at(U("artifact_uri")).as_string());
-    std::string modelPath = sourceString.append("/data/model.pth");
+    return artifactUri;
+}
 
-    return modelPath;
+/**
+ * This method is designed particularly for local models (mlflow host in the same folder).
+ * It uses string methods to search some keywords in @param uri and operate strings.
+ * @todo(cissie) The method is not appiable for other situations.
+*/
+std::string getLocalModelPathByArtifactUri(const std::string& uri) {
+    std::filesystem::path filePath(__FILE__);
+    std::string pathPrefix = filePath.parent_path().string(); // this file's parent path
+
+    std::string currentFolderName = filePath.parent_path().filename().string();
+    size_t pos = uri.find(currentFolderName);
+
+    if (pos == std::string::npos) {
+        return "";
+    }
+
+    std::string path_suffix = uri.substr(pos + currentFolderName.length());
+    std::cout << path_suffix << std::endl;
+    return pathPrefix + path_suffix + "/data/model.pth";
 }
 
 int main() {
@@ -73,8 +93,14 @@ int main() {
         // Process the JSON response
         std::cout << "\nFull response:\n" << jsonValue << std::endl;
 
-        std::string modelPath = extractSourceFromJson(jsonValue);
-        std::cout << "\nGet file source from response:\n" << modelPath << std::endl;
+        std::string artifactUri = extractArtifactUriFromJson(jsonValue);
+        std::cout << "\nGet artifact_uri from response:\n" << artifactUri << "\n\n";
+
+        std::string modelPath = getLocalModelPathByArtifactUri(artifactUri);
+        if (modelPath == ""){
+            std::cout << "Error: model does not exist. \n\nExit -1...\n\n";
+        }
+        std::cout << "Model path:\n" << modelPath << std::endl;
 
         // phasm::TorchscriptModel model = phasm::TorchscriptModel(modelPath, true);
 
