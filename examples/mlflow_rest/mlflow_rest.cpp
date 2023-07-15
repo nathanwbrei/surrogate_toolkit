@@ -4,25 +4,7 @@ Subject to the terms in the LICENSE file found in the top-level directory.
 
 First developed by xmei@jlab.org.
 
-A toy example to send GET request from REST host http://api.zippopotam.us/us/23606.
 Draft version copied from ChatGPT: https://chat.openai.com/share/a989a968-2ce2-47f8-a398-0329cb35b60c.
-
-```
-(base) bash-4.4$ curl --location 'http://api.zippopotam.us/us/23606'
-Response:
-    {
-        "post code": "23606",
-        "country": "United States",
-        "country abbreviation": "US",
-        "places": [{
-            "place name": "Newport News",
-            "longitude": "-76.4967",
-            "state": "Virginia",
-            "state abbreviation": "VA",
-            "latitude": "37.0768"
-            }]
-    }
-```
 
 References:
 - http://www.atakansarioglu.com/easy-quick-start-cplusplus-rest-client-example-cpprest-tutorial/
@@ -36,14 +18,29 @@ using namespace web;
 using namespace web::http;
 using namespace web::http::client;
 
+#define LOCAL_HOST U("http://127.0.0.1")
+#define DOCKER_HOST U("http://host.docker.internal:5000")
+#define ENDPOINT U("/api/2.0/mlflow/registered-models/get")
+
+#define RE_KEY "name"
+#define RE_VALUE "demo-reg-model"
+
 int main() {
     // Create an HTTP client object
-    http_client client(U("http://api.zippopotam.us"));
+    http_client client(DOCKER_HOST);
 
     // Create a GET request
-    uri_builder builder(U("/us/23606"));
+    uri_builder builder(ENDPOINT);
     http_request request(methods::GET);
     request.set_request_uri(builder.to_uri());
+
+    // Create the request body
+    json::value requestBody;
+    requestBody[U(RE_KEY)] = json::value::string(U(RE_VALUE));
+    std::cout << requestBody << std::endl;
+
+    // Set the request body
+    request.set_body(requestBody);
 
     // Send the GET request asynchronously
     client.request(request).then([](http_response response) {

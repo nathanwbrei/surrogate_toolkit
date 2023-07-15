@@ -18,7 +18,7 @@ import mlflow.pytorch
 from mlflow.models import infer_signature
 
 
-class SimplifiedMLP(nn.Module):  # TODO: refer to Daniel's torch_mlp module once he uploaded "torchmetrics"
+class SimplifiedMLP(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc1 = nn.Linear(4, 30)
@@ -98,9 +98,12 @@ if __name__ == "__main__":
     scripted_model = train_model(scripted_model, args.epochs, X_train, y_train)
     signature = test_model(scripted_model, X_test, y_test)
 
+    reg_model_name = "demo-reg-model"
+
     with mlflow.start_run() as run:
         mlflow.pytorch.log_model(
-            scripted_model, "model", signature=signature
+            scripted_model, "model", signature=signature,
+            registered_model_name=reg_model_name
         )  # logging scripted model
         model_path = mlflow.get_artifact_uri("model")
         loaded_pytorch_model = mlflow.pytorch.load_model(model_path)  # loading scripted model

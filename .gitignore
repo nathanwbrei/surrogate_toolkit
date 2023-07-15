@@ -10,7 +10,7 @@ cmake-build*/
 *.root
 *.pyc
 .DS_Store
-*.pt
+*.pt*
 downloads
 
 # VS code
