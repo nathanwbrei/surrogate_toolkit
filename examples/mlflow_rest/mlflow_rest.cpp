@@ -4,15 +4,18 @@ Subject to the terms in the LICENSE file found in the top-level directory.
 
 First developed by xmei@jlab.org.
 
-Draft version copied from ChatGPT: https://chat.openai.com/share/a989a968-2ce2-47f8-a398-0329cb35b60c.
-
 References:
 - http://www.atakansarioglu.com/easy-quick-start-cplusplus-rest-client-example-cpprest-tutorial/
 - https://github.com/microsoft/cpprestsdk
+- https://mlflow.org/docs/latest/rest-api.html
 */
 
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
+// #include <torch/torch.h>
+
+// #include "torch_utils.h"
+// #include "torchscript_model.h"
 
 using namespace web;
 using namespace web::http;
@@ -24,6 +27,19 @@ using namespace web::http::client;
 
 #define RE_KEY "name"
 #define RE_VALUE "demo-reg-model"
+
+std::string extractSourceFromJson(const web::json::value jsonResponse) {
+
+    // Extract the source value from latest_versions
+    const auto& latestVersions = jsonResponse.at(U("registered_model")).at(U("latest_versions")).as_array();
+    const utility::string_t& source = latestVersions.begin()->at(U("source")).as_string();
+
+    // Convert the source value to std::string
+    std::string sourceString = utility::conversions::to_utf8string(source);
+    std::string modelPath = sourceString.append("/data/model.pth");
+
+    return modelPath;
+}
 
 int main() {
     // Create an HTTP client object
@@ -37,13 +53,14 @@ int main() {
     // Create the request body
     json::value requestBody;
     requestBody[U(RE_KEY)] = json::value::string(U(RE_VALUE));
-    std::cout << requestBody << std::endl;
 
     // Set the request body
     request.set_body(requestBody);
 
     // Send the GET request asynchronously
+    std::cout << "Send request" << "..." << std::endl;
     client.request(request).then([](http_response response) {
+        std::cout << response.status_code() << std::endl;
         // Check the status code
         if (response.status_code() == status_codes::OK) {
             // Read the response body as a JSON object
@@ -54,10 +71,13 @@ int main() {
         }
     }).then([](web::json::value jsonValue) {
         // Process the JSON response
-        // Here, you can access the response data using the jsonValue object
+        std::cout << "\nFull response:\n" << jsonValue << std::endl;
 
-        // For example, print the response body
-        std::cout << jsonValue.serialize() << std::endl;
+        std::string modelPath = extractSourceFromJson(jsonValue);
+        std::cout << "\nGet file source from response:\n" << modelPath << std::endl;
+
+        // phasm::TorchscriptModel model = phasm::TorchscriptModel(modelPath, true);
+
     }).wait();
 
     return 0;
