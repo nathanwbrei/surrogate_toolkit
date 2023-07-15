@@ -23,19 +23,18 @@ using namespace web::http::client;
 
 #define LOCAL_HOST U("http://127.0.0.1")
 #define DOCKER_HOST U("http://host.docker.internal:5000")
-#define ENDPOINT U("/api/2.0/mlflow/registered-models/get")
 
-#define RE_KEY "name"
-#define RE_VALUE "demo-reg-model"
+// API: https://mlflow.org/docs/latest/rest-api.html#get-download-uri-for-modelversion-artifacts
+#define ENDPOINT U("/api/2.0/mlflow/model-versions/get-download-uri")
+#define REQ_KEY_1 U("name")
+#define REQ_VALUE_1 U("demo-reg-model")
+#define REQ_KEY_2 U("version")
+#define REQ_VALUE_2 U("1")
 
 std::string extractSourceFromJson(const web::json::value jsonResponse) {
 
-    // Extract the source value from latest_versions
-    const auto& latestVersions = jsonResponse.at(U("registered_model")).at(U("latest_versions")).as_array();
-    const utility::string_t& source = latestVersions.begin()->at(U("source")).as_string();
-
-    // Convert the source value to std::string
-    std::string sourceString = utility::conversions::to_utf8string(source);
+    std::string sourceString = utility::conversions::to_utf8string(
+        jsonResponse.at(U("artifact_uri")).as_string());
     std::string modelPath = sourceString.append("/data/model.pth");
 
     return modelPath;
@@ -52,13 +51,14 @@ int main() {
 
     // Create the request body
     json::value requestBody;
-    requestBody[U(RE_KEY)] = json::value::string(U(RE_VALUE));
+    requestBody[REQ_KEY_1] = json::value::string(REQ_VALUE_1);
+    requestBody[REQ_KEY_2] = json::value::string(REQ_VALUE_2);
 
     // Set the request body
     request.set_body(requestBody);
 
     // Send the GET request asynchronously
-    std::cout << "Send request" << "..." << std::endl;
+    std::cout << "Sending request to " << ENDPOINT << std::endl;
     client.request(request).then([](http_response response) {
         std::cout << response.status_code() << std::endl;
         // Check the status code
