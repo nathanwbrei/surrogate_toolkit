@@ -12,11 +12,10 @@ else()
     add_executable(phasm-example-rest ${MLFLOW_REST_SOURCES})
     set_target_properties(phasm-example-rest PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
     target_include_directories(phasm-example-rest
-        PUBLIC ${TORCH_INCLUDE_DIRS}
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../surrogate/include
+        PUBLIC ${TORCH_INCLUDE_DIRS}        
     )
     target_link_libraries(phasm-example-rest
-        ${TORCH_LIBRARIES} phasm-surrogate phasm-torch-plugin
+        ${TORCH_LIBRARIES} phasm-torch-plugin
         OpenSSL::SSL OpenSSL::Crypto cpprestsdk::cpprest
         ${CMAKE_DL_LIBS}
     )

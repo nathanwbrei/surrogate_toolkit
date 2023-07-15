@@ -111,6 +111,7 @@ if __name__ == "__main__":
         with torch.no_grad():
             test_datapoint = torch.Tensor([4.4000, 3.0000, 1.3000, 0.2000]).to(device)
             prediction = loaded_pytorch_model(test_datapoint)
+            print(f"PREDICTION VALUE: {prediction}")
             actual = "setosa"
             predicted = target_names[torch.argmax(prediction)]
             print("\nPREDICTION RESULT: ACTUAL: {}, PREDICTED: {}".format(actual, predicted))

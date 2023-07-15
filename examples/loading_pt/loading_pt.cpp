@@ -14,13 +14,10 @@
  * Ifarm location: /work/epsci/shared_pkg/lstm_model.pt
  **/
 
+#include "torchscript_model.h"
+
 #include <iostream>
 #include <memory>
-
-#include <torch/torch.h>
-
-#include "torch_utils.h"
-#include "torchscript_model.h"
 
 # define BATCH_SIZE 2048
 # define SEQ_LENGTH 7  // For the test lstm_model.pt model only
