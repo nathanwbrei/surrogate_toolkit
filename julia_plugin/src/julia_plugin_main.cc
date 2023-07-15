@@ -16,6 +16,12 @@ struct JuliaPlugin : public phasm::Plugin {
     JuliaPlugin() {
         std::cout << "PHASM: Initializing the Julia interpreter" << std::endl;
         jl_init();
+        // Only load Phasm.jl once
+        jl_eval_string("include(\"Phasm.jl\"); using .Phasm");
+        if (jl_exception_occurred()) {
+            jl_static_show(jl_stdout_stream(), jl_exception_occurred());
+            throw std::runtime_error("Unable to load Phasm.jl");
+        }
     }
 
     virtual ~JuliaPlugin() {

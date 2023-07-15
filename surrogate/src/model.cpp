@@ -14,7 +14,7 @@ size_t Model::get_capture_count() const { return m_captured_rows; }
 
 std::shared_ptr<ModelVariable> Model::get_model_var(size_t position) {
     if (position >= m_model_vars.size()) { throw std::runtime_error("Parameter index out of bounds"); }
-    return m_inputs[position];
+    return m_model_vars[position];
 }
 
 std::shared_ptr<ModelVariable> Model::get_model_var(std::string param_name) {

@@ -29,6 +29,11 @@ RUN tar -xf libdwarf.tar.xz \
  && cmake .. -DCMAKE_INSTALL_PREFIX=/app/libdwarf/installdir \
  && make install
 
+# Install Intel PIN
+ADD "https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz" pin.tar.gz
+RUN tar -xf pin.tar.gz \
+ && mv pin-3.22-98547-g7a303a835-gcc-linux pin
+
 # Install JANA (Do this last because we are more likely to upgrade!)
 RUN git clone -b v2.0.6 http://github.com/JeffersonLab/JANA2 \
  && mkdir JANA2/install \
@@ -40,5 +45,7 @@ RUN git clone -b v2.0.6 http://github.com/JeffersonLab/JANA2 \
 ENV JANA_HOME=/app/JANA2/install
 ENV PATH="$PATH:/app/JANA2/install/bin"
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/app/JANA2/install/plugins"
+ENV PIN_ROOT="/app/pin"
 
 CMD /bin/bash
+

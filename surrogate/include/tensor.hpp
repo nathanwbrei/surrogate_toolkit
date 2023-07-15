@@ -134,7 +134,7 @@ public:
     // inline torch::Tensor& get_underlying() {  return m_underlying; }
     inline size_t get_length() const { return m_length; }
     inline DType get_dtype() const { return m_dtype; }
-    inline std::vector<int64_t> get_shape() const { return m_shape; }
+    inline const std::vector<int64_t>& get_shape() const { return m_shape; }
 
     bool operator==(const tensor& rhs) const;
 

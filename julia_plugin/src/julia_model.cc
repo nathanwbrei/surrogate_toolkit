@@ -8,20 +8,12 @@
 
 namespace phasm {
 void JuliaModel::initialize() {
-    std::cout << "PHASM: Calling JuliaModel::initialize" << std::endl;
     std::string inc_str = "include(\"" + m_filepath + "\")";
     jl_eval_string(inc_str.c_str());
     if (jl_exception_occurred()) {
         jl_static_show(jl_stdout_stream(), jl_exception_occurred());
         std::cout << std::endl;
     }
-
-    jl_eval_string("using .TestModule");
-    if (jl_exception_occurred()) {
-        jl_static_show(jl_stdout_stream(), jl_exception_occurred());
-        std::cout << std::endl;
-    }
-
     jl_value_t* boxed_model = jl_box_voidpointer(this);
     jl_set_global(jl_main_module, jl_symbol("model"), boxed_model);
     if (jl_exception_occurred()) {
@@ -34,12 +26,13 @@ void JuliaModel::train_from_captures() {
 }
 
 bool JuliaModel::infer() {
-    std::cout << "PHASM: Calling JuliaModel::infer" << std::endl;
-    auto ret = jl_eval_string("TestModule.infer(reinterpret(TestModule.Model,model))");
+    // TODO: Don't want to do the jl_eval_string on every call to infer()
+    auto ret = jl_eval_string("Phasm.phasm_infer(reinterpret(Phasm.Model,model), infer)");
     if (jl_exception_occurred()) {
-        std::cout << "infer(model): exception: " << jl_typeof_str(jl_exception_occurred()) << std::endl;
+        std::cout << "Julia exception in JuliaModel::infer(): " << jl_typeof_str(jl_exception_occurred()) << std::endl;
         jl_static_show(jl_stdout_stream(), jl_exception_occurred());
         std::cout << std::endl;
+        throw std::runtime_error("Exception inside Julia model!");
     }
     if (jl_typeis(ret, jl_bool_type)) {
         return jl_unbox_bool(ret);
@@ -50,5 +43,3 @@ bool JuliaModel::infer() {
 }
 
 } // namespace phasm
-
-

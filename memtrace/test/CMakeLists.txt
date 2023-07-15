@@ -1,3 +1,9 @@
+if (NOT ${USE_DWARF})
+        message(STATUS "Skipping target 'phasm-memtrace-tests' because USE_DWARF=Off")
+        return()
+endif()
+
+message(STATUS "Including target 'phasm-memtrace-tests'")
 
 set(MEMTRACE_TEST_SOURCES
         dummy_tests.cpp

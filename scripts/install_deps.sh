@@ -40,8 +40,13 @@ cd $DOWNLOAD_DIR
 if [ $PHASM_USE_TORCH -eq 1 ]; then
   echo "Installing Torch"
   rm -rf $INSTALL_DIR/Torch
-  unzip libtorch.zip
-  mv libtorch $INSTALL_DIR/Torch
+  if [ $PHASM_USE_CUDA -eq 1 ]; then
+    unzip libtorch_cuda.zip
+    mv libtorch_cuda $INSTALL_DIR/Torch
+  else 
+    unzip libtorch_cpu.zip
+    mv libtorch_cpu $INSTALL_DIR/Torch
+  fi
 fi
 
 # Install Julia
@@ -94,7 +99,8 @@ if [ $PHASM_USE_GEANT4 -eq 1 ]; then
   tar -xf geant4.tar.gz -C geant4 --strip-components 1
   mkdir geant4/build
   cd geant4/build
-  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/geant4
+  cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/geant4 -DGEANT4_INSTALL_DATA=On -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=1
+
   make -j8 install
 fi
 
