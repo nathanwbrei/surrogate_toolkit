@@ -26,30 +26,66 @@ phasm_modelvars_isinput(model::Model, index) = @ccall phasm_modelvars_isinput(mo
 phasm_modelvars_isoutput(model::Model, index) = @ccall phasm_modelvars_isoutput(model::Model,index::Int64)::Bool
 
 function phasm_modelvars_getinputdata(model::Model, index) 
-    data_ptr::Vector{Ptr{Float64}} = [0]
+    untyped_data_ptr::Vector{Ptr{Nothing}} = [0]
     shape_ptr::Vector{Ptr{Int64}} = [0]
+    dtype::Vector{Int64} = [0]
     ndims::Vector{Csize_t} = [0]
     @ccall phasm_modelvars_getinputdata(
         model::Model,
         index::Int64,
-        pointer(data_ptr)::Ptr{Ptr{Float64}},
+        pointer(dtype)::Ptr{Int64},
+        pointer(untyped_data_ptr)::Ptr{Ptr{Nothing}},
         pointer(shape_ptr)::Ptr{Ptr{Int64}},
         pointer(ndims)::Ptr{Csize_t}
         )::Cvoid
+    if dtype[1] == 1
+        t = UInt8
+    elseif dtype[1] == 2
+        t = Int16
+    elseif dtype[1] == 3
+        t = Int32
+    elseif dtype[1] == 4
+        t = Int64
+    elseif dtype[1] == 5
+        t = Float32
+    elseif dtype[1] == 6
+        t = Float64
+    else
+        println("Invalid dtype $(dtype)")
+    end
+    data_ptr = reinterpret(Ptr{t}, untyped_data_ptr)
     shape_vec = unsafe_wrap(Array, shape_ptr[1], (ndims[1],); own=false)
     shape_tup = (shape_vec...,)
     return unsafe_wrap(Array, data_ptr[1], shape_tup; own=false)
 end
 
 function phasm_modelvars_setoutputdata(model::Model, index, array) 
+
+    # enum class DType { Undefined, UI8, I16, I32, I64, F32, F64 };
+    if eltype(array) == UInt8
+        dtype = 1
+    elseif eltype(array) == Int16
+        dtype = 2
+    elseif eltype(array) == Int32
+        dtype = 3
+    elseif eltype(array) == Int64
+        dtype = 4
+    elseif eltype(array) == Float32
+        dtype = 5
+    elseif eltype(array) == Float64
+        dtype = 6
+    else
+        dtype = 0
+    end
+
     ptr = pointer(array)
     dims = Csize_t(ndims(array))
     if (dims == 1)
         len = Csize_t(length(array))
-        @ccall phasm_modelvars_setoutputdata(model::Model,index::Int64,ptr::Ptr{Float64},len::Csize_t)::Cvoid
+        @ccall phasm_modelvars_setoutputdata(model::Model,index::Int64,dtype::Int32,ptr::Ptr{Float64},len::Csize_t)::Cvoid
     else
         shape = [Int64(x) for x in size(array)]::Vector{Int64}
-        @ccall phasm_modelvars_setoutputdata2(model::Model,index::Int64,ptr::Ptr{Float64},pointer(shape)::Ptr{Int64}, dims::Csize_t)::Cvoid
+        @ccall phasm_modelvars_setoutputdata2(model::Model,index::Int64,dtype::Int32,ptr::Ptr{Float64},pointer(shape)::Ptr{Int64}, dims::Csize_t)::Cvoid
     end
 end
 

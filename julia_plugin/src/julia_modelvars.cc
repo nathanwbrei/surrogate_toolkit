@@ -28,27 +28,58 @@ bool phasm_modelvars_isoutput(void* model, int64_t index) {
     return m->get_model_var(index)->is_output;
 }
 
-void phasm_modelvars_getinputdata(void* model, int64_t index, double** data, const int64_t** shape, size_t* ndims) {
+void phasm_modelvars_getinputdata(void* model, int64_t index, phasm::DType* dtype, void** data, const int64_t** shape, size_t* ndims) {
     auto m = static_cast<phasm::JuliaModel*>(model);
     auto& t = m->get_model_var(index)->inference_input;
     *data = t.get_data<double>();
     *shape = t.get_shape().data();
     *ndims = t.get_shape().size();
+    *dtype = t.get_dtype();
 }
 
-void phasm_modelvars_setoutputdata(void* model, int64_t index, double* data, size_t length) {
+void phasm_modelvars_setoutputdata(void* model, int64_t index, phasm::DType dtype, void* data, size_t length) {
     auto m = static_cast<phasm::JuliaModel*>(model);
     auto mv = m->get_model_var(index);
-    mv->inference_output = phasm::tensor(data, length);
+    switch (dtype) {
+        case phasm::DType::UI8: 
+            mv->inference_output = phasm::tensor((uint8_t*)data, length); break;
+        case phasm::DType::I16:
+            mv->inference_output = phasm::tensor((int16_t*)data, length); break;
+        case phasm::DType::I32: 
+            mv->inference_output = phasm::tensor((int32_t*)data, length); break;
+        case phasm::DType::I64:
+            mv->inference_output = phasm::tensor((int64_t*)data, length); break;
+        case phasm::DType::F32:
+            mv->inference_output = phasm::tensor((float*)data, length); break;
+        case phasm::DType::F64:
+            mv->inference_output = phasm::tensor((double*)data, length); break;
+        default:
+            throw std::runtime_error("Invalid DType!");
+    }
 }
 
-void phasm_modelvars_setoutputdata2(void* model, int64_t index, double* data, int64_t* shape, size_t dims) {
+void phasm_modelvars_setoutputdata2(void* model, int64_t index, phasm::DType dtype, void* data, int64_t* shape, size_t dims) {
     auto m = static_cast<phasm::JuliaModel*>(model);
     auto mv = m->get_model_var(index);
     std::vector<int64_t> shapev;
     for (size_t i=0; i<dims; ++i) {
         shapev.push_back(shape[i]);
     }
-    mv->inference_output = phasm::tensor(data, shapev);
+    switch (dtype) {
+        case phasm::DType::UI8: 
+            mv->inference_output = phasm::tensor((uint8_t*)data, shapev); break;
+        case phasm::DType::I16:
+            mv->inference_output = phasm::tensor((int16_t*)data, shapev); break;
+        case phasm::DType::I32: 
+            mv->inference_output = phasm::tensor((int32_t*)data, shapev); break;
+        case phasm::DType::I64:
+            mv->inference_output = phasm::tensor((int64_t*)data, shapev); break;
+        case phasm::DType::F32:
+            mv->inference_output = phasm::tensor((float*)data, shapev); break;
+        case phasm::DType::F64:
+            mv->inference_output = phasm::tensor((double*)data, shapev); break;
+        default:
+            throw std::runtime_error("Invalid DType!");
+    }
 }
 
