@@ -46,5 +46,5 @@ set(PHASM_TORCH_PLUGIN_TEST_SOURCES
 )
 
 add_executable("phasm-torch-plugin-tests" ${PHASM_TORCH_PLUGIN_TEST_SOURCES})
-target_include_directories(phasm-torch-plugin-tests PUBLIC include ../memtrace/include ${TORCH_INCLUDE_DIRS})
+target_include_directories(phasm-torch-plugin-tests PRIVATE include ../memtrace/include ${TORCH_INCLUDE_DIRS})
 target_link_libraries(phasm-torch-plugin-tests ${TORCH_LIBRARIES} phasm-surrogate phasm-torch-plugin)

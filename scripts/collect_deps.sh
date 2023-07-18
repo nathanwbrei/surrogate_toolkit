@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # This script brings into existence the set of environment variables $PHASM_USE_TORCH, $PHASM_USE_JULIA, etc, 
 # and furnishes them with sensible defaults which the user can override. This lets us download
 # the dependencies and set up our environments to include exactly what we need

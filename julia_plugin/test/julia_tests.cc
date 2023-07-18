@@ -114,5 +114,4 @@ TEST_CASE("Tensors of different dtypes") {
     REQUIRE(sum == 4 + 9 + 49 + 196 + 81 + 1);
 }
 
-
 } // namespace phasm_julia_tests
