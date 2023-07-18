@@ -1,5 +1,6 @@
-### Dependency note
+## Building containers with spack
 
+### Dependency note
 #### cpprestsdk
 ``` bash
 #10 29.50 ==> Concretized cpprestsdk
@@ -48,4 +49,10 @@
 #10 29.50  -   b67srgh          ^xz@5.4.1%gcc@11.3.0~pic build_system=autotools libs=shared,static arch=linux-ubuntu22.04-skylake
 #10 29.50  -   lcz6tp5          ^zstd@1.5.5%gcc@11.3.0+programs build_system=makefile compression=none libs=shared,static arch=linux-ubuntu22.04-skylake
 #10 29.50  -   ikdbdfz      ^zlib@1.2.13%gcc@11.3.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu22.04-skylake
+```
+
+### Activate Spack env
+Activate all the software installed by Spack via:
+```bash
+. /etc/profile.d/phasm_spack_environment.sh
 ```

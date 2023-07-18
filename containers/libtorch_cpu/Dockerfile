@@ -8,7 +8,7 @@
 
 ################################################################
 # Phase 1: call spack to configure env.
-# @ARG spack_env is used to select configuration files.
+# @ARG SPACK_ENV_NAME is used to select configuration files.
 #
 # Ref: https://spack.readthedocs.io/en/latest/containers.html
 ################################################################
@@ -30,21 +30,22 @@ RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
     awk -F: '{print $1}' | xargs strip -s
 
 # Modifications to the environment that are necessary to run
-RUN spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+RUN spack env activate --sh -d . >> /etc/profile.d/phasm_spack_environment.sh
 
 ################################################################
-# Phase 2: install libtorch and other develop dependencies
+# Phase 2: install libtorch and other dependencies.
 ################################################################
-FROM ubuntu:jammy
+FROM ubuntu:jammy as base
 
+# Set up env by Spack installation
 COPY --from=builder /opt/spack-environment /opt/spack-environment
 COPY --from=builder /opt/software /opt/software
 COPY --from=builder /opt/view /opt/view
-COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+COPY --from=builder /etc/profile.d/phasm_spack_environment.sh /etc/profile.d/phasm_spack_environment.sh
 
 # Install basic development environment
 RUN apt update -y && \
-    apt install -y gdb valgrind cmake wget vim libasan6 less exa bat git zlib1g-dev
+    apt install -y gdb unzip valgrind cmake wget vim libasan6 less exa bat git zlib1g-dev build-essential
 
 # Fix JLab certificates
 ADD http://pki.jlab.org/JLabCA.crt /usr/local/share/ca-certificates/JLabCA.crt
@@ -59,29 +60,30 @@ WORKDIR /deps
 # Install libtorch
 # CPU-only libtorch. Url updated on July-17 2023 by xmei@jlab.org. Fix to Libtorch-cpu 1.12.
 ARG TORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.12.0%2Bcpu.zip"
-RUN wget ${TORCH_URL} libtorch.zip && \
-    unzip libtorch.zip \
-    && rm libtorch.zip
+RUN wget ${TORCH_URL} && \
+    mv libtorch-*.zip libtorch.zip && \
+    unzip libtorch.zip && \
+    rm libtorch.zip
 
-################################################################
-# Phase 3: install JANA, 
-################################################################
-
+######################################################################
+# Phase 3: install JANA and set up env.
+######################################################################
 # Install JANA (Do this last because we are more likely to upgrade!)
+# Below to solve CMake Error: No CMAKE_CXX_COMPILER could be found.
 RUN git clone -b v2.0.6 http://github.com/JeffersonLab/JANA2 \
     && mkdir JANA2/install \
     && mkdir JANA2/build \
     && cd JANA2/build \
     && cmake .. -DCMAKE_INSTALL_PREFIX=/deps/JANA2/install \
-    && make -j8 install
+    && make -j8 install \
+    && cd .. \
+    && rm -rf build/
 
 ENV JANA_HOME=/deps/JANA2/install
 ENV PATH="$PATH:/deps/JANA2/install/bin"
 ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/deps/libtorch/lib:/deps/JANA2/install/plugins"
-# ENV PIN_ROOT="/deps/pin"  #TODO: Julia & root pathes[]
 
 ENV DEPS=/deps
-
 RUN mkdir /app
 WORKDIR /app
 CMD /bin/bash
