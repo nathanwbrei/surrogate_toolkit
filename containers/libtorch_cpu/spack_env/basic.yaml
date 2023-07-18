@@ -1,14 +1,14 @@
 spack:
-  # Fast: intel-pin (1 dependeecy)
-  # Slow: libdwarf (16 dependencies), cpprestsdk (15, even slower, depend on cmake-3.26.3?!)
   specs:
+  - curl
+  - cmake
   - intel-pin
   - libdwarf
   - cpprestsdk
   # - julia
   # - llvm
-  # Below are copied from https://spack.readthedocs.io/en/latest/containers.html.
-  # Donot touch below.
+  # Copied from https://spack.readthedocs.io/en/latest/containers.html.
+  # Manage viewpoint/installation dirs.
   concretizer:
     unify: true
   config:

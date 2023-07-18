@@ -1,6 +1,26 @@
 ## Building containers with spack
 
 ### Dependency note
+
+#### curl
+```bash
+#12 30.65 ==> Concretized curl
+#12 30.65  -   oh5brep  curl@8.1.2%gcc@11.3.0~gssapi~ldap~libidn2~librtmp~libssh~libssh2+nghttp2 build_system=autotools libs=shared,static tls=openssl arch=linux-ubuntu22.04-skylake
+#12 30.65  -   flolspa      ^nghttp2@1.52.0%gcc@11.3.0 build_system=autotools arch=linux-ubuntu22.04-skylake
+#12 30.65  -   cdz7nu7      ^openssl@3.1.1%gcc@11.3.0~docs~shared build_system=generic certs=mozilla arch=linux-ubuntu22.04-skylake
+#12 30.65  -   ufq4jme          ^ca-certificates-mozilla@2023-05-30%gcc@11.3.0 build_system=generic arch=linux-ubuntu22.04-skylake
+#12 30.65  -   2qkdjub          ^perl@5.38.0%gcc@11.3.0+cpanm+opcode+open+shared+threads build_system=generic arch=linux-ubuntu22.04-skylake
+#12 30.65  -   vwznhkj              ^berkeley-db@18.1.40%gcc@11.3.0+cxx~docs+stl build_system=autotools patches=26090f4,b231fcc arch=linux-ubuntu22.04-skylake
+#12 30.65  -   u6aasne              ^bzip2@1.0.8%gcc@11.3.0~debug~pic+shared build_system=generic arch=linux-ubuntu22.04-skylake
+#12 30.65  -   r2wi5n3                  ^diffutils@3.9%gcc@11.3.0 build_system=autotools arch=linux-ubuntu22.04-skylake
+#12 30.65  -   dbi5zz3                      ^libiconv@1.17%gcc@11.3.0 build_system=autotools libs=shared,static arch=linux-ubuntu22.04-skylake
+#12 30.65  -   d4qjgmz              ^gdbm@1.23%gcc@11.3.0 build_system=autotools arch=linux-ubuntu22.04-skylake
+#12 30.65  -   ozoyfh4                  ^readline@8.2%gcc@11.3.0 build_system=autotools patches=bbf97f1 arch=linux-ubuntu22.04-skylake
+#12 30.65  -   4ftf36d                      ^ncurses@6.4%gcc@11.3.0~symlinks+termlib abi=none build_system=autotools arch=linux-ubuntu22.04-skylake
+#12 30.65  -   nb7izlf      ^pkgconf@1.9.5%gcc@11.3.0 build_system=autotools arch=linux-ubuntu22.04-skylake
+#12 30.65  -   ikdbdfz      ^zlib@1.2.13%gcc@11.3.0+optimize+pic+shared build_system=makefile arch=linux-ubuntu22.04-skylake
+```
+
 #### cpprestsdk
 ``` bash
 #10 29.50 ==> Concretized cpprestsdk

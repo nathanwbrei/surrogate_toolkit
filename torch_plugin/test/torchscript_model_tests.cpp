@@ -115,7 +115,7 @@ TEST_CASE("Load the module to assigned device (GPU prefered) and do inference") 
     REQUIRE(Bz != -3.0);
 }
 
-// TEST_CASE("Get the module from REST API") {
+// TEST_CASE("Get the module from url") {
 
 // }
 

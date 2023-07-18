@@ -1,0 +1,26 @@
+# Use self-hosted EPSCI MACOS runner to build necessary containers
+#
+# Ref: https://github.com/spack/spack/blob/develop/.github/workflows/build-containers.yml
+name: Containers
+
+on:
+  # Run on push to a certain branch that modify files at the following path
+  push:
+    branches: [ docker_build ]
+    paths:
+      - '.github/workflows/containers_epsci-mac.yml'
+      - 'containers/libtorch_cpu/*'
+
+concurrency:
+  group: build_containers-$${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-image:
+    # matching the label to self-hosted EPSCI MACOS runner
+    runs-on: [self-hosted, macOS]
+      - uses: actions/checkout@v3
+      - name: show path
+        run: |
+          echo $GITHUB_WORKSPACE
+      # - name: change path
