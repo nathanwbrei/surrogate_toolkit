@@ -7,20 +7,14 @@
  * It is based on the libtorch tutorial at https://pytorch.org/tutorials/advanced/cpp_export.html
  *
  * Usage: ./phasm-example-loading-pt <path/to/lstm-model.pt>
- * The test model is taken from https://github.com/cissieAB/gluex-tracking-pytorch-lstm.
- * CUDA device is required. The test input tensor is of dimension (1256, 7, 6).
- *
- * The LSTM model definition： https://github.com/cissieAB/gluex-tracking-pytorch-lstm/blob/main/python/utils.py#L70
+ * The test model is taken from https://github.com/cissieAB/gluex-tracking-pytorch-lstm
  * Ifarm location: /work/epsci/shared_pkg/lstm_model.pt
  **/
 
+#include "torchscript_model.h"
+
 #include <iostream>
 #include <memory>
-
-#include <torch/torch.h>
-
-#include "torch_utils.h"
-#include "torchscript_model.h"
 
 # define BATCH_SIZE 2048
 # define SEQ_LENGTH 7  // For the test lstm_model.pt model only

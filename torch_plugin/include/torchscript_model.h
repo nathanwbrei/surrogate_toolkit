@@ -8,7 +8,8 @@
 
 #include "surrogate.h"
 #include "model.h"
-#include <torch/torch.h>
+#include "torch_utils.h"
+
 #include <torch/script.h>
 
 namespace phasm {

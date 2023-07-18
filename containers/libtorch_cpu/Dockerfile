@@ -1,51 +1,89 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+################################################################
+# Dockerfile to solve basic PHASM dev environment.
+#
+# Updated by Cissie July-17-2023.
+# To see the progress more clearly, use `docker build --progress plain <path>`
+################################################################
 
-USER root
-RUN mkdir /app
-WORKDIR /app
+
+################################################################
+# Phase 1: call spack to configure env.
+# @ARG SPACK_ENV_NAME is used to select configuration files.
+#
+# Ref: https://spack.readthedocs.io/en/latest/containers.html
+################################################################
+
+FROM spack/ubuntu-jammy:latest as builder
+
+ARG SPACK_ENV_NAME=basic
+COPY spack_env/$SPACK_ENV_NAME.yaml /opt/spack-environment/spack.yaml
+
+# Install the software, remove unnecessary deps
+WORKDIR /opt/spack-environment
+RUN spack env activate . && spack install --fail-fast && spack gc -y
+
+# Strip all the binaries
+RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+    xargs file -i | \
+    grep 'charset=binary' | \
+    grep 'x-executable\|x-archive\|x-sharedlib' | \
+    awk -F: '{print $1}' | xargs strip -s
+
+# Modifications to the environment that are necessary to run
+RUN spack env activate --sh -d . >> /etc/profile.d/phasm_spack_environment.sh
+
+################################################################
+# Phase 2: install libtorch and other dependencies.
+################################################################
+FROM ubuntu:jammy as base
+
+# Set up env by Spack installation
+COPY --from=builder /opt/spack-environment /opt/spack-environment
+COPY --from=builder /opt/software /opt/software
+COPY --from=builder /opt/view /opt/view
+COPY --from=builder /etc/profile.d/phasm_spack_environment.sh /etc/profile.d/phasm_spack_environment.sh
 
 # Install basic development environment
-RUN apt update -y \
- && apt install -y gdb valgrind cmake wget unzip vim libasan6 less exa bat git zlib1g-dev
+RUN apt update -y && \
+    apt install -y gdb unzip valgrind cmake wget vim libasan6 less exa bat git zlib1g-dev build-essential
 
-# Fix certificates
+# Fix JLab certificates
 ADD http://pki.jlab.org/JLabCA.crt /usr/local/share/ca-certificates/JLabCA.crt
 RUN chmod 644 /usr/local/share/ca-certificates/JLabCA.crt && \
-    update-ca-certificates && \
-    echo "check_certificate = off" >> ~/.wgetrc
+    update-ca-certificates
+    
+RUN echo "check_certificate = off" >> ~/.wgetrc
+
+RUN mkdir /deps
+WORKDIR /deps
 
 # Install libtorch
-# This is still a cpu-only libtorch. Url updated on May 24 2023
-ADD "https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip" libtorch.zip
-RUN unzip libtorch.zip
+# CPU-only libtorch. Url updated on July-17 2023 by xmei@jlab.org. Fix to Libtorch-cpu 1.12.
+ARG TORCH_URL="https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-1.12.0%2Bcpu.zip"
+RUN wget ${TORCH_URL} && \
+    mv libtorch-*.zip libtorch.zip && \
+    unzip libtorch.zip && \
+    rm libtorch.zip
 
-# Install libdwarf
-ADD "https://github.com/davea42/libdwarf-code/releases/download/v0.3.4/libdwarf-0.3.4.tar.xz" libdwarf.tar.xz
-RUN tar -xf libdwarf.tar.xz \
- && mv libdwarf-0.3.4 libdwarf \
- && mkdir libdwarf/build \
- && mkdir libdwarf/installdir \
- && cd libdwarf/build \
- && cmake .. -DCMAKE_INSTALL_PREFIX=/app/libdwarf/installdir \
- && make install
-
-# Install Intel PIN
-ADD "https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-gcc-linux.tar.gz" pin.tar.gz
-RUN tar -xf pin.tar.gz \
- && mv pin-3.22-98547-g7a303a835-gcc-linux pin
-
+######################################################################
+# Phase 3: install JANA and set up env.
+######################################################################
 # Install JANA (Do this last because we are more likely to upgrade!)
+# Below to solve CMake Error: No CMAKE_CXX_COMPILER could be found.
 RUN git clone -b v2.0.6 http://github.com/JeffersonLab/JANA2 \
- && mkdir JANA2/install \
- && mkdir JANA2/build \
- && cd JANA2/build \
- && cmake .. -DCMAKE_INSTALL_PREFIX=/app/JANA2/install \
- && make -j8 install
+    && mkdir JANA2/install \
+    && mkdir JANA2/build \
+    && cd JANA2/build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=/deps/JANA2/install \
+    && make -j8 install \
+    && cd .. \
+    && rm -rf build/
 
-ENV JANA_HOME=/app/JANA2/install
-ENV PATH="$PATH:/app/JANA2/install/bin"
-ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/app/JANA2/install/plugins"
-ENV PIN_ROOT="/app/pin"
+ENV JANA_HOME=/deps/JANA2/install
+ENV PATH="$PATH:/deps/JANA2/install/bin"
+ENV LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/deps/libtorch/lib:/deps/JANA2/install/plugins"
 
+ENV DEPS=/deps
+RUN mkdir /app
+WORKDIR /app
 CMD /bin/bash
-

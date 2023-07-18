@@ -6,6 +6,5 @@ add_subdirectory(memtrace)
 add_subdirectory(tutorial)
 add_subdirectory(loading_pt)
 add_subdirectory(pinn_pde_solver)
+add_subdirectory(mlflow_rest)
 add_subdirectory(calorimeter)
-
-

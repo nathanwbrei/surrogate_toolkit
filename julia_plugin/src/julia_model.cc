@@ -43,5 +43,3 @@ bool JuliaModel::infer() {
 }
 
 } // namespace phasm
-
-

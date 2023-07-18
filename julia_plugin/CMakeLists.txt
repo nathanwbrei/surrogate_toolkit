@@ -39,4 +39,3 @@ else()
     install(FILES src/Phasm.jl DESTINATION share/tests/julia-plugin-tests)
 
 endif()
-

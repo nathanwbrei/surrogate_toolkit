@@ -19,4 +19,3 @@ else()
         install(TARGETS phasm-example-pdesolver DESTINATION bin)
 
 endif()
-
