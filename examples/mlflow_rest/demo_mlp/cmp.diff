@@ -1,0 +1,175 @@
+10d9
+< import pandas as pd
+13a13,14
+> from sklearn.datasets import load_iris
+> from sklearn.metrics import accuracy_score
+17d17
+< from mlflow import MlflowClient
+21,23c21,22
+< class SimpleMLP(nn.Module):
+< 
+<     def __init__(self, input_size, hidden_size, output_size):
+---
+> class SimplifiedMLP(nn.Module):
+>     def __init__(self):
+25,29c24,26
+<         self.input = nn.Linear(input_size, hidden_size)
+<         self.h1 = nn.Linear(hidden_size, hidden_size)
+<         self.h2 = nn.Linear(hidden_size, hidden_size)
+<         self.h3 = nn.Linear(hidden_size, hidden_size)
+<         self.out = nn.Linear(hidden_size, output_size)
+---
+>         self.fc1 = nn.Linear(4, 30)
+>         self.fc2 = nn.Linear(30, 30)
+>         self.fc3 = nn.Linear(30, 3)
+32,36c29,34
+<         x = F.relu(self.input(x))
+<         x = F.relu(self.h1(x))
+<         x = F.relu(self.h2(x))
+<         x = F.relu(self.h3(x))
+<         x = self.out(x)
+---
+>         '''
+>         A simplified 3-layer MLP model.
+>         '''
+>         x = F.relu(self.fc1(x))
+>         x = F.relu(self.fc2(x))
+>         x = self.fc3(x)
+41c39,42
+<     training_data_filename = "training_captures.csv"
+---
+>     iris = load_iris()
+>     data = iris.data
+>     labels = iris.target
+>     target_names = iris.target_names
+43,44c44,46
+<     print("Loading training data from '" + training_data_filename + "'")
+<     df = pd.read_csv(training_data_filename)
+---
+>     X_train, X_test, y_train, y_test = train_test_split(
+>         data, labels, test_size=0.2, random_state=42, shuffle=True, stratify=labels
+>     )
+46,48c48,51
+<     features = df[['x',' y',' z']].values
+<     targets = df[[' Bx',' By',' Bz']].values
+<     X_train, X_test, y_train, y_test = train_test_split(features, targets, test_size=0.1)
+---
+>     X_train = torch.FloatTensor(X_train).to(device)
+>     X_test = torch.FloatTensor(X_test).to(device)
+>     y_train = torch.LongTensor(y_train).to(device)
+>     y_test = torch.LongTensor(y_test).to(device)
+50,53c53
+<     X_train = torch.FloatTensor(X_train)
+<     X_test = torch.FloatTensor(X_test)
+<     y_train = torch.FloatTensor(y_train)
+<     y_test = torch.FloatTensor(y_test)
+---
+>     return X_train, X_test, y_train, y_test, target_names
+55d54
+<     return X_train, X_test, y_train, y_test
+57d55
+< 
+59,60c57,58
+<     criterion = nn.MSELoss()
+<     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+---
+>     criterion = nn.CrossEntropyLoss()
+>     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+64,65c62,63
+<         loss = criterion(out, y_train)
+<         optimizer.zero_grad(set_to_none=True)
+---
+>         loss = criterion(out, y_train).to(device)
+>         optimizer.zero_grad()
+69,71c67,68
+<         step = epoch + 1
+<         if step % 10 == 0:
+<             print("step", step, ", loss", float(loss))
+---
+>         if epoch % 10 == 0:
+>             print("number of epoch", epoch, "loss", float(loss))
+80,81c77,79
+<         loss_fn = nn.MSELoss()
+<         print("\nTest loss: ", loss_fn(predict_out, y_test).item())
+---
+>         _, predict_y = torch.max(predict_out, 1)
+> 
+>         print("\nprediction accuracy", float(accuracy_score(y_test.cpu(), predict_y.cpu())))
+85,86c83
+< def refresh_folder(ab_path):
+<     pass
+---
+> device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+88d84
+< 
+93c89
+<         "--epochs", type=int, default=1000, help="number of epochs to run (default: 1000)"
+---
+>         "--epochs", type=int, default=100, help="number of epochs to run (default: 100)"
+98,100c94,99
+<     X_train, X_test, y_train, y_test = prepare_data()
+<     model = SimpleMLP(3, 30, 3)
+<     model = torch.jit.script(model)
+---
+>     model = SimplifiedMLP()
+>     model = model.to(device)
+>     X_train, X_test, y_train, y_test, target_names = prepare_data()
+>     scripted_model = torch.jit.script(model)  # scripting the model
+>     scripted_model = train_model(scripted_model, args.epochs, X_train, y_train)
+>     signature = test_model(scripted_model, X_test, y_test)
+102,104c101
+<     # print("\nModel before training\n", model.modules)
+<     model = train_model(model, args.epochs, X_train, y_train)
+<     # print("\nModel after training\n", model.modules)
+---
+>     reg_model_name = "demo-reg-model"
+106,118d102
+<     signature = test_model(model, X_test, y_test)
+< 
+<     model_name = "simpleMLP.pth"
+<     model.save(model_name)
+<     loaded_model = torch.jit.load(model_name)
+< 
+<     print(f"\n\nLoad model {model_name} in current dir")
+<     loaded_model.eval()
+<     with torch.no_grad():
+<         test_datapoint = torch.Tensor([0.0, 0.0, 0.0])
+<         prediction = loaded_model(test_datapoint)
+<         print("\nPREDICTION RESULT: {}".format(prediction))
+< 
+120,138c104,117
+<         artifact_name = "model"   # foldername-alike
+<         model_path = mlflow.get_artifact_uri()
+<         print(f"{model_path}, {run.info.run_id}")
+< 
+<         # TODO: ERROR mlflow.cli: === Run (ID '<id>') failed ===
+<         # save_model locally scucceed with segfault 11.
+<         # log_model did not succeed.
+<         # registered_model_name="simpleMLP"
+<         mlflow.pytorch.save_model(
+<             model, artifact_name, signature=signature
+<         )
+< 
+<     # print("run_id: {}".format(run.info.run_id))
+<     # for artifact_path in ["model/data"]:
+<     #     artifacts = [
+<     #         f.path for f in MlflowClient().list_artifacts(run.info.run_id, artifact_path)
+<     #     ]
+<     #     print("artifacts: {}".format(artifacts))
+<    
+\ No newline at end of file
+---
+>         mlflow.pytorch.log_model(
+>             scripted_model, "model", signature=signature,
+>             registered_model_name=reg_model_name
+>         )  # logging scripted model
+>         model_path = mlflow.get_artifact_uri("model")
+>         loaded_pytorch_model = mlflow.pytorch.load_model(model_path)  # loading scripted model
+>         model.eval()
+>         with torch.no_grad():
+>             test_datapoint = torch.Tensor([4.4000, 3.0000, 1.3000, 0.2000]).to(device)
+>             prediction = loaded_pytorch_model(test_datapoint)
+>             print(f"PREDICTION VALUE: {prediction}")
+>             actual = "setosa"
+>             predicted = target_names[torch.argmax(prediction)]
+>             print("\nPREDICTION RESULT: ACTUAL: {}, PREDICTED: {}".format(actual, predicted))
