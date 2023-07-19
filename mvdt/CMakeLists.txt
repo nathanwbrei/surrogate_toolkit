@@ -61,7 +61,22 @@ set_target_properties(streamchecker PROPERTIES
 )
 
 target_include_directories(streamchecker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(streamchecker PRIVATE clang)
+target_link_libraries(streamchecker PUBLIC 
+  clangLex
+  clangCrossTU
+  clangAST
+  clangStaticAnalyzerFrontend
+  clangStaticAnalyzerCheckers
+  clangStaticAnalyzerCore 
+  clangAnalysis
+  clangASTMatchers
+  clangAST
+  clangBasic
+  LLVMSupport
+  clangCrossTU
+  clangLex
+)
+
 install(TARGETS streamchecker DESTINATION lib)
 
 
