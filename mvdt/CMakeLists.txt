@@ -6,8 +6,6 @@ endif()
 
 message(STATUS "Including target 'phasm-mvdt'")
 
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(
   "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-fno-rtti;-Wall>"
   "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<CONFIG:DEBUG>>:-fno-omit-frame-pointer>"
@@ -264,13 +262,13 @@ install(TARGETS runstreamchecker
 )
 
 # Test cases for the two example plugins
-# TODO: Make this target-specific
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(testlib
   test/files.c
   test/functions.c
 )
+
+set_target_properties(testlib PROPERTIES EXPORT_COMPILE_COMMANDS On)
 
 
 # This is just the skeleton
