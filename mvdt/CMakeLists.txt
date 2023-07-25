@@ -273,7 +273,7 @@ set_target_properties(testlib PROPERTIES EXPORT_COMPILE_COMMANDS On)
 
 # This is just the skeleton
 
-set(MVDT_SOURCES src/main.cpp)
+set(MVDT_SOURCES src/main.cpp src/AnalysisResult.cpp)
 add_executable(phasm-mvdt ${MVDT_SOURCES})
 
 target_include_directories(phasm-mvdt PRIVATE 
