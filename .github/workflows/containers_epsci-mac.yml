@@ -1,6 +1,10 @@
 # Use self-hosted EPSCI MACOS runner to build necessary containers
 #
-# Ref: https://github.com/spack/spack/blob/develop/.github/workflows/build-containers.yml
+# Ref: 
+# - https://github.com/spack/spack/blob/develop/.github/workflows/build-containers.yml
+# - https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container
+# - https://github.com/marketplace/actions/cache
+# - https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
 name: Containers
 
 on:
@@ -25,3 +29,4 @@ jobs:
         run: |
           echo $GITHUB_WORKSPACE
       # - name: change path
+      # Use matrix to control spack env: basic, julia, g4
