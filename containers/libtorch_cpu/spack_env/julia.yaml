@@ -1,12 +1,13 @@
 spack:
   specs:
-  - curl
-  - cmake
-  - intel-pin
-  - libdwarf
-  - cpprestsdk
-  - llvm
   - julia
+  - cpprestsdk
+  - libdwarf
+  - intel-pin
+  - cmake
+  - curl
+  # Seems llvm is stuck
+  # - llvm
   # Copied from https://spack.readthedocs.io/en/latest/containers.html.
   # Manage viewpoint/installation dirs.
   concretizer:

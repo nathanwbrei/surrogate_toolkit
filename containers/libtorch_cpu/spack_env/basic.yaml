@@ -1,12 +1,10 @@
 spack:
   specs:
-  - curl
-  - cmake
-  - intel-pin
-  - libdwarf
   - cpprestsdk
-  # - julia
-  # - llvm
+  - libdwarf
+  - intel-pin
+  - cmake
+  - curl
   # Copied from https://spack.readthedocs.io/en/latest/containers.html.
   # Manage viewpoint/installation dirs.
   concretizer:
