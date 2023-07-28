@@ -1,13 +1,12 @@
 spack:
   specs:
-  - curl
-  - cmake
-  - intel-pin
-  - libdwarf
-  - cpprestsdk
   - geant4
   - geant4-data
-  - geant4-vmc
+  - cpprestsdk
+  - libdwarf
+  - intel-pin
+  - cmake
+  - curl
   # Copied from https://spack.readthedocs.io/en/latest/containers.html.
   # Manage viewpoint/installation dirs.
   concretizer:
