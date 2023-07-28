@@ -1,9 +1,9 @@
 name: Tests
 on:
   push:
-    branches:
-      - 'cissie_dev'
-      - 'main'
+    branches: [ ci ]
+      # - 'cissie_dev'
+      # - 'main'
 
 concurrency:
   group: testing-$${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

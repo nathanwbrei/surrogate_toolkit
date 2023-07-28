@@ -10,7 +10,7 @@ name: Build Docker images
 on:
   # Run on push to a certain branch that modify files at the following path
   push:
-    branches: [ cissie_dev ]
+    branches: [ ci ]
     paths:
       - '.github/workflows/build-docker.yml'
       - 'containers/libtorch_cpu/*'
