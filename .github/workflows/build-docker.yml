@@ -29,7 +29,7 @@ jobs:
       # Use matrix to control spack env: basic, julia, llvm, g4
       matrix:
         # spack_env: [basic, julia, g4]
-        spack_env: [basic, julia]
+        spack_env: [basic, g4]
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -55,17 +55,17 @@ jobs:
         run: |
           docker builder prune -a -f
 
-      - name: Prepare docker to cache
+      - name: Prepare images to cache
         id: prepare-cache
         run: |
-          mkdir -p $GITHUB_WORKSPACE/.docker-cache
-          docker save -o $GITHUB_WORKSPACE/.docker-cache/phasm-cpu-${{ matrix.spack_env }}.tar \
+          mkdir -p /tmp/.docker-cache
+          docker save -o /tmp/.docker-cache/phasm-cpu-${{ matrix.spack_env }}.tar \
             xxmei/phasm:${{ matrix.spack_env }}_cpu-torch-1.12
-          echo "timestamp=$(date --iso-8601=minutes)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -Iminutes)" >> $GITHUB_OUTPUT
 
       - name: Save cache
         uses: actions/cache/save@v3
         with:
           path: |
-            $GITHUB_WORKSPACE/.docker-cache
+            /tmp/.docker-cache
           key: docker-${{ matrix.spack_env }}-${{ steps.prepare-cache.outputs.timestamp }}

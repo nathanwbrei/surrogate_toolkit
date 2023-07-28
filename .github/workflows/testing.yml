@@ -1,4 +1,4 @@
-name: Units tests and some examples
+name: Tests
 on:
   push:
     branches:
