@@ -1,10 +1,10 @@
-# Use self-hosted EPSCI MACOS runner to build necessary containers
+# Use self-hosted EPSCI MACOS runner to build, push and cache necessary containers
 #
 # Ref: 
 # - https://github.com/spack/spack/blob/develop/.github/workflows/build-containers.yml
-# - https://docs.github.com/en/actions/using-jobs/running-jobs-in-a-container
 # - https://github.com/marketplace/actions/cache
 # - https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
+
 name: Build Docker images
 
 on:
@@ -21,14 +21,13 @@ concurrency:
 
 jobs:
 # A more abstract way is at https://docs.github.com/en/actions/publishing-packages/publishing-docker-images
-# Here we do it bare-metally
+# Here we do it bare-metally.
   build-and-push-image:
     # matching the label to self-hosted EPSCI MACOS runner
     runs-on: [self-hosted, macOS]
     strategy:
-      # Use matrix to control spack env: basic, julia, llvm, g4
+      # Use matrix to control spack env
       matrix:
-        # spack_env: [basic, julia, g4]
         spack_env: [basic, g4]
     steps:
       - name: Check out the repo
@@ -51,10 +50,6 @@ jobs:
             -t xxmei/phasm:${{ matrix.spack_env }}_cpu-torch-1.12 .
           docker push xxmei/phasm:${{ matrix.spack_env }}_cpu-torch-1.12
 
-      - name: Clean Docker build
-        run: |
-          docker builder prune -a -f
-
       - name: Prepare images to cache
         id: prepare-cache
         run: |
@@ -63,9 +58,14 @@ jobs:
             xxmei/phasm:${{ matrix.spack_env }}_cpu-torch-1.12
           echo "timestamp=$(date -Iminutes)" >> $GITHUB_OUTPUT
 
-      - name: Save cache
+      - name: Save to Github Action Cache
         uses: actions/cache/save@v3
         with:
           path: |
             /tmp/.docker-cache
           key: docker-${{ matrix.spack_env }}-${{ steps.prepare-cache.outputs.timestamp }}
+
+      - name: Clean Docker build cache and local cache at /tmp/.docker-cache
+        run: |
+          docker builder prune -a -f
+          rm -rf /tmp/.docker-cache

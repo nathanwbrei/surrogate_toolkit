@@ -10,12 +10,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  testing:
+  # Unit tests for torch_plugin, surrogate
+  Unit tests with basic env:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # spack_env: [basic, julia, g4]
-        spack_env: [basic]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+  # Examples with baisc env
+  # Julia unit tests and examples with julia env
+  # GPU examples on ifarm (self-host runner, singularity image)
