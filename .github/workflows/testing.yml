@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   # Unit tests for torch_plugin, surrogate
-  Unit tests with basic env:
+  basic-env-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
