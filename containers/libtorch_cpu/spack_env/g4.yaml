@@ -1,5 +1,7 @@
 spack:
   specs:
+  - geant4
+  - geant4-data
   - cpprestsdk
   - libdwarf
   - intel-pin
