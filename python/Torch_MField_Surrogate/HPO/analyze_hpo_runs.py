@@ -25,8 +25,8 @@ csv_data = 'orig_bfield_data.csv'
 val_split = 0.1
 
 # Set names of the result folders
-model_name = 'test_mfield_hpo_v5'
-hp_results = 'mfield_hp_search_results_v5'
+hp_results = 'test_mfield_hpo'
+hp_study_name = 'mfield_hp_search_results'
 
 # Set up a basic config which will be completed with the parameters found during the hp search:
 mlp_config = {
@@ -49,12 +49,12 @@ print("***********************************************")
 print(" ")
 
 # Add a result folder where the final training results are stored:
-result_folder = model_name + '/final_training_results'
+result_folder = hp_results + '/final_training_results'
 if os.path.exists(result_folder) == False:
     os.mkdir(result_folder)
 
 # Add a folder where the final models are stored:
-fin_model_folder = model_name + '/retrained_models'
+fin_model_folder = hp_results + '/retrained_models'
 if os.path.exists(fin_model_folder) == False:
     os.mkdir(fin_model_folder)
 
@@ -62,7 +62,7 @@ if os.path.exists(fin_model_folder) == False:
 #**********************************
 print("Load HP search results...")
 
-study = joblib.load(model_name+'/'+hp_results+'.pkl')
+study = joblib.load(hp_results+'/'+hp_study_name+'.pkl')
 
 print("...done!")
 print(" ")
@@ -128,7 +128,7 @@ def retrieve_models_from_hp_search(hp_study):
         current_mlp = TorchMLP(current_config,dev)
         
         # Now load the state dictionary:
-        current_state_dict = torch.load(model_name+'/mfield_surrogate_trial'+str(idx)+'.pt')
+        current_state_dict = torch.load(hp_results+'/mfield_surrogate_trial'+str(idx)+'.pt')
         # Set the model weights:
         current_mlp.load_state_dict(current_state_dict)
 
@@ -332,13 +332,13 @@ print("Get performance plots from HP search...")
 # Optimization history:
 optuna.visualization.matplotlib.plot_optimization_history(study)
 plt.gcf().set_size_inches(20,7)
-plt.savefig(model_name + '/hpo_history.png')
+plt.savefig(hp_results + '/hpo_history.png')
 plt.close()
 
 # Parameter importance:
 optuna.visualization.matplotlib.plot_param_importances(study)
 plt.gcf().set_size_inches(15,7)
-plt.savefig(model_name + '/hpo_param_importance.png')
+plt.savefig(hp_results + '/hpo_param_importance.png')
 plt.close()
 
 print("...done!")

@@ -19,11 +19,11 @@ plt.rcParams.update({'font.size':20})
 dev = 'cpu'
 
 # MLFlow settings:
-mlflow_experiment_name = "mfield_hpo_search_v5"
+mlflow_experiment_name = "mfield_hpo_search"
 mflow_tracking_uri = None
 
 # Name of the data:
-csv_data = '../orig_bfield_data.csv'
+csv_data = 'orig_bfield_data.csv'
 
 # Set the number of trials:
 n_hpo_trials = 30
@@ -32,14 +32,17 @@ n_hpo_trials = 30
 use_mean_chisquare_objective = True
 
 # Folder where the hp search results are stored:
-hp_results = 'mfield_hp_search_results_v5'
+hp_results = 'test_mfield_hpo'
+
+# Name of the hpo study:
+hp_study_name = 'mfield_hp_search_results'
 
 # Set the validation split:
 val_split = 0.1
 
 # Set up a config for the HP search and the MLP training:
 hpo_config = {
-    'model_name': 'test_mfield_hpo_v5',
+    'model_name': hp_results,
    'n_epochs': 5000,
    'n_mon_epoch': 5001,
    'n_read_epoch': 2,
@@ -240,9 +243,9 @@ print(" ")
 #**********************************
 print("Run HP search...")
 
-study = optuna.create_study(direction='minimize',study_name=hp_results)
+study = optuna.create_study(direction='minimize',study_name=hp_study_name)
 study.optimize(objective,n_trials=n_hpo_trials)
-joblib.dump(study,hpo_config['model_name']+'/'+hp_results +'.pkl')
+joblib.dump(study,hp_results +'/' + hp_study_name + '.pkl')
 
 print("...done!")
 print(" ")
