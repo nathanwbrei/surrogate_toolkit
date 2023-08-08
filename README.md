@@ -4,8 +4,8 @@
 ## Resources
 - Test results tracking: https://docs.google.com/spreadsheets/d/19iVKLKfVFlASZSgHDrYQx6XqakzqsAp0i52GIF5nEWs
 - Docker images:
-    - https://hub.docker.com/repository/docker/xxmei/phasm/general
     - https://hub.docker.com/r/nbrei/phasm_dev_env
+    - https://hub.docker.com/r/xxmei/phasm
 - Singularity containers on ifarm: `/work/epsci/shared_pkg/phasm-gpu_xxx-xx.sif`
 
 ## Build Instructions
