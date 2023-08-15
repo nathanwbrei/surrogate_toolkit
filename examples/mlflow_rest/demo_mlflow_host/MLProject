@@ -1,4 +1,4 @@
-name: mfield_mlp
+name: iris_identifier
 
 python_env: python_env.yaml
 
@@ -8,5 +8,5 @@ entry_points:
       epochs: {type: int, default: 50}
 
     command: |
-          python mfield_mlp_mlflow.py \
+          python demo_mlflow.py \
             --epochs {epochs}

@@ -98,7 +98,7 @@ if __name__ == "__main__":
     scripted_model = train_model(scripted_model, args.epochs, X_train, y_train)
     signature = test_model(scripted_model, X_test, y_test)
 
-    reg_model_name = "demo-reg-model"
+    reg_model_name = "demo-reg-model"  # this name should be identical with cpp script.
 
     with mlflow.start_run() as run:
         mlflow.pytorch.log_model(
@@ -112,6 +112,7 @@ if __name__ == "__main__":
             test_datapoint = torch.Tensor([4.4000, 3.0000, 1.3000, 0.2000]).to(device)
             prediction = loaded_pytorch_model(test_datapoint)
             print(f"PREDICTION VALUE: {prediction}")
+            print(f"Argmax value: {torch.argmax(prediction)}")
             actual = "setosa"
             predicted = target_names[torch.argmax(prediction)]
             print("\nPREDICTION RESULT: ACTUAL: {}, PREDICTED: {}".format(actual, predicted))
