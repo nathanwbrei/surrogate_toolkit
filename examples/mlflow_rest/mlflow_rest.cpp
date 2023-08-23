@@ -55,6 +55,12 @@ int main() {
     }
     std::cout << "Extracted model path:\n" << modelPath << "\n\n";
 
+    std::string run_id = client.GetRunID("demo-reg-model", "1");
+    if (run_id == ""){
+        std::cerr << "Error: empty run_id. \n\nExit...\n\n";
+        exit(-1);
+    }
+
     // Model inference
     phasm::TorchscriptModel model = phasm::TorchscriptModel(modelPath);
     // std::vector<int64_t> first_layer_shape = model.GetFirstLayerShape();
@@ -68,6 +74,9 @@ int main() {
     torch::Tensor argmaxIndices = at::argmax(output);
     std::cout << "Prediction of [4.4000, 3.0000, 1.3000, 0.2000] is \n[" << output << "\n]\n";
     std::cout << "Argmax Indices:\n" << argmaxIndices << "\n";
+
+    std::string postStatus = client.PostResult(run_id, "Argmax_index", 0) ? "Succeed" : "Failed";
+    std::cout << "Posting argmax_index to server..." << postStatus << std::endl << std::endl;
 
     // Verify argmax index.
     // Python output > Argmax value: 0
