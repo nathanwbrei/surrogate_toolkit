@@ -43,7 +43,14 @@ namespace phasm {
             /// @param run_id an identifier of the model run.
             /// @param key the name of the logged data.
             /// @param value the value of the looged data.
+            /// @return true if the response code is 200 else false.
             bool PostResult(std::string run_id, std::string key, double value);
+
+            /// @breif Implementation of the "List Artifacts" API at.
+            /// https://mlflow.org/docs/latest/rest-api.html#list-artifacts
+            /// @param run_id an identifier of the model run.
+            /// @return extraced json body of full response.
+            web::json::value ListArtifacts(std::string run_id);
 
         private:
             std::string baseUrl_ = "";

@@ -21,6 +21,7 @@ std::string phasm::MLflowRESTClient::SetEndPoint(phasm::MLflowRESTClient::RESTMe
             return "/api/2.0/mlflow/model-versions/get";
         // Implementation of https://mlflow.org/docs/latest/rest-api.html#list-artifacts
         case phasm::MLflowRESTClient::RESTMethods::ListArtifacts:
+            return "/api/2.0/mlflow/artifacts/list";
         default:
             return "";
     }
@@ -133,7 +134,7 @@ std::string phasm::MLflowRESTClient::GetRunID(std::string name, std::string vers
 // by run_ids. I think we need more flexibility on this, maybe a general DB.
 // API param list: https://mlflow.org/docs/latest/rest-api.html#log-metric
 //
-/* Test curl command:
+/* Curl command:
 curl -H 'Content-Type: application/json' -X POST http://127.0.0.1:5004/api/2.0/mlflow/runs/log-metric \
 -d '{"run_id": "f136c5849c0a48faab570cc95c81b383", "key": "demo-result", "value": -1.00, "timestamp": 1692736539}'
 Response is an empty json object
@@ -141,7 +142,7 @@ Response is an empty json object
 bool phasm::MLflowRESTClient::PostResult(std::string run_id, std::string key, double value) {
     // Create the request body according to required fields
     json::value requestBody;
-    requestBody["run_id"] = json::value::string(run_id); // TODO: json::value::value(run_id) instead?
+    requestBody["run_id"] = json::value::string(run_id);
     // Each key has its independent stored file. Each row of this file stands for timestamp, value, and step
     requestBody["key"] = json::value::string(key);
     // cpprestsdk web::json::value class: https://microsoft.github.io/cpprestsdk/classweb_1_1json_1_1value.html
@@ -163,6 +164,45 @@ bool phasm::MLflowRESTClient::PostResult(std::string run_id, std::string key, do
     }
 
     return (statusCode == status_codes::OK);
+}
+
+
+// Param list: https://mlflow.org/docs/latest/rest-api.html#list-artifacts
+// Here we do not consider page_token or next_page_token.
+//
+/* Curl coommand:
+curl -H 'Content-Type: application/json' -X GET http://127.0.0.1:500 -d '{"run_id": "fab5f88fdbef4a1dbdc036c93e4a61b5"}'
+Full response:
+{
+  "root_uri": "file:///Users/xinxinmei/Documents/projects/phasm/examples/mlflow_rest/demo_mlflow_host/mlruns/0/fab5f88fdbef4a1dbdc036c93e4a61b5/artifacts",
+  "files": [
+    {
+      "path": "model",
+      "is_dir": true
+    }
+  ]
+}
+*/
+web::json::value phasm::MLflowRESTClient::ListArtifacts(std::string run_id) {
+    web::json::value ret = web::json::value();
+
+    json::value requestBody;
+    requestBody["run_id"] = json::value::string(run_id);
+
+    http_client client(baseUrl_);
+    phasm::MLflowRESTClient::SetHttpRequest(methods::GET, requestBody, phasm::MLflowRESTClient::RESTMethods::ListArtifacts);
+
+    pplx::task<http_response> response = client.request(request_);
+
+    // Wait for the response and extract the JSON value
+    http_response httpResponse = response.get();
+    web::http::status_code statusCode = httpResponse.status_code();
+
+    if (statusCode != status_codes::OK) {
+        throw std::runtime_error("List Artifacts reequest received non-OK status code: " + std::to_string(statusCode));
+    }
+
+    return httpResponse.extract_json().get(); //.get() is necessary for type conversion. It's similar to adding a .wait()
 }
 
 std::string phasm::MLflowRESTClient::GetModelDownloadUri(std::string name, std::string version) {

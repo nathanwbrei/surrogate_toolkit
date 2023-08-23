@@ -60,6 +60,7 @@ int main() {
         std::cerr << "Error: empty run_id. \n\nExit...\n\n";
         exit(-1);
     }
+    std::cout << client.ListArtifacts(run_id) << std::endl << std::endl;
 
     // Model inference
     phasm::TorchscriptModel model = phasm::TorchscriptModel(modelPath);
