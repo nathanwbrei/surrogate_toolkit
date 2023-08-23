@@ -51,6 +51,9 @@ message(STATUS "USE_CUDA    ${USE_CUDA}")
 option(USE_TORCH "Compile with Torch dependency" ON)
 message(STATUS "USE_TORCH   ${USE_TORCH}")
 
+option(USE_REST "Compile with REST dependency" ON)
+message(STATUS "USE_REST   ${USE_REST}")
+
 option(USE_JULIA "Compile with Julia dependency" OFF)
 message(STATUS "USE_JULIA   ${USE_JULIA}")
 
@@ -88,6 +91,12 @@ if (${USE_TORCH})
     message(STATUS "Found package Torch => ${Torch_DIR}")
 endif()
 
+if (${USE_REST})
+    find_package(cpprestsdk REQUIRED)
+    message(STATUS "Found package REST => ${REST_DIR}")
+endif()
+
+
 if (${USE_GEANT4})
     find_package(Geant4 REQUIRED)
     message(STATUS "Found package Geant4 => ${Geant4_DIR}")
@@ -101,6 +110,7 @@ add_subdirectory(containers)
 add_subdirectory(examples)
 add_subdirectory(surrogate)
 add_subdirectory(torch_plugin)
+add_subdirectory(rest_plugin)
 add_subdirectory(julia_plugin)
 add_subdirectory(memtrace)
 add_subdirectory(memtrace_pin)

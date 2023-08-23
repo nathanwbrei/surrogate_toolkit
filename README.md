@@ -21,9 +21,9 @@ Refer to the top section for docker/singularity image urls.
 docker pull <docker_img>  # optional
 docker run -it -v ${PWD}:/app <docker_img>  # mount current directory
 
-mkdir build && cd build   # build
+mkdir build && cd build
 cmake -DCMAKE_PREFIX_PATH="$DEPS/libtorch;$DEPS/JANA2/install" ..
-make -j32 install  # install
+make -j32 install
 ```
 ### Singularity container (with GPU/CUDA support)
 
