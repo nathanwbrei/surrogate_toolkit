@@ -5,6 +5,7 @@ PhasmProcess::PhasmProcess(G4VProcess *underlying, MethodToSurrogate method)
   pRegProcess = underlying; // Does NOT own underlying
   theProcessName = "Phasm" + underlying->GetProcessName();
   theProcessType = underlying->GetProcessType();
+  theProcessSubType = underlying->GetProcessSubType();
 }
 
 G4double PhasmProcess::AlongStepGetPhysicalInteractionLength(
