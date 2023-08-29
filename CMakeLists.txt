@@ -51,8 +51,8 @@ message(STATUS "USE_CUDA    ${USE_CUDA}")
 option(USE_TORCH "Compile with Torch dependency" ON)
 message(STATUS "USE_TORCH   ${USE_TORCH}")
 
-option(USE_REST "Compile with REST dependency" ON)
-message(STATUS "USE_REST   ${USE_REST}")
+option(USE_REST "Compile with REST dependency" OFF)
+message(STATUS "USE_REST    ${USE_REST}")
 
 option(USE_JULIA "Compile with Julia dependency" OFF)
 message(STATUS "USE_JULIA   ${USE_JULIA}")
@@ -95,7 +95,6 @@ if (${USE_REST})
     find_package(cpprestsdk REQUIRED)
     message(STATUS "Found package REST => ${REST_DIR}")
 endif()
-
 
 if (${USE_GEANT4})
     find_package(Geant4 REQUIRED)
