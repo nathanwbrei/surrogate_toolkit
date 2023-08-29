@@ -14,6 +14,7 @@
 #include "torchscript_model.h"
 
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <chrono>
 #include <cmath>
@@ -23,10 +24,15 @@
 # define DEMO_BATCH_SIZE 2048
 # define DEMO_SEQ_LENGTH 7  // For the test lstm_model.pt model only
 
-/// @brief Measure the elaspsed time of the process of (input initilization + single round inference).
+struct benchRes {
+    int64_t batch_size;
+    double milliseconds;
+};
+
+/// @brief Measure the elaspsed time of (loading module + input initilization + single round inference).
 /// @param input_shape the dimension of the input shape.
 /// @return duration of the process in milliseconds (10e-3 s).
-double benchmark(const std::vector<int64_t>& input_shape, bool use_gpu, phasm::TorchscriptModel& model) {
+double benchmarkKernel(const std::vector<int64_t>& input_shape, bool use_gpu, std::string model_path) {
     torch::Device bench_device = use_gpu ? torch::kCUDA : torch::kCPU;
 
     auto t_start = std::chrono::high_resolution_clock::now();
@@ -34,7 +40,9 @@ double benchmark(const std::vector<int64_t>& input_shape, bool use_gpu, phasm::T
     std::vector<torch::jit::IValue> input;
     input.push_back(torch::randn(input_shape, bench_device));
 
-    at::Tensor output = model.get_module().forward(input).toTensor();
+    phasm::TorchscriptModel bench_model = phasm::TorchscriptModel(model_path, false, bench_device);
+    at::Tensor output = bench_model.get_module().forward(input).toTensor();
+
     // Operate on the first element of the output to make sure inference execution is completed.
     // std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/1) << '\n';
     float firstElement = output[0][0].item<float>();
@@ -44,6 +52,46 @@ double benchmark(const std::vector<int64_t>& input_shape, bool use_gpu, phasm::T
     auto t_duration = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count();
 
     return double(t_duration) / 1000.0;  // return in milliseconds
+}
+
+void benchmarkWrapper(const std::vector<int64_t>& first_layer_shape, bool use_gpu, const std::string& pt_path) {
+    std::string device_type = use_gpu? "GPU":"CPU";
+    std::cout << "\n\n########################################\n";
+    std::cout << "Benchmarking on " << device_type << std::endl;
+    std::cout << "########################################\n";
+    std::vector<benchRes> resVec;
+    std::vector<int64_t> input_shape;
+    for (int64_t batch_size = MIN_BATCH_SIZE; batch_size <= MAX_BATCH_SIZE; batch_size *= 2) {
+        input_shape.clear();
+        input_shape.push_back(batch_size);
+        input_shape.push_back(DEMO_SEQ_LENGTH);
+        std::copy(first_layer_shape.begin() + 1, first_layer_shape.end(), std::back_inserter(input_shape));
+
+        benchRes curElement;
+        curElement.batch_size = batch_size;
+        curElement.milliseconds = benchmarkKernel(input_shape, use_gpu, pt_path);
+        resVec.push_back(curElement);
+    }
+
+    // Print the bechmarking result to a txt file
+    std::string fileName = use_gpu ? "lstm-bench-gpuRes.txt": "lstm-bench-cpuRes.txt";
+
+    std::ofstream outputFile(fileName);
+    // Check if the file was opened successfully
+    if (outputFile.is_open()) {
+        std::cout << "Batch_size, milliseconds" << std::endl;
+        outputFile << "Batch_size, milliseconds" << std::endl;
+        // Write the vector's contents to the file
+        for (const auto& element : resVec) {
+            std::cout << element.batch_size << ", " << element.milliseconds << std::endl;
+            outputFile << element.batch_size << ", " << element.milliseconds << std::endl;
+        }
+        outputFile.close();
+        std::cout << "Benchmark results written to '" << fileName << "'.\n\n" << std::endl;
+    } else {
+        std::cerr << "Unable to open the file." << std::endl;
+    }
+
 }
 
 int main(int argc, const char *argv[]) {
@@ -82,23 +130,15 @@ int main(int argc, const char *argv[]) {
     std::cout << output.slice(/*dim=*/0, /*start=*/0, /*end=*/5) << '\n';
 
     /** BENCHMARKING ON CPU*/
-    std::cout << "\n\n########################################\n";
-    std::cout << "Benchmarking on CPU \n";
-    std::cout << "########################################\n";
-    std::cout << "batch_size,\ttime (milli-seconds)\n";
-    for (int64_t batch_size = MIN_BATCH_SIZE; batch_size <= MAX_BATCH_SIZE; batch_size *= 2) {
-        input_shape.clear();
-        input_shape.push_back(batch_size);
-        input_shape.push_back(DEMO_SEQ_LENGTH);
-        std::copy(first_layer_shape.begin() + 1, first_layer_shape.end(), std::back_inserter(input_shape));
+    benchmarkWrapper(first_layer_shape, false, argv[1]);
 
-        std::cout << batch_size << ",\t" << benchmark(input_shape, false, model) << std::endl;
+    /** BENCHMARKING ON GPU*/
+    bool has_gpu = phasm::has_cuda_device();
+    if (!has_gpu) {
+        std::cout << "No CUDA devices available. Exit...\n\n";
+        return 0;
     }
+    benchmarkWrapper(first_layer_shape, true, argv[1]);
 
-    // bool has_gpu = phasm::has_cuda_device();
-    // if (has_gpu) {
-    //     std::cout << "Use CUDA device 0 to load module!\n" << std::endl;
-    //     device = torch::kCUDA;
-    // }
     return 0;
 }
