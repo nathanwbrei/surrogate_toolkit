@@ -44,7 +44,7 @@ struct OpticBase {
     void unsafe_attach(OpticBase* optic) {
         if (optic->consumes != produces) {
             std::ostringstream ss;
-            ss << "Incompatible optics: '" << produces << "' vs '" << optic->consumes << "'";
+            ss << "Incompatible optics: Upstream produces '" << produces << "' but downstream consumes '" << optic->consumes << "'";
             throw std::runtime_error(ss.str());
         }
         optic->parent = this;
