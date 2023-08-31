@@ -73,9 +73,7 @@ TEST_CASE("Surrogate API with OOP") {
     initial.setY(49.0);
 
     auto primitive_lens = TensorIso<double>();
-    auto getY = [](Point* p) { return p->getY(); };
-    auto setY = [](Point* p, double y) { p->setY(y); };
-    auto val_lens = Lens2<Point, double>(&primitive_lens, getY, setY);
+    auto val_lens = Lens2<Point, double>(&primitive_lens, &Point::getY, &Point::setY);
 
     // Attempt to read from the Point
     auto t = val_lens.to(&initial);
