@@ -43,14 +43,11 @@ set_target_properties(phasm-example-calorimeter-B4a PROPERTIES INSTALL_RPATH_USE
 # relies on these scripts being in the current working directory.
 #
 set(EXAMPLEB4A_SCRIPTS
-  exampleB4a.out
-  exampleB4.in
-  gui.mac
-  init_vis.mac
   plotHisto.C
   plotNtuple.C
   run1.mac
-  run2.mac
+  gui.mac
+  init_vis.mac
   vis.mac
   )
 
