@@ -2,6 +2,7 @@
 #include <catch.hpp>
 #include <iostream>
 #include "optics.h"
+#include "surrogate_builder.h"
 
 using namespace phasm;
 namespace phasm::test::optics_oop_tests {
@@ -48,4 +49,57 @@ TEST_CASE("Surrogate API with OOP") {
 }
 
 
+class Edge {
+    Point m_start;
+    Point m_end;
+public:
+    Point getStart() { return m_start; }
+    Point getEnd() { return m_end; }
+    void setStart(Point start) { m_start = start; }
+    void setEnd(Point end) { m_end = end; }
+};
+
+TEST_CASE("Nested encapsulated fields") {
+//    SurrogateBuilder builder;
+//    builder.local<Edge>("e")
+//           .accessor<Point>(&Edge::getStart, &Edge.setStart)
+//           .accessor<double>(&Point::getX, &Point::setX)
+//           .primitive("x", Direction::INOUT)
+//           .end()
+//           .finish();
+
+    Point start;
+    start.setX(22.0);
+    start.setY(49.0);
+
+    Point end;
+    end.setX(27.0);
+    end.setY(42.0);
+
+    Edge edge;
+    edge.setStart(start);
+    edge.setEnd(end);
+
+    auto primitive_lens = TensorIso<double>();
+    auto point_lens = ValueLens<Point, double>(&primitive_lens, &Point::getY, &Point::setY);
+    auto edge_lens = ValueLens<Edge, Point>(&point_lens, &Edge::getStart, &Edge::setStart);
+
+    // Attempt to read from the Edge
+    auto t = edge_lens.to(&edge);
+    double *tp = t.get_data<double>();
+    REQUIRE(*tp == (double) 49.0);
+
+    // Attempt to write to the Edge
+    *tp = 19;
+    edge_lens.from(t, &edge);
+    REQUIRE(edge.getStart().getY() == 19);
+
+    // Attempt to read from the Edge into a fresh tensor
+    auto tt = edge_lens.to(&edge);
+    double *ttp = tt.get_data<double>();
+    REQUIRE(*ttp == 19);
+
+}
+
 } // namespace
+
