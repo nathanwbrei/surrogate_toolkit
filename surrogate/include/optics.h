@@ -262,6 +262,51 @@ public:
     }
 };
 
+// ValueLens is used when a class encapsulates its members and only
+// exposes them using setters and getters of values.
+
+template <typename ClassT, typename FieldT>
+class ValueLens: public Optic<ClassT> {
+    Optic<FieldT>* m_optic = nullptr;
+    std::function<FieldT(ClassT*)> m_getter;
+    std::function<void(ClassT*, FieldT)> m_setter;
+public:
+    ValueLens(Optic<FieldT>* optic, 
+         std::function<FieldT(ClassT*)> getter,
+         std::function<void(ClassT*,FieldT)> setter)
+      : m_optic(optic), m_getter(getter), m_setter(setter) {
+        OpticBase::consumes = demangle<ClassT>();
+        OpticBase::produces = demangle<FieldT>();
+    };
+    ValueLens(const ValueLens& other) = default;
+
+    std::vector<int64_t> shape() override { return m_optic->shape(); }
+    tensor to(ClassT* source) override {
+        FieldT val = m_getter(source); 
+        return m_optic->to(&val);
+    }
+    void from(tensor source, ClassT* dest) override {
+        FieldT val;
+        // Fill data from tensor into temporary FieldT that lives on the stack
+        m_optic->from(source, &val);
+        // Then call setter on dest object
+        m_setter(dest, val);
+    }
+    void attach(Optic<FieldT>* optic) {
+        OpticBase::unsafe_attach(optic);
+        m_optic = optic;
+    }
+    void unsafe_use(OpticBase* optic) override {
+        auto downcasted = dynamic_cast<Optic<FieldT>*>(optic);
+        if (downcasted == nullptr) {
+            throw std::runtime_error("Incompatible optic!");
+        }
+        m_optic = downcasted;
+    }
+    ValueLens* clone() override {
+        return new ValueLens<ClassT, FieldT>(*this);
+    }
+};
 
 template <typename T>
 class ArrayTraversal : public Optic<T> {
