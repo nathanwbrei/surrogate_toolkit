@@ -74,6 +74,9 @@ struct Cursor<HeadT> {
 
     template <typename T>
     Cursor<T, HeadT> accessor(std::function<T*(HeadT*)> lambda);
+
+    template <typename T>
+    Cursor<T, HeadT> accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter);
 };
 
 
@@ -91,6 +94,9 @@ struct Cursor {
 
     template <typename T>
     Cursor<T, HeadT, RestTs...> accessor(std::function<T*(HeadT*)> lambda);
+
+    template <typename T>
+    Cursor<T, HeadT, RestTs...> accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter);
 };
 
 OpticBase* cloneOpticsFromLeafToRoot(OpticBase* leaf);
@@ -164,6 +170,14 @@ Cursor<T, HeadT> Cursor<HeadT>::accessor(std::function<T *(HeadT *)> lambda) {
 }
 
 template<typename HeadT>
+template<typename T>
+Cursor<T, HeadT> Cursor<HeadT>::accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter) {
+    auto child = new ValueLens<HeadT, T>(nullptr, getter, setter);
+    current_callsite_var->optics_tree.push_back(child);
+    return Cursor<T, HeadT>(child, current_callsite_var, builder);
+}
+
+template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::array(size_t size) {
     auto child = new ArrayTraversal<HeadT>(nullptr, size);
     current_callsite_var->optics_tree.push_back(child);
@@ -209,6 +223,14 @@ template <typename HeadT, typename... RestTs>
 template <typename T>
 Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T*(HeadT*)> lambda) {
     auto child = new Lens<HeadT, T>(nullptr, lambda);
+    focus->unsafe_attach(child);
+    return Cursor<T, HeadT, RestTs...>(child, builder);
+}
+
+template <typename HeadT, typename... RestTs>
+template <typename T>
+Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter) {
+    auto child = new ValueLens<HeadT, T>(nullptr, getter, setter);
     focus->unsafe_attach(child);
     return Cursor<T, HeadT, RestTs...>(child, builder);
 }
