@@ -34,7 +34,7 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 # Add the executable, and link it to the Geant4 libraries
 #
 add_executable(phasm-example-calorimeter-B4d exampleB4d.cc ${sources} ${headers})
-target_link_libraries(phasm-example-calorimeter-B4d ${Geant4_LIBRARIES})
+target_link_libraries(phasm-example-calorimeter-B4d ${Geant4_LIBRARIES} phasm-surrogate)
 set_target_properties(phasm-example-calorimeter-B4d PROPERTIES INSTALL_RPATH_USE_LINK_PATH True)
 
 #----------------------------------------------------------------------------

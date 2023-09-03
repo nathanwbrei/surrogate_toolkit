@@ -30,8 +30,8 @@ PhasmProcess::AtRestGetPhysicalInteractionLength(const G4Track &track,
     std::cout << "PHASM: Inside AtRestGetPIL" << std::endl;
     return pRegProcess->AtRestGetPhysicalInteractionLength(track, condition);
   } else {
-    return pRegProcess->AtRestGetPhysicalInteractionLength(track, condition);
   }
+  return pRegProcess->AtRestGetPhysicalInteractionLength(track, condition);
 }
 
 G4double PhasmProcess::PostStepGetPhysicalInteractionLength(
@@ -50,8 +50,19 @@ G4double PhasmProcess::PostStepGetPhysicalInteractionLength(
 G4VParticleChange *PhasmProcess::AlongStepDoIt(const G4Track &track,
                                                const G4Step &stepData) {
   if (m_method_to_surrogate == MethodToSurrogate::AlongStepDoIt) {
-    std::cout << "PHASM: Inside AlongStepDoIt" << std::endl;
-    return pRegProcess->AlongStepDoIt(track, stepData);
+
+    std::cout << "PHASM: Inside surrogate AlongStepDoIt" << std::endl;
+
+    double x = track.GetTotalEnergy();
+    double y = 22;
+    G4VParticleChange *result;
+
+    AlongStepDoItSurrogate.bind_original_function(
+        [&]() { result = pRegProcess->AlongStepDoIt(track, stepData); });
+    AlongStepDoItSurrogate.bind_all_callsite_vars(&x, &y);
+    AlongStepDoItSurrogate.call();
+    return result;
+
   } else {
     return pRegProcess->AlongStepDoIt(track, stepData);
   }

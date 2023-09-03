@@ -1,6 +1,7 @@
 
 #pragma once
 #include <G4WrapperProcess.hh>
+#include <surrogate_builder.h>
 
 class PhasmProcess : public G4WrapperProcess {
 public:
@@ -16,6 +17,14 @@ public:
 private:
   MethodToSurrogate m_method_to_surrogate = MethodToSurrogate::AlongStepDoIt;
   std::vector<G4ParticleDefinition *> m_particles_to_surrogate;
+
+  static inline phasm::Surrogate AlongStepDoItSurrogate =
+      phasm::SurrogateBuilder()
+          .set_model("phasm-torch-plugin", "")
+          .set_callmode(phasm::CallMode::DumpTrainingData)
+          .local_primitive<double>("x", phasm::IN)
+          .local_primitive<double>("y", phasm::OUT)
+          .finish();
 
 public:
   PhasmProcess(G4VProcess *underlying, MethodToSurrogate method);
