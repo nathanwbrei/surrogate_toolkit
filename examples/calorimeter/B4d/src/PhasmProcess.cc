@@ -53,13 +53,12 @@ G4VParticleChange *PhasmProcess::AlongStepDoIt(const G4Track &track,
 
     std::cout << "PHASM: Inside surrogate AlongStepDoIt" << std::endl;
 
-    double x = track.GetTotalEnergy();
-    double y = 22;
     G4VParticleChange *result;
 
     AlongStepDoItSurrogate.bind_original_function(
         [&]() { result = pRegProcess->AlongStepDoIt(track, stepData); });
-    AlongStepDoItSurrogate.bind_all_callsite_vars(&x, &y);
+    AlongStepDoItSurrogate.bind_all_callsite_vars(const_cast<G4Track *>(&track),
+                                                  result);
     AlongStepDoItSurrogate.call();
     return result;
 

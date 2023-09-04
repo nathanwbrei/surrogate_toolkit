@@ -1,5 +1,6 @@
 
 #pragma once
+#include <G4ParticleChangeForLoss.hh>
 #include <G4WrapperProcess.hh>
 #include <surrogate_builder.h>
 
@@ -22,8 +23,18 @@ private:
       phasm::SurrogateBuilder()
           .set_model("phasm-torch-plugin", "")
           .set_callmode(phasm::CallMode::DumpTrainingData)
-          .local_primitive<double>("x", phasm::IN)
-          .local_primitive<double>("y", phasm::OUT)
+          .local<G4Track>("track")
+          .accessor<double>(&G4Track::GetKineticEnergy,
+                            &G4Track::SetKineticEnergy)
+          .primitive("kineticEnergy", phasm::IN)
+          .end()
+          .end()
+          .local<G4ParticleChangeForLoss>("particleChange")
+          .accessor<double>(&G4ParticleChangeForLoss::GetCharge,
+                            &G4ParticleChangeForLoss::ProposeCharge)
+          .primitive("charge", phasm::OUT)
+          .end()
+          .end()
           .finish();
 
 public:
