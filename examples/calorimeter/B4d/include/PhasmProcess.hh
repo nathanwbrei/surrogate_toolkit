@@ -29,10 +29,37 @@ private:
           .primitive("kineticEnergy", phasm::IN)
           .end()
           .end()
+          .local<G4Step>("step")
+          .accessor<double>(&G4Step::GetTotalEnergyDeposit,
+                            &G4Step::SetTotalEnergyDeposit)
+          .primitive("totalEnergyDeposit", phasm::IN)
+          .end()
+          .accessor<double>(&G4Step::GetNonIonizingEnergyDeposit,
+                            &G4Step::SetNonIonizingEnergyDeposit)
+          .primitive("nonIonizingEnergyDeposit", phasm::IN)
+          .end()
+          .end()
           .local<G4ParticleChangeForLoss>("particleChange")
           .accessor<double>(&G4ParticleChangeForLoss::GetCharge,
                             &G4ParticleChangeForLoss::ProposeCharge)
           .primitive("charge", phasm::OUT)
+          .end()
+          .accessor<CLHEP::Hep3Vector>(
+              [](G4ParticleChangeForLoss *l) {
+                return l->GetMomentumDirection();
+              },
+              [](G4ParticleChangeForLoss *l, CLHEP::Hep3Vector v) {
+                l->ProposeMomentumDirection(v);
+              })
+          .accessor<double>(&CLHEP::Hep3Vector::x, &CLHEP::Hep3Vector::setX)
+          .primitive("momentumDirectionX", phasm::OUT)
+          .end()
+          .accessor<double>(&G4ThreeVector::y, &G4ThreeVector::setY)
+          .primitive("momentumDirectionY", phasm::OUT)
+          .end()
+          .accessor<double>(&G4ThreeVector::z, &G4ThreeVector::setZ)
+          .primitive("momentumDirectionZ", phasm::OUT)
+          .end()
           .end()
           .end()
           .finish();

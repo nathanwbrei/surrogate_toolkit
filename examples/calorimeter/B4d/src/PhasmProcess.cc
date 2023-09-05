@@ -57,8 +57,8 @@ G4VParticleChange *PhasmProcess::AlongStepDoIt(const G4Track &track,
 
     AlongStepDoItSurrogate.bind_original_function(
         [&]() { result = pRegProcess->AlongStepDoIt(track, stepData); });
-    AlongStepDoItSurrogate.bind_all_callsite_vars(const_cast<G4Track *>(&track),
-                                                  result);
+    AlongStepDoItSurrogate.bind_all_callsite_vars(
+        const_cast<G4Track *>(&track), const_cast<G4Step *>(&stepData), result);
     AlongStepDoItSurrogate.call();
     return result;
 
