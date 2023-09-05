@@ -181,7 +181,7 @@ template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::array(size_t size) {
     auto child = new ArrayTraversal<HeadT>(nullptr, size);
     current_callsite_var->optics_tree.push_back(child);
-    return Cursor<HeadT>(child, builder);
+    return Cursor<HeadT>(child, current_callsite_var, builder);
 }
 
 template<typename HeadT>
@@ -195,8 +195,8 @@ SurrogateBuilder &Cursor<HeadT>::end() {
 // -----------------------------------------------------------------
 
 template <typename HeadT, typename... RestTs>
-Cursor<HeadT, RestTs...>::Cursor(OpticBase* focus, std::shared_ptr<CallSiteVariable> callsite_var, SurrogateBuilder* builder)
-: focus(focus), current_callsite_var(callsite_var), builder(builder) {}
+Cursor<HeadT, RestTs...>::Cursor(OpticBase* f, std::shared_ptr<CallSiteVariable> callsite_var, SurrogateBuilder* b)
+: focus(f), current_callsite_var(callsite_var), builder(b) {}
 
 template <typename HeadT, typename... RestTs>
 Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::primitive(std::string name, Direction dir, DType dtype) {
@@ -224,7 +224,7 @@ template <typename T>
 Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T*(HeadT*)> lambda) {
     auto child = new Lens<HeadT, T>(nullptr, lambda);
     focus->unsafe_attach(child);
-    return Cursor<T, HeadT, RestTs...>(child, builder);
+    return Cursor<T, HeadT, RestTs...>(child, current_callsite_var, builder);
 }
 
 template <typename HeadT, typename... RestTs>
@@ -232,14 +232,14 @@ template <typename T>
 Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter) {
     auto child = new ValueLens<HeadT, T>(nullptr, getter, setter);
     focus->unsafe_attach(child);
-    return Cursor<T, HeadT, RestTs...>(child, builder);
+    return Cursor<T, HeadT, RestTs...>(child, current_callsite_var, builder);
 }
 
 template <typename HeadT, typename... RestTs>
 Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::array(size_t size) {
     auto child = new ArrayTraversal<HeadT>(nullptr, size);
     focus->unsafe_attach(child);
-    return Cursor<HeadT, RestTs...>(child, builder);
+    return Cursor<HeadT, RestTs...>(child, current_callsite_var, builder);
 }
 
 template <typename HeadT, typename... RestTs>
