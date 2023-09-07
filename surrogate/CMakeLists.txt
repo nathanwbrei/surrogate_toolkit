@@ -8,6 +8,7 @@ set(SURROGATE_LIBRARY_SOURCES
         src/surrogate_builder.cpp
         src/tensor.cpp
         src/plugin_loader.cc
+        src/flamegraph.cpp
         )
 
 add_library(phasm-surrogate STATIC ${SURROGATE_LIBRARY_SOURCES})
