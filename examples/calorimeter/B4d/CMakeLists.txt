@@ -47,7 +47,7 @@ set(EXAMPLEB4D_SCRIPTS
   init_vis.mac
   plotHisto.C
   plotNtuple.C
-  run1.mac
+  run_b4d.mac
   vis.mac
   )
 
@@ -63,3 +63,4 @@ endforeach()
 # Install the executable to 'share/examples/calorimeter' directory under CMAKE_INSTALL_PREFIX
 #
 install(TARGETS phasm-example-calorimeter-B4d DESTINATION share/examples/calorimeter)
+install(FILES run_b4d.mac vis.mac init_vis.mac gui.mac plotHisto.C plotNtuple.C DESTINATION share/examples/calorimeter)

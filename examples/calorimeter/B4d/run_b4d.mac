@@ -3,15 +3,22 @@
 # To be run preferably in batch, without graphics:
 # % exampleB4[a,b,c,d] run2.mac
 #
-#/run/numberOfThreads 4
+/run/numberOfThreads 1
 #/control/cout/ignoreThreadsExcept 0
-#
+
 /run/initialize
-#
-# Default kinemtics: 
+
+# list the existing physics processes
+/process/list
+
+# Default kinematics: 
 # electron 50 MeV in direction (0.,0.,1.)
-# 1000 events
-#
+/gun/energy 300 MeV
+/gun/particle e-
+
 /run/printProgress 100
-/run/beamOn 1000
+/score/ntuple/writerVerbose 1
+
+# 5000 events
+/run/beamOn 5000
 
