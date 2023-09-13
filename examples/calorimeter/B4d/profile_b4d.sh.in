@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "PHASM_CALL_MODE=$PHASM_CALL_MODE"
+echo "  Options are: UseOriginal, UseModel, DumpTrainingData, DumpValidationData"
+
+# Geant4_DIR=G4_INSTALL_DIR/lib64/Geant4-11.0.2
+G4_SETUP_SCRIPT=@Geant4_DIR@/../../bin/geant4.sh
+source $G4_SETUP_SCRIPT
+
+PHASM_SOURCE=@CMAKE_SOURCE_DIR@
+$PHASM_SOURCE/scripts/phasm_profile.sh "./phasm-example-calorimeter-B4d -m run_b4d.mac"

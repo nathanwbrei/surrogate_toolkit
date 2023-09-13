@@ -59,8 +59,14 @@ foreach(_script ${EXAMPLEB4D_SCRIPTS})
     )
 endforeach()
 
+configure_file(profile_b4d.sh.in profile_b4d.sh)
+
 #----------------------------------------------------------------------------
 # Install the executable to 'share/examples/calorimeter' directory under CMAKE_INSTALL_PREFIX
 #
 install(TARGETS phasm-example-calorimeter-B4d DESTINATION share/examples/calorimeter)
 install(FILES run_b4d.mac vis.mac init_vis.mac gui.mac plotHisto.C plotNtuple.C DESTINATION share/examples/calorimeter)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/profile_b4d.sh
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+        DESTINATION share/examples/calorimeter
+        )

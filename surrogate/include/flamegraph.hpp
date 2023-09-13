@@ -1,6 +1,7 @@
 
 #pragma once
 #include <complex>
+#include <memory>
 #include <stdlib.h>
 #include <string>
 #include <vector>
@@ -20,6 +21,3 @@ struct Flamegraph {
   Flamegraph() = default;
   Flamegraph(std::string filename);
 };
-
-
-

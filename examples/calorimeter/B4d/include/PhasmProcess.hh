@@ -22,7 +22,6 @@ private:
   static inline phasm::Surrogate AlongStepDoItSurrogate =
       phasm::SurrogateBuilder()
           .set_model("phasm-torch-plugin", "")
-          .set_callmode(phasm::CallMode::DumpTrainingData)
           .local<G4Track>("track")
           .accessor<double>(&G4Track::GetKineticEnergy,
                             &G4Track::SetKineticEnergy)
