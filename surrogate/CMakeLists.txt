@@ -37,6 +37,7 @@ set(SURROGATE_LIBRARY_TEST_SOURCES
         test/tutorial_tests.cpp
         test/plugin_tests.cc
         test/optics_oop_tests.cpp
+        test/flamegraph_tests.cpp
         )
 add_executable("phasm-surrogate-tests" ${SURROGATE_LIBRARY_TEST_SOURCES})
 target_include_directories(phasm-surrogate-tests PRIVATE include ../memtrace/include)

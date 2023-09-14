@@ -1,10 +1,22 @@
 #include "flamegraph.hpp"
 #include <algorithm>
 #include <cassert>
+#include <fstream>
 #include <memory>
 #include <vector>
+#include <iostream>
 
-Flamegraph::Flamegraph(std::string filename) {}
+Flamegraph::Flamegraph(std::string filename) {
+  // Open filename
+  //
+  std::ifstream fs (filename);
+  while (fs) {
+      std::string line;
+      fs >> line;
+      add(line);
+  }
+  fs.close();
+}
 
 std::vector<std::string> split(std::string line, char delimiter) {
 
@@ -27,23 +39,27 @@ void Flamegraph::add(std::vector<std::string> stacktrace,
 
   for (auto &current_symbol : stacktrace) {
 
+    bool node_found = false;
     for (const std::unique_ptr<Node> &node : current_node->children) {
       if (node->symbol == current_symbol) {
         // Symbol found
         node->total_sample_count += sample_count;
         current_node = node.get();
-        break;
+        node_found = true;
       }
     }
-    // Symbol not found, so we create a node for it
-    auto created_node = std::make_unique<Node>();
-    created_node->symbol = current_symbol;
-    created_node->own_sample_count = 0; // In case this is not a leaf node
-    created_node->total_sample_count = sample_count;
-    Node *next_node = created_node.get();
-    current_node->children.push_back(std::move(created_node));
-    current_node = next_node;
+    if (! node_found) {
+      // Symbol not found, so we create a node for it
+      auto created_node = std::make_unique<Node>();
+      created_node->symbol = current_symbol;
+      created_node->own_sample_count = 0; // In case this is not a leaf node
+      created_node->total_sample_count = sample_count;
+      Node *next_node = created_node.get();
+      current_node->children.push_back(std::move(created_node));
+      current_node = next_node;
+    }
   }
+
   // current_node points to the leaf node. This is the only time we set
   // own_sample_count
   current_node->own_sample_count = sample_count;
@@ -53,9 +69,49 @@ void Flamegraph::add(std::string line) {
 
   std::vector<std::string> halvsies = split(line, ' ');
   assert(halvsies.size() == 2);
-  assert(halvsies[1].size() == 1);
   std::vector<std::string> stacktrace = split(halvsies[0], ';');
   uint64_t sample_count;
-  sample_count << (halvsies[1][0]);
+  std::stringstream ss(halvsies[1]);
+  ss >> sample_count;
   add(stacktrace, sample_count);
 }
+
+void printNode(std::ostream& os, Flamegraph::Node* node, int level) {
+    for (int i=0; i<level; ++i) {
+        os << "  ";
+    }
+    os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << "]" << std::endl;
+    for (const auto& child : node->children) {
+        printNode(os, child.get(), level+1);
+    }
+}
+
+void Flamegraph::print(std::ostream& os) {
+    for (const auto& child : root->children) {
+        printNode(os, child.get(), 0);
+    }
+}
+
+void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_prefix) {
+
+    if (symbol_prefix.empty()) {
+        symbol_prefix = node->symbol;
+    }
+    else {
+        symbol_prefix = symbol_prefix + ";" + node->symbol;
+    }
+    if (node->own_sample_count != 0) {
+        os << symbol_prefix << " " << node->own_sample_count << std::endl;
+    }
+    for (const auto& child : node->children) {
+        writeNode(os, child.get(), symbol_prefix);
+    }
+}
+
+void Flamegraph::write(std::ostream& os) {
+    for (const auto& child : root->children) {
+        writeNode(os, child.get(), "");
+    }
+}
+
+
