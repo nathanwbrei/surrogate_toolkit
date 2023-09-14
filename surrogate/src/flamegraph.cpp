@@ -67,11 +67,12 @@ void Flamegraph::add(std::vector<std::string> stacktrace,
 
 void Flamegraph::add(std::string line) {
 
-  std::vector<std::string> halvsies = split(line, ' ');
-  assert(halvsies.size() == 2);
-  std::vector<std::string> stacktrace = split(halvsies[0], ';');
+  size_t pos = line.find_last_of(' ');
+  std::string stacktrace_str = line.substr(0, pos);
+  std::string sample_count_str = line.substr(pos+1);
+  std::vector<std::string> stacktrace = split(stacktrace_str, ';');
   uint64_t sample_count;
-  std::stringstream ss(halvsies[1]);
+  std::stringstream ss(sample_count_str);
   ss >> sample_count;
   add(stacktrace, sample_count);
 }
