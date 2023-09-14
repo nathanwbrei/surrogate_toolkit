@@ -113,6 +113,6 @@ add_subdirectory(rest_plugin)
 add_subdirectory(julia_plugin)
 add_subdirectory(memtrace)
 add_subdirectory(memtrace_pin)
-#add_subdirectory(gpu_perf_tester)
+add_subdirectory(flamegraph)
 
 message(STATUS "-----------------------")

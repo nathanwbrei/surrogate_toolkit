@@ -7,15 +7,11 @@
 #include <iostream>
 
 Flamegraph::Flamegraph(std::string filename) {
-  // Open filename
-  //
   std::ifstream fs (filename);
-  while (fs) {
-      std::string line;
-      fs >> line;
-      add(line);
+  std::string line; 
+  while (std::getline(fs, line)) {
+    add(line);
   }
-  fs.close();
 }
 
 std::vector<std::string> split(std::string line, char delimiter) {
