@@ -1,10 +1,12 @@
 #include "flamegraph.hpp"
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 Flamegraph::Flamegraph(std::string filename) {
   std::ifstream fs (filename);
@@ -90,7 +92,7 @@ void printNode(std::ostream& os, Flamegraph::Node* node, int level, bool all) {
         for (int i=0; i<level; ++i) {
             os << "  ";
         }
-        os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << ", " << stringifyFilterResult(node->filterResult) << "]" << std::endl;
+        os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << ", " << node->eventloop_fraction << ", "<< stringifyFilterResult(node->filterResult) << "]" << std::endl;
     }
     for (const auto& child : node->children) {
         printNode(os, child.get(), level+1, all);
@@ -138,9 +140,74 @@ void filter_eventloop(Flamegraph::Node* node, const std::string& eventloop_symbo
     // its children stay Included. 
 }
 
+void filter_kernelfns(Flamegraph::Node* node) {
+    // I just want str.ends_with()
+    auto pos = node->symbol.size()-4;
+    if (strcmp(node->symbol.data() + pos, "_[k]") == 0) {
+        if (node->filterResult == Flamegraph::FilterResult::Include) {
+            node->filterResult = Flamegraph::FilterResult::ExcludeKernelFn;
+        }
+    }
+    // TODO: Somthing similar for JIT and inline functions
+    for (const auto& child : node->children) {
+        filter_kernelfns(child.get());
+    }
+}
 
-void Flamegraph::filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent) {
+void filter_tinies(Flamegraph::Node* node, float tower_fraction) {
+    if (node->eventloop_fraction <= tower_fraction) {
+        if (node->filterResult == Flamegraph::FilterResult::Include) {
+            // There might be multiple reasons to exclude, so we just go with the first reason 
+            // We then order our filters from "most reliable" to "least reliable"
+            node->filterResult = Flamegraph::FilterResult::ExcludeTiny;
+        }
+    }
+    for (const auto& child : node->children) {
+        filter_tinies(child.get(), tower_fraction);
+    }
+}
+
+void filter_towers(Flamegraph::Node* node, float tower_fraction) {
+    // Determine if this node is the base of a tower
+    for (const auto& child : node->children) {
+        if ((child->eventloop_fraction / node->eventloop_fraction) >= tower_fraction) {
+            if (node->filterResult == Flamegraph::FilterResult::Include) {
+                node->filterResult = Flamegraph::FilterResult::ExcludeTower;
+            }
+        }
+        filter_towers(child.get(), tower_fraction);
+    }
+
+    // Recurse over all children
+    for (const auto& child : node->children) {
+        filter_towers(child.get(), tower_fraction);
+    }
+}
+
+void score(Flamegraph::Node* node, const std::string& eventloop_symbol, uint64_t eventloop_total_samples) {
+    if (node->symbol == eventloop_symbol) {
+        eventloop_total_samples = node->total_sample_count;
+        node->eventloop_fraction = 1.0;
+    }
+    else if (eventloop_total_samples != 0) {
+        // eventloop_total_samples == 0   =>  Not inside the event loop yet
+        node->eventloop_fraction = (float) node->total_sample_count/eventloop_total_samples;
+
+    }
+    for (const auto& child : node->children) {
+        score(child.get(), eventloop_symbol, eventloop_total_samples);
+    }
+    // Recurse over all nodes because we don't know where the eventloop will appear (it might even appear multiple times!)
+}
+
+
+void Flamegraph::filter(const std::string& eventloop_symbol, float tiny_fraction, float tower_fraction) {
+    this->eventloop_symbol = eventloop_symbol; // Store this so we don't need to thread it through all the filters
+    score(root.get(), this->eventloop_symbol, 0);
     filter_eventloop(root.get(), eventloop_symbol);
+    filter_kernelfns(root.get());
+    filter_tinies(root.get(), tiny_fraction);
+    filter_towers(root.get(), tower_fraction);
 }
 
 
@@ -179,6 +246,7 @@ void Flamegraph::writeColorPalette(std::ostream& os) {
         os << pair.first << "->rgb(" << (int)std::get<0>(pair.second) << "," << (int)std::get<1>(pair.second) << "," << (int)std::get<2>(pair.second) << ")" << std::endl;
     }
 }
+
 
 
 

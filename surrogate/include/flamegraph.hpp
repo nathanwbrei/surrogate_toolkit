@@ -18,10 +18,11 @@ struct Flamegraph {
     std::vector<std::unique_ptr<Node>> children;
     uint64_t own_sample_count = 0;
     uint64_t total_sample_count = 0;
+    float eventloop_fraction = 0.0;
     FilterResult filterResult = FilterResult::Include;
-    float score = 0;
   };
 
+  std::string eventloop_symbol = ""; // Empty string means "none, aka use whole program as event loop"
   std::unique_ptr<Node> root = std::make_unique<Node>();
 
   Flamegraph() = default;
@@ -30,7 +31,6 @@ struct Flamegraph {
   void add(std::vector<std::string> symbol, uint64_t sample_count);
   void add(std::string line);
   void filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent);
-  void score();
   void print(bool all=true, std::ostream &os=std::cout);
   void write(bool all=true, std::ostream &os=std::cout);
 

@@ -38,14 +38,14 @@ TEST_CASE("Flame graph basics") {
 
 TEST_CASE("Flame graph filter by event loop") {
     Flamegraph fg;
-    fg.add("main;outer;inner 22");
-    fg.add("main;outer;tiny 3");
+    fg.add("main;outer;inner 200");
+    fg.add("main;outer;tiny 1");
     fg.add("main;fun with spaces 33");
     fg.add("main;outer;inner;another 8");
     fg.add("main;meh 2");
-    fg.add("main 20");
-    fg.add("main;fun with spaces;f 20");
-    fg.filter("outer", 0, 0);
+    fg.add("main 1000");
+    fg.add("main;fun with spaces;f 2");
+    fg.filter("outer", 0.01, 0.95);
 
     std::cout << "Printing everything" << std::endl;
     fg.print(true);
@@ -60,5 +60,9 @@ TEST_CASE("Flame graph filter by event loop") {
     std::cout << "Writing color palette" << std::endl;
     fg.writeColorPalette();
 }
+
+
+
+
 
 
