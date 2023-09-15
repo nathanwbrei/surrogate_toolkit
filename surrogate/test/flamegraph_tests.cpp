@@ -32,8 +32,8 @@ TEST_CASE("Flame graph basics") {
     REQUIRE(fg.root->children[0]->own_sample_count == 5);
     REQUIRE(fg.root->children[0]->total_sample_count == 60);
 
-    fg.print();
-    fg.write();
+    fg.printTree();
+    fg.printFolded();
 }
 
 TEST_CASE("Flame graph filter by event loop") {
@@ -48,17 +48,13 @@ TEST_CASE("Flame graph filter by event loop") {
     fg.filter("outer", 0.01, 0.95);
 
     std::cout << "Printing everything" << std::endl;
-    fg.print(true);
-    std::cout << "Writing everything" << std::endl;
-    fg.write(true);
+    fg.printTree();
 
-    std::cout << "Printing filtered" << std::endl;
-    fg.print(false);
-    std::cout << "Writing filtered" << std::endl;
-    fg.write(false);
+    std::cout << std::endl << "Writing filtered" << std::endl;
+    fg.printFolded(false);
 
-    std::cout << "Writing color palette" << std::endl;
-    fg.writeColorPalette();
+    std::cout << std::endl << "Writing color palette" << std::endl;
+    fg.printColorPalette();
 }
 
 

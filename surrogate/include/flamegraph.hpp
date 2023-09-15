@@ -30,15 +30,16 @@ struct Flamegraph {
 
   void add(std::vector<std::string> symbol, uint64_t sample_count);
   void add(std::string line);
-  void filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent);
-  void print(bool all=true, std::ostream &os=std::cout);
-  void write(bool all=true, std::ostream &os=std::cout);
 
-  std::vector<std::string> getSurrogateCandidates();
-  void printSurrogateCandidates(std::ostream& os=std::cout);
+  void filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent);
+
+  void printTree(std::ostream &os=std::cout);
+  void printFolded(bool all=true, std::ostream &os=std::cout);
+  void printCandidates(std::ostream& os=std::cout);
+  void printColorPalette(std::ostream& os=std::cout);
 
   std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> buildColorPalette();
-  void writeColorPalette(std::ostream& os=std::cout);
+  std::vector<std::pair<std::string, float>> buildCandidates();
 
   
 };

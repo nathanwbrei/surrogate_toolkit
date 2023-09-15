@@ -87,25 +87,23 @@ std::string stringifyFilterResult(Flamegraph::FilterResult fr) {
     }
 }
 
-void printNode(std::ostream& os, Flamegraph::Node* node, int level, bool all) {
-    if (all || node->filterResult == Flamegraph::FilterResult::Include)  {
-        for (int i=0; i<level; ++i) {
-            os << "  ";
-        }
-        os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << ", " << node->eventloop_fraction << ", "<< stringifyFilterResult(node->filterResult) << "]" << std::endl;
+void printTree(std::ostream& os, Flamegraph::Node* node, int level) {
+    for (int i=0; i<level; ++i) {
+        os << "  ";
     }
+    os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << ", " << node->eventloop_fraction << ", "<< stringifyFilterResult(node->filterResult) << "]" << std::endl;
     for (const auto& child : node->children) {
-        printNode(os, child.get(), level+1, all);
+        printTree(os, child.get(), level+1);
     }
 }
 
-void Flamegraph::print(bool all, std::ostream& os) {
+void Flamegraph::printTree(std::ostream& os) {
     for (const auto& child : root->children) {
-        printNode(os, child.get(), 0, all);
+        ::printTree(os, child.get(), 0);
     }
 }
 
-void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_prefix, bool all) {
+void printFolded(std::ostream& os, Flamegraph::Node* node, std::string symbol_prefix, bool all) {
 
     if (symbol_prefix.empty()) {
         symbol_prefix = node->symbol;
@@ -119,13 +117,13 @@ void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_pref
         }
     }
     for (const auto& child : node->children) {
-        writeNode(os, child.get(), symbol_prefix, all);
+        printFolded(os, child.get(), symbol_prefix, all);
     }
 }
 
-void Flamegraph::write(bool all, std::ostream& os) {
+void Flamegraph::printFolded(bool all, std::ostream& os) {
     for (const auto& child : root->children) {
-        writeNode(os, child.get(), "", all);
+        ::printFolded(os, child.get(), "", all);
     }
 }
 
@@ -240,7 +238,7 @@ std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> Flamegraph::buildColo
     return palette;
 }
 
-void Flamegraph::writeColorPalette(std::ostream& os) {
+void Flamegraph::printColorPalette(std::ostream& os) {
     auto palette = buildColorPalette();
     for (auto pair : palette) {
         os << pair.first << "->rgb(" << (int)std::get<0>(pair.second) << "," << (int)std::get<1>(pair.second) << "," << (int)std::get<2>(pair.second) << ")" << std::endl;

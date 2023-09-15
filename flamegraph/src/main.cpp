@@ -24,10 +24,10 @@ int main(int argc, char* argv[]) {
     }
     auto fg = Flamegraph(filename);
     if (use_tree_view) {
-        fg.print();
+        fg.printTree();
     }
     else {
-        fg.write();
+        fg.printFolded(false);
     }
 }
 
