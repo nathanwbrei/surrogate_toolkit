@@ -28,10 +28,10 @@ struct Flamegraph {
 
   void add(std::vector<std::string> symbol, uint64_t sample_count);
   void add(std::string line);
-  void filter(std::string eventloop_symbol, float threshold_percent, float tower_percent);
+  void filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent);
   void score();
-  void print(std::ostream &os=std::cout, bool all=true);
-  void write(std::ostream &os=std::cout, bool all=true);
+  void print(bool all=true, std::ostream &os=std::cout);
+  void write(bool all=true, std::ostream &os=std::cout);
 
   std::vector<std::string> getSurrogateCandidates();
   void printSurrogateCandidates(std::ostream& os=std::cout);

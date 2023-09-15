@@ -73,19 +73,30 @@ void Flamegraph::add(std::string line) {
   add(stacktrace, sample_count);
 }
 
+std::string stringifyFilterResult(Flamegraph::FilterResult fr) {
+    switch (fr) {
+        case Flamegraph::FilterResult::Include: return "Include";
+        case Flamegraph::FilterResult::ExcludeOutsideEvtLoop: return "ExcludeOutsideEvtLoop";
+        case Flamegraph::FilterResult::ExcludeTiny: return "ExcludeTiny";
+        case Flamegraph::FilterResult::ExcludeTower: return "ExcludeTower";
+        case Flamegraph::FilterResult::ExcludeMemoryBound: return "ExcludeMemoryBound";
+        case Flamegraph::FilterResult::ExcludeKernelFn: return "ExcludeKernelFn";
+    }
+}
+
 void printNode(std::ostream& os, Flamegraph::Node* node, int level, bool all) {
     if (all || node->filterResult == Flamegraph::FilterResult::Include)  {
         for (int i=0; i<level; ++i) {
             os << "  ";
         }
-        os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << "]" << std::endl;
+        os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << ", " << stringifyFilterResult(node->filterResult) << "]" << std::endl;
     }
     for (const auto& child : node->children) {
         printNode(os, child.get(), level+1, all);
     }
 }
 
-void Flamegraph::print(std::ostream& os, bool all) {
+void Flamegraph::print(bool all, std::ostream& os) {
     for (const auto& child : root->children) {
         printNode(os, child.get(), 0, all);
     }
@@ -109,10 +120,26 @@ void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_pref
     }
 }
 
-void Flamegraph::write(std::ostream& os, bool all) {
+void Flamegraph::write(bool all, std::ostream& os) {
     for (const auto& child : root->children) {
         writeNode(os, child.get(), "", all);
     }
+}
+
+void filter_eventloop(Flamegraph::Node* node, const std::string& eventloop_symbol) {
+    if (node->symbol != eventloop_symbol) {
+        node->filterResult = Flamegraph::FilterResult::ExcludeOutsideEvtLoop;
+        for (const auto& child : node->children) {
+            filter_eventloop(child.get(), eventloop_symbol);
+        }
+    }
+    // If we found the eventloop symbol, the recursion terminates so that the eventloop and 
+    // its children stay Included. 
+}
+
+
+void Flamegraph::filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent) {
+    filter_eventloop(root.get(), eventloop_symbol);
 }
 
 

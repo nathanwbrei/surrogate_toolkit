@@ -24,10 +24,10 @@ int main(int argc, char* argv[]) {
     }
     auto fg = Flamegraph(filename);
     if (use_tree_view) {
-        fg.print(std::cout);
+        fg.print();
     }
     else {
-        fg.write(std::cout);
+        fg.write();
     }
 }
 

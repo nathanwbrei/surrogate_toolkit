@@ -36,4 +36,26 @@ TEST_CASE("Flame graph basics") {
     fg.write();
 }
 
+TEST_CASE("Flame graph filter by event loop") {
+    Flamegraph fg;
+    fg.add("main;outer;inner 22");
+    fg.add("main;outer;tiny 3");
+    fg.add("main;fun with spaces 33");
+    fg.add("main;outer;inner;another 8");
+    fg.add("main;meh 2");
+    fg.add("main 20");
+    fg.add("main;fun with spaces;f 20");
+    fg.filter("outer", 0, 0);
+
+    std::cout << "Printing everything" << std::endl;
+    fg.print(true);
+    std::cout << "Writing everything" << std::endl;
+    fg.write(true);
+
+    std::cout << "Printing filtered" << std::endl;
+    fg.print(false);
+    std::cout << "Writing filtered" << std::endl;
+    fg.write(false);
+}
+
 
