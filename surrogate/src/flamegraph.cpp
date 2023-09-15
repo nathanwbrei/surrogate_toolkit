@@ -73,23 +73,25 @@ void Flamegraph::add(std::string line) {
   add(stacktrace, sample_count);
 }
 
-void printNode(std::ostream& os, Flamegraph::Node* node, int level) {
-    for (int i=0; i<level; ++i) {
-        os << "  ";
+void printNode(std::ostream& os, Flamegraph::Node* node, int level, bool all) {
+    if (all || node->filterResult == Flamegraph::FilterResult::Include)  {
+        for (int i=0; i<level; ++i) {
+            os << "  ";
+        }
+        os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << "]" << std::endl;
     }
-    os << node->symbol << " [" << node->total_sample_count << ", " << node->own_sample_count << "]" << std::endl;
     for (const auto& child : node->children) {
-        printNode(os, child.get(), level+1);
+        printNode(os, child.get(), level+1, all);
     }
 }
 
-void Flamegraph::print(std::ostream& os) {
+void Flamegraph::print(std::ostream& os, bool all) {
     for (const auto& child : root->children) {
-        printNode(os, child.get(), 0);
+        printNode(os, child.get(), 0, all);
     }
 }
 
-void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_prefix) {
+void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_prefix, bool all) {
 
     if (symbol_prefix.empty()) {
         symbol_prefix = node->symbol;
@@ -97,17 +99,19 @@ void writeNode(std::ostream& os, Flamegraph::Node* node, std::string symbol_pref
     else {
         symbol_prefix = symbol_prefix + ";" + node->symbol;
     }
-    if (node->own_sample_count != 0) {
-        os << symbol_prefix << " " << node->own_sample_count << std::endl;
+    if (all || node->filterResult == Flamegraph::FilterResult::Include) {
+        if (node->own_sample_count != 0) {
+            os << symbol_prefix << " " << node->own_sample_count << std::endl;
+        }
     }
     for (const auto& child : node->children) {
-        writeNode(os, child.get(), symbol_prefix);
+        writeNode(os, child.get(), symbol_prefix, all);
     }
 }
 
-void Flamegraph::write(std::ostream& os) {
+void Flamegraph::write(std::ostream& os, bool all) {
     for (const auto& child : root->children) {
-        writeNode(os, child.get(), "");
+        writeNode(os, child.get(), "", all);
     }
 }
 
