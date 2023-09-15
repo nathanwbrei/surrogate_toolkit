@@ -56,6 +56,9 @@ TEST_CASE("Flame graph filter by event loop") {
     fg.print(false);
     std::cout << "Writing filtered" << std::endl;
     fg.write(false);
+
+    std::cout << "Writing color palette" << std::endl;
+    fg.writeColorPalette();
 }
 
 

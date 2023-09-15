@@ -81,6 +81,7 @@ std::string stringifyFilterResult(Flamegraph::FilterResult fr) {
         case Flamegraph::FilterResult::ExcludeTower: return "ExcludeTower";
         case Flamegraph::FilterResult::ExcludeMemoryBound: return "ExcludeMemoryBound";
         case Flamegraph::FilterResult::ExcludeKernelFn: return "ExcludeKernelFn";
+        default: return "Corrupted FilterResult!!!";
     }
 }
 
@@ -141,5 +142,43 @@ void filter_eventloop(Flamegraph::Node* node, const std::string& eventloop_symbo
 void Flamegraph::filter(const std::string& eventloop_symbol, float threshold_percent, float tower_percent) {
     filter_eventloop(root.get(), eventloop_symbol);
 }
+
+
+void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>>& palette) {
+
+    auto it = palette.find(node->symbol);
+    if (it == palette.end()) {
+        if (node->filterResult == Flamegraph::FilterResult::Include) {
+            palette.insert({node->symbol, {255,100,0}}); // Orange
+        }
+        else {
+            palette.insert({node->symbol, {200,200,200}}); // Gray
+        }
+    }
+    else {
+        // Include overrides previous exclude. Why? Highlight candidate functions that are ALSO used outside event loop
+        if (node->filterResult == Flamegraph::FilterResult::Include) {
+            it->second = {255, 100, 0}; // Orange
+        }
+    }
+    for (const auto& child : node->children) {
+        buildColorPalette(child.get(), palette);
+    }
+}
+
+std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> Flamegraph::buildColorPalette() {
+
+    std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> palette;
+    ::buildColorPalette(root.get(), palette);
+    return palette;
+}
+
+void Flamegraph::writeColorPalette(std::ostream& os) {
+    auto palette = buildColorPalette();
+    for (auto pair : palette) {
+        os << pair.first << "->rgb(" << (int)std::get<0>(pair.second) << "," << (int)std::get<1>(pair.second) << "," << (int)std::get<2>(pair.second) << ")" << std::endl;
+    }
+}
+
 
 

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <tuple>
 
 struct Flamegraph {
 
@@ -36,7 +37,7 @@ struct Flamegraph {
   std::vector<std::string> getSurrogateCandidates();
   void printSurrogateCandidates(std::ostream& os=std::cout);
 
-  std::map<std::string, char[3]> getColorPalette();
+  std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> buildColorPalette();
   void writeColorPalette(std::ostream& os=std::cout);
 
   
