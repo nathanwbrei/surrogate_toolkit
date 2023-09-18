@@ -129,8 +129,9 @@ void Flamegraph::printFolded(bool all, std::ostream& os) {
 }
 
 void filter_eventloop(Flamegraph::Node* node, const std::string& eventloop_symbol) {
+    // We also filter out the event loop itself, so as to avoid the visual noise
+    node->filterResult = Flamegraph::FilterResult::ExcludeOutsideEvtLoop;
     if (node->symbol != eventloop_symbol) {
-        node->filterResult = Flamegraph::FilterResult::ExcludeOutsideEvtLoop;
         for (const auto& child : node->children) {
             filter_eventloop(child.get(), eventloop_symbol);
         }
@@ -211,6 +212,9 @@ void rank(Flamegraph::Node* node, std::map<std::string, float>& scores) {
             it->second += node->eventloop_fraction;
         }
     }
+    for (const auto& child : node->children) {
+        ::rank(child.get(), scores);
+    }
 }
 
 
@@ -227,6 +231,9 @@ void Flamegraph::filter(const std::string& eventloop_symbol, float tiny_fraction
 
 std::vector<std::pair<std::string, float>> Flamegraph::buildCandidates() {
     std::vector<std::pair<std::string, float>> results;
+    if (this->scores.empty()) {
+        std::cout << "Warning: scores is empty!" << std::endl;
+    }
     for (auto pair : this->scores) {
         results.push_back({pair.first, pair.second});
     }
@@ -270,9 +277,16 @@ void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<
 
 std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> Flamegraph::buildColorPalette() {
 
+    std::cout << "Building color palette." << std::endl;
     auto rankings_vec = buildCandidates();
-    float min_score = std::min(rankings_vec.begin(), rankings_vec.end(), [](auto lhs, auto rhs) {return lhs->second < rhs->second;})->second;
-    float max_score = std::max(rankings_vec.begin(), rankings_vec.end(), [](auto lhs, auto rhs) {return lhs->second < rhs->second;})->second;
+    float min_score = 1;
+    float max_score = 0;
+    for (auto& ranking : rankings_vec) {
+        if (ranking.second < min_score) min_score = ranking.second;
+        if (ranking.second > max_score) max_score = ranking.second;
+    }
+    std::cout << "min score= " << min_score << std::endl; 
+    std::cout << "max score= " << max_score << std::endl; 
 
     std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> palette;
     ::buildColorPalette(root.get(), palette, min_score, max_score);

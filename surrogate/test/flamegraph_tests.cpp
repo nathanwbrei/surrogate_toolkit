@@ -39,6 +39,7 @@ TEST_CASE("Flame graph basics") {
 TEST_CASE("Flame graph filter by event loop") {
     Flamegraph fg;
     fg.add("main;outer;inner 200");
+    fg.add("main;outer;tower;huh 50");
     fg.add("main;outer;tiny 1");
     fg.add("main;fun with spaces 33");
     fg.add("main;outer;inner;another 8");
