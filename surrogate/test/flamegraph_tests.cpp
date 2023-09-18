@@ -47,13 +47,16 @@ TEST_CASE("Flame graph filter by event loop") {
     fg.add("main;fun with spaces;f 2");
     fg.filter("outer", 0.01, 0.95);
 
-    std::cout << "Printing everything" << std::endl;
+    std::cout << "Printing tree" << std::endl;
     fg.printTree();
 
-    std::cout << std::endl << "Writing filtered" << std::endl;
+    std::cout << std::endl << "Printing folded" << std::endl;
     fg.printFolded(false);
 
-    std::cout << std::endl << "Writing color palette" << std::endl;
+    std::cout << std::endl << "Printing candidates" << std::endl;
+    fg.printCandidates();
+
+    std::cout << std::endl << "Printing color palette" << std::endl;
     fg.printColorPalette();
 }
 

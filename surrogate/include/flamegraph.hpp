@@ -24,6 +24,7 @@ struct Flamegraph {
 
   std::string eventloop_symbol = ""; // Empty string means "none, aka use whole program as event loop"
   std::unique_ptr<Node> root = std::make_unique<Node>();
+  std::map<std::string, float> scores;
 
   Flamegraph() = default;
   Flamegraph(std::string filename);

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <fstream>
 #include <memory>
+#include <ostream>
 #include <vector>
 #include <iostream>
 #include <cstring>
@@ -198,6 +199,20 @@ void score(Flamegraph::Node* node, const std::string& eventloop_symbol, uint64_t
     // Recurse over all nodes because we don't know where the eventloop will appear (it might even appear multiple times!)
 }
 
+void rank(Flamegraph::Node* node, std::map<std::string, float>& scores) {
+
+    // This is going to SUM all of the eventloop_fraction that is INCLUDED
+    if (node->filterResult == Flamegraph::FilterResult::Include) {
+        auto it = scores.find(node->symbol);
+        if (it  == scores.end()) {
+            scores[node->symbol] = node->eventloop_fraction;
+        }
+        else {
+            it->second += node->eventloop_fraction;
+        }
+    }
+}
+
 
 void Flamegraph::filter(const std::string& eventloop_symbol, float tiny_fraction, float tower_fraction) {
     this->eventloop_symbol = eventloop_symbol; // Store this so we don't need to thread it through all the filters
@@ -206,15 +221,37 @@ void Flamegraph::filter(const std::string& eventloop_symbol, float tiny_fraction
     filter_kernelfns(root.get());
     filter_tinies(root.get(), tiny_fraction);
     filter_towers(root.get(), tower_fraction);
+    rank(root.get(), this->scores);
 }
 
 
-void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>>& palette) {
+std::vector<std::pair<std::string, float>> Flamegraph::buildCandidates() {
+    std::vector<std::pair<std::string, float>> results;
+    for (auto pair : this->scores) {
+        results.push_back({pair.first, pair.second});
+    }
+    std::sort(results.begin(), results.end(), [](auto& lhs, auto& rhs){ return lhs.second<rhs.second;});
+    return results;
+}
+
+void Flamegraph::printCandidates(std::ostream& os) {
+    os << "Rank: Function => %% of event loop" << std::endl;
+    os << "----------------------------------" << std::endl;
+
+    int i=1;
+    for (const auto& pair: this->buildCandidates()) {
+        os << i << ": " << pair.first << " => " << pair.second << std::endl;
+    }
+}
+
+
+void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>>& palette, float min_score, float max_score) {
 
     auto it = palette.find(node->symbol);
     if (it == palette.end()) {
         if (node->filterResult == Flamegraph::FilterResult::Include) {
-            palette.insert({node->symbol, {255,100,0}}); // Orange
+            int green = 255 * (1-((node->eventloop_fraction - min_score)/(max_score-min_score)));
+            palette.insert({node->symbol, {255,green,0}}); // Orange
         }
         else {
             palette.insert({node->symbol, {200,200,200}}); // Gray
@@ -227,14 +264,18 @@ void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<
         }
     }
     for (const auto& child : node->children) {
-        buildColorPalette(child.get(), palette);
+        buildColorPalette(child.get(), palette, min_score, max_score);
     }
 }
 
 std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> Flamegraph::buildColorPalette() {
 
+    auto rankings_vec = buildCandidates();
+    float min_score = std::min(rankings_vec.begin(), rankings_vec.end(), [](auto lhs, auto rhs) {return lhs->second < rhs->second;})->second;
+    float max_score = std::max(rankings_vec.begin(), rankings_vec.end(), [](auto lhs, auto rhs) {return lhs->second < rhs->second;})->second;
+
     std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> palette;
-    ::buildColorPalette(root.get(), palette);
+    ::buildColorPalette(root.get(), palette, min_score, max_score);
     return palette;
 }
 
