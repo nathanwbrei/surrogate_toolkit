@@ -3,7 +3,7 @@
 // Subject to the terms in the LICENSE file found in the top-level directory.
 
 #include "flamegraph.hpp"
-#include <iostream>
+#include <fstream>
 #include <cstring>
 
 int main(int argc, char* argv[]) {
@@ -11,23 +11,43 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: phasm-flamegraph expects at least one argument." << std::endl;
         exit(1);
     }
-    std::string filename;
-    bool use_tree_view = false;
 
+    std::ofstream filtered("perf.filtered");
+    std::ofstream palettemap("palette.map");
+    std::string folded_input;
+    std::string eventloop_symbol;
+    bool verbose = false;
+
+    int position_idx = 0;
     for (int i=1; i<argc; ++i) {
-        if (strcmp(argv[i], "-t") == 0) {
-            use_tree_view = true;
+        if (strcmp(argv[i], "-v") == 0) {
+            verbose = true;
         }
         else {
-            filename = argv[i];
+            if (position_idx == 0) {
+                folded_input = argv[i];
+                position_idx += 1;
+            }
+            else if (position_idx == 1) {
+                eventloop_symbol = argv[i];
+                position_idx += 1;
+            }
+            else {
+                std::cerr << "Too many arguments!" << std::endl;
+                exit(1);
+            }
         }
     }
-    auto fg = Flamegraph(filename);
-    if (use_tree_view) {
+    auto fg = Flamegraph(folded_input);
+    fg.filter(eventloop_symbol, 0.02, 0.95);
+    if (verbose) {
         fg.printTree();
     }
     else {
-        fg.printFolded(false);
+        fg.printCandidates();
     }
+    fg.printFolded(false, filtered);
+    fg.printColorPalette(palettemap);
 }
+
 

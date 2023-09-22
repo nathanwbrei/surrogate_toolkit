@@ -177,11 +177,6 @@ void filter_towers(Flamegraph::Node* node, float tower_fraction) {
         }
         filter_towers(child.get(), tower_fraction);
     }
-
-    // Recurse over all children
-    for (const auto& child : node->children) {
-        filter_towers(child.get(), tower_fraction);
-    }
 }
 
 void score(Flamegraph::Node* node, const std::string& eventloop_symbol, uint64_t eventloop_total_samples) {
@@ -237,7 +232,7 @@ std::vector<std::pair<std::string, float>> Flamegraph::buildCandidates() {
     for (auto pair : this->scores) {
         results.push_back({pair.first, pair.second});
     }
-    std::sort(results.begin(), results.end(), [](auto& lhs, auto& rhs){ return lhs.second<rhs.second;});
+    std::sort(results.begin(), results.end(), [](auto& lhs, auto& rhs){ return lhs.second>rhs.second;});
     return results;
 }
 
@@ -247,7 +242,7 @@ void Flamegraph::printCandidates(std::ostream& os) {
 
     int i=1;
     for (const auto& pair: this->buildCandidates()) {
-        os << i << ": " << pair.first << " => " << pair.second << std::endl;
+        os << i++ << ": " << pair.first << " => " << pair.second << std::endl;
     }
 }
 
