@@ -71,6 +71,20 @@ TEST_CASE("Composition of a Field lens with a TensorIso") {
 
 }
 
+
+TEST_CASE("Composition of a RefLens with a TensorIso") {
+    MyStruct s{49.0, 7.6};
+
+    auto primitive_lens = TensorIso<float>();
+    auto field_lens = RefLens<MyStruct, float>(&primitive_lens, &MyStruct::y);
+    auto t = field_lens.to(&s);
+    float *tp = t.get_data<float>();
+    REQUIRE(*tp == (float)7.6);
+    *tp = 99;
+    field_lens.from(t, &s);
+    REQUIRE(s.y == 99);
+}
+
 struct OtherStruct {
     int w;
     MyStruct *s;
@@ -197,4 +211,4 @@ struct Tree {
         }
     }
 };
-} // namespace phasm::test::optics_tests
+} // namespace phasm::test::optics_tests} // namespace phasm::test::optics_tests

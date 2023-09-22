@@ -326,10 +326,10 @@ public:
     std::vector<int64_t> shape() override { return m_optic->shape(); }
 
     tensor to(StructT *source) override {
-        return m_optic->to(&(source.*m_field));
+        return m_optic->to(&(source->*m_field));
     }
     void from(tensor source, StructT *dest) override {
-        return m_optic->from(source, &(dest.*m_field));
+        return m_optic->from(source, &(dest->*m_field));
     }
     void attach(Optic<FieldT> *optic) {
         OpticBase::unsafe_attach(optic);

@@ -61,8 +61,8 @@ TEST_CASE("Field accessor") {
             .field<int>(&MyStruct::x)
                 .primitive("x")
             .end()
-            //.accessor<double>([](MyStruct *s) { return s->y; })
-            .field<double[3]>(&MyStruct::y)
+            .accessor<double>([](MyStruct *s) { return s->y; })
+            //.field<double[3]>(&MyStruct::y)
             // TODO: field/RefLens should support arrays
                 .primitives("y", {3}, Direction::INOUT)
             .end();
