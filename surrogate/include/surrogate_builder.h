@@ -77,6 +77,9 @@ struct Cursor<HeadT> {
 
     template <typename T>
     Cursor<T, HeadT> accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter);
+
+    template <typename T>
+    Cursor<T, HeadT> accessor(T HeadT::* field);
 };
 
 
@@ -97,6 +100,9 @@ struct Cursor {
 
     template <typename T>
     Cursor<T, HeadT, RestTs...> accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter);
+
+    template <typename T>
+    Cursor<T, HeadT, RestTs...> accessor(T HeadT::* field);
 };
 
 OpticBase* cloneOpticsFromLeafToRoot(OpticBase* leaf);
@@ -177,6 +183,14 @@ Cursor<T, HeadT> Cursor<HeadT>::accessor(std::function<T(HeadT*)> getter, std::f
     return Cursor<T, HeadT>(child, current_callsite_var, builder);
 }
 
+template <typename HeadT>
+template <typename T>
+Cursor<T, HeadT> Cursor<HeadT>::accessor(T HeadT::* field) {
+    auto child = new RefLens<HeadT, T>(nullptr, field);
+    this->focus->unsafe_attach(child);
+    return Cursor<T, HeadT>(child, current_callsite_var, builder);
+}
+
 template<typename HeadT>
 Cursor<HeadT> Cursor<HeadT>::array(size_t size) {
     auto child = new ArrayTraversal<HeadT>(nullptr, size);
@@ -234,6 +248,15 @@ Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T(H
     focus->unsafe_attach(child);
     return Cursor<T, HeadT, RestTs...>(child, current_callsite_var, builder);
 }
+
+template <typename HeadT, typename... RestTs>
+template <typename T>
+Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(T HeadT::* field) {
+    auto child = new RefLens<HeadT, T>(nullptr, field);
+    focus->unsafe_attach(child);
+    return Cursor<T, HeadT, RestTs...>(child, current_callsite_var, builder);
+}
+
 
 template <typename HeadT, typename... RestTs>
 Cursor<HeadT, RestTs...> Cursor<HeadT, RestTs...>::array(size_t size) {

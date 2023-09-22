@@ -308,6 +308,44 @@ public:
     }
 };
 
+
+template <typename StructT, typename FieldT>
+class RefLens : public Optic<StructT> {
+    Optic<FieldT> *m_optic = nullptr;
+    FieldT StructT::* m_field = nullptr;
+
+public:
+    RefLens(Optic<FieldT> *optic, FieldT StructT::* field)
+        : m_optic(optic), m_field(field) {
+        OpticBase::consumes = demangle<StructT>();
+        OpticBase::produces = demangle<FieldT>();
+    };
+
+    RefLens(const RefLens &other) = default;
+
+    std::vector<int64_t> shape() override { return m_optic->shape(); }
+
+    tensor to(StructT *source) override {
+        return m_optic->to(&(source.*m_field));
+    }
+    void from(tensor source, StructT *dest) override {
+        return m_optic->from(source, &(dest.*m_field));
+    }
+    void attach(Optic<FieldT> *optic) {
+        OpticBase::unsafe_attach(optic);
+        m_optic = optic;
+    }
+    void unsafe_use(OpticBase *optic) override {
+        auto downcasted = dynamic_cast<Optic<FieldT> *>(optic);
+        if (downcasted == nullptr) {
+            throw std::runtime_error("Incompatible optic!");
+        }
+        m_optic = downcasted;
+    }
+    RefLens *clone() override { return new RefLens<StructT, FieldT>(*this); }
+};
+
+
 template <typename T>
 class ArrayTraversal : public Optic<T> {
     Optic<T>* m_optic;
