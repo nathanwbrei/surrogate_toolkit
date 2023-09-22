@@ -23,18 +23,48 @@ TEST_CASE("Basic fluent construction") {
     SurrogateBuilder builder;
 
     builder
-            .local<int>("a")
+        .local<int>("a")
             .primitive("a", Direction::OUT)
             .end()
-            .global("my_global", &my_global)
+        .global("my_global", &my_global)
             .primitive("b")
             .end()
-            .local<MyStruct>("s")
+        .local<MyStruct>("s")
             .accessor<int>([](MyStruct *s) { return &(s->x); })
-            .primitive("x")
+                .primitive("x")
             .end()
             .accessor<double>([](MyStruct *s) { return s->y; })
-            .primitives("y", {3}, Direction::INOUT)
+                .primitives("y", {3}, Direction::INOUT)
+            .end();
+
+    REQUIRE(builder.get_callsite_vars().size() == 3);
+    REQUIRE(builder.get_model_vars().size() == 4);
+
+    builder.printOpticsTree();
+    std::cout << "-----------" << std::endl;
+    builder.printModelVars();
+
+}
+
+TEST_CASE("Field accessor") {
+
+    SurrogateBuilder builder;
+
+    builder
+        .local<int>("a")
+            .primitive("a", Direction::OUT)
+            .end()
+        .global("my_global", &my_global)
+            .primitive("b")
+        .end()
+        .local<MyStruct>("s")
+            .field<int>(&MyStruct::x)
+                .primitive("x")
+            .end()
+            //.accessor<double>([](MyStruct *s) { return s->y; })
+            .field<double[3]>(&MyStruct::y)
+            // TODO: field/RefLens should support arrays
+                .primitives("y", {3}, Direction::INOUT)
             .end();
 
     REQUIRE(builder.get_callsite_vars().size() == 3);

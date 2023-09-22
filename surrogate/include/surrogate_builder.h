@@ -78,8 +78,8 @@ struct Cursor<HeadT> {
     template <typename T>
     Cursor<T, HeadT> accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter);
 
-    template <typename T>
-    Cursor<T, HeadT> accessor(T HeadT::* field);
+    template <typename T, typename PtrToDataMemberT>
+    Cursor<T, HeadT> field(PtrToDataMemberT field);
 };
 
 
@@ -101,8 +101,8 @@ struct Cursor {
     template <typename T>
     Cursor<T, HeadT, RestTs...> accessor(std::function<T(HeadT*)> getter, std::function<void(HeadT*,T)> setter);
 
-    template <typename T>
-    Cursor<T, HeadT, RestTs...> accessor(T HeadT::* field);
+    template <typename T, typename PtrToDataMemberT>
+    Cursor<T, HeadT, RestTs...> field(PtrToDataMemberT field);
 };
 
 OpticBase* cloneOpticsFromLeafToRoot(OpticBase* leaf);
@@ -184,10 +184,9 @@ Cursor<T, HeadT> Cursor<HeadT>::accessor(std::function<T(HeadT*)> getter, std::f
 }
 
 template <typename HeadT>
-template <typename T>
-Cursor<T, HeadT> Cursor<HeadT>::accessor(T HeadT::* field) {
+template <typename T, typename PtrToDataMemberT>
+Cursor<T, HeadT> Cursor<HeadT>::field(PtrToDataMemberT field) {
     auto child = new RefLens<HeadT, T>(nullptr, field);
-    this->focus->unsafe_attach(child);
     return Cursor<T, HeadT>(child, current_callsite_var, builder);
 }
 
@@ -250,8 +249,8 @@ Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(std::function<T(H
 }
 
 template <typename HeadT, typename... RestTs>
-template <typename T>
-Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::accessor(T HeadT::* field) {
+template <typename T, typename PtrToDataMemberT>
+Cursor<T, HeadT, RestTs...> Cursor<HeadT, RestTs...>::field(PtrToDataMemberT field) {
     auto child = new RefLens<HeadT, T>(nullptr, field);
     focus->unsafe_attach(child);
     return Cursor<T, HeadT, RestTs...>(child, current_callsite_var, builder);
