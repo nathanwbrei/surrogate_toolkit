@@ -247,12 +247,12 @@ void Flamegraph::printCandidates(std::ostream& os) {
 }
 
 
-void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>>& palette, float min_score, float max_score) {
+void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>>& palette, std::map<std::string,float>& scores) {
 
     auto it = palette.find(node->symbol);
     if (it == palette.end()) {
         if (node->filterResult == Flamegraph::FilterResult::Include) {
-            int green = 255 * (1-((node->eventloop_fraction - min_score)/(max_score-min_score)));
+            int green = 255 * (1-scores[node->symbol]);
             palette.insert({node->symbol, {255,green,0}}); // Orange
         }
         else {
@@ -262,11 +262,12 @@ void buildColorPalette(Flamegraph::Node* node, std::map<std::string, std::tuple<
     else {
         // Include overrides previous exclude. Why? Highlight candidate functions that are ALSO used outside event loop
         if (node->filterResult == Flamegraph::FilterResult::Include) {
-            it->second = {255, 100, 0}; // Orange
+            int green = 255 * (1-scores[node->symbol]);
+            palette.insert({node->symbol, {255,green,0}}); // Orange
         }
     }
     for (const auto& child : node->children) {
-        buildColorPalette(child.get(), palette, min_score, max_score);
+        buildColorPalette(child.get(), palette, scores);
     }
 }
 
@@ -274,17 +275,9 @@ std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> Flamegraph::buildColo
 
     std::cout << "Building color palette." << std::endl;
     auto rankings_vec = buildCandidates();
-    float min_score = 1;
-    float max_score = 0;
-    for (auto& ranking : rankings_vec) {
-        if (ranking.second < min_score) min_score = ranking.second;
-        if (ranking.second > max_score) max_score = ranking.second;
-    }
-    std::cout << "min score= " << min_score << std::endl; 
-    std::cout << "max score= " << max_score << std::endl; 
 
     std::map<std::string, std::tuple<uint8_t,uint8_t,uint8_t>> palette;
-    ::buildColorPalette(root.get(), palette, min_score, max_score);
+    ::buildColorPalette(root.get(), palette, scores);
     return palette;
 }
 
