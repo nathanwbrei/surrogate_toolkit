@@ -76,7 +76,7 @@ mkdir -p $DOWNLOAD_DIR
 cd $DOWNLOAD_DIR
 
 if [ $TARGET_IS_MACOS -eq 1 ]; then
-  conditional_download Torch PHASM_USE_TORCH libtorch.zip https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip libtorch-macos-1.10.1.zip
+  conditional_download Torch PHASM_USE_TORCH libtorch_macos.zip https://download.pytorch.org/libtorch/cpu/libtorch-macos-1.10.1.zip
   conditional_download Julia USE_JULIA julia.tar.gz https://julialang-s3.julialang.org/bin/mac/aarch64/1.9/julia-1.9.2-macaarch64.tar.gz
   conditional_download JANA PHASM_USE_JANA JANA.zip https://github.com/JeffersonLab/JANA2/archive/refs/tags/v2.0.6.zip
   conditional_download PIN PHASM_USE_PIN pin.tar.gz https://software.intel.com/sites/landingpage/pintool/downloads/pin-3.22-98547-g7a303a835-clang-mac.tar.gz

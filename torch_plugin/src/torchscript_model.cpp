@@ -100,10 +100,10 @@ bool TorchscriptModel::infer() {
         }
         else if (output.isTuple()) {
             auto tuple = output.toTuple();
-            if (tuple->size() != m_outputs.size()) {
+            if (tuple->elements().size() != m_outputs.size()) {
                 std::cerr << "PHASM: FATAL ERROR: Torchscript model output tuple size mismatch" << std::endl;
                 std::cerr << "  Surrogate expects " << m_outputs.size() << std::endl;
-                std::cerr << "  PT file provides " << tuple->size() << std::endl;
+                std::cerr << "  PT file provides " << tuple->elements().size() << std::endl;
                 std::cerr << "  Filename is '" << m_filename << "'" << std::endl;
                 exit(1);
             }
