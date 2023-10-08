@@ -4,23 +4,58 @@
 #include <stddef.h>
 #include <vector>
 #include <iostream>
+#include <map>
+#include <variant>
+#include <array>
+#include <initializer_list>
 
 
 namespace phasm {
 
-class omnitensor_index {
-    friend class omnitensor;
-    std::vector<int> m_indices;
 
+class TensorIndices {
+    std::vector<size_t> m_data;
 public:
-
-    omnitensor_index(std::vector<int> indices) : m_indices(indices) {}
-
+    inline TensorIndices(std::vector<size_t> indices) : m_data(indices) {};
+    inline TensorIndices(std::initializer_list<size_t> indices) : m_data(indices) {};
+    inline size_t get_dim_count() const { return m_data.size(); }
+    inline size_t get_index(size_t dim) const { return m_data[dim]; }
+    inline void set_index(size_t dim, size_t index) { m_data[dim] = index; }
 };
 
-static omnitensor_index index(std::vector<int> indices) {
-    return omnitensor_index(indices);
-}
+
+namespace detail {
+
+class NestedListV1 {
+    std::map<TensorIndices, std::pair<size_t, size_t>> m_leaves;
+public:
+    void insert(const TensorIndices& indices, size_t offset, size_t count);
+    std::pair<size_t,size_t> get(const TensorIndices& index);
+};
+
+class NestedListV2 {
+    std::vector<size_t> m_contents;
+    size_t m_depth;
+public:
+    inline NestedListV2(size_t depth) : m_depth(depth) {};
+    void append(const TensorIndices& indices, size_t offset, size_t count);
+    void insert(const TensorIndices& indices, size_t offset, size_t count);
+    std::pair<size_t,size_t> get(const TensorIndices& indices);
+};
+
+
+class NestedListV3 {
+    std::vector<size_t> m_contents;
+    size_t m_depth;
+public:
+    inline NestedListV3(size_t depth) : m_depth(depth) {}
+    void reserve(const TensorIndices& indices, size_t length);
+    void append(const TensorIndices& indices, size_t offset, size_t count);
+    std::pair<size_t,size_t> get(const TensorIndices& index);
+};
+
+} // namespace detail
+
 
 
 class omnitensor {
@@ -101,30 +136,29 @@ public:
 
     ~omnitensor();
 
-    size_t offset(const omnitensor_index& index) {
+    inline size_t offset(const TensorIndices& indices) {
         size_t offset = 0;
-        for (int dim=0; dim<index.m_indices.size(); ++dim) {
+        for (size_t dim=0; dim<indices.get_dim_count(); ++dim) {
             if (m_dimtypes[dim] == DimType::Array) {
-                offset += m_dim_offsets[dim]*index.m_indices[dim];
+                offset += m_dim_offsets[dim] * indices.get_index(dim);
             }
         }
         return offset;
     }
 
-    size_t length(const omnitensor_index& current) {
-        if (current.m_indices.size() == 0) {
+    inline size_t length(const TensorIndices& current) {
+        if (current.get_dim_count() == 0) {
             return m_length;
         }
-        omnitensor_index next = current;
-        size_t last_dim = next.m_indices.size() - 1;
-        next.m_indices[last_dim]++;
+        TensorIndices next = current;
+        size_t last_dim = next.get_dim_count() - 1;
+        next.set_index(last_dim, current.get_index(last_dim) + 1);
         return offset(next) - offset(current);
     }
 
-
     template <typename T>
-    std::pair<T*, size_t> data(const omnitensor_index& index) {
-        return { static_cast<T*>(m_data)+offset(index), length(index)};
+    std::pair<T*, size_t> data(const TensorIndices& indices) {
+        return { static_cast<T*>(m_data)+offset(indices), length(indices)};
     }
 };
 
