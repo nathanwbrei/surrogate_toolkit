@@ -49,7 +49,7 @@ class NestedListV3 {
     size_t m_depth;
 public:
     inline NestedListV3(size_t depth) : m_depth(depth) {}
-    void reserve(const TensorIndices& indices, size_t length);
+    void reserve(size_t dim, size_t length);
     void append(const TensorIndices& indices, size_t offset, size_t count);
     std::pair<size_t,size_t> get(const TensorIndices& index);
 };
